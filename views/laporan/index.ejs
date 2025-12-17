@@ -1,0 +1,94 @@
+<%- include('../layout/header', { user }) %>
+
+<div class="max-w-7xl mx-auto px-6 py-8">
+
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden">
+  <div class="px-6 py-4 border-b dark:border-slate-700 flex justify-between items-center">
+    <div>
+      <h2 class="text-2xl font-bold">📋 Data Laporan Investigasi</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total: <%= rows.length %> laporan</p>
+    </div>
+
+    <a href="/laporan/create"
+      class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+      ➕ Tambah Laporan
+    </a>
+  </div>
+
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100 dark:bg-slate-700 border-b dark:border-slate-600">
+      <tr>
+        <th class="px-6 py-4 text-left font-semibold">No</th>
+        <th class="px-6 py-4 text-left font-semibold">Pemegang Polis</th>
+        <th class="px-6 py-4 text-left font-semibold">No Peserta</th>
+        <th class="px-6 py-4 text-left font-semibold">Nama Tertanggung</th>
+        <th class="px-6 py-4 text-left font-semibold">Status</th>
+        <th class="px-6 py-4 text-center font-semibold">Aksi</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    <% if (rows.length === 0) { %>
+      <tr>
+        <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+          Belum ada data laporan. <a href="/laporan/create" class="text-emerald-600 hover:underline">Buat laporan baru</a>
+        </td>
+      </tr>
+    <% } else { %>
+      <% rows.forEach((r, i) => { %>
+      <tr class="border-t dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition">
+        <td class="px-6 py-4 font-medium text-gray-600 dark:text-gray-300"><%= i + 1 %></td>
+        <td class="px-6 py-4 font-medium"><%= r.nama_pemegang_polis || '-' %></td>
+        <td class="px-6 py-4"><%= r.no_peserta || '-' %></td>
+        <td class="px-6 py-4"><%= r.nama_tertanggung || '-' %></td>
+        <td class="px-6 py-4">
+          <% if (r.status_asuransi === 'done') { %>
+            <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-full text-xs font-medium">✓ Done</span>
+          <% } else if (r.status_asuransi === 'ongoing') { %>
+            <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100 rounded-full text-xs font-medium">⊝ On Going</span>
+          <% } else if (r.status_asuransi === 'case-close') { %>
+            <span class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100 rounded-full text-xs font-medium">✕ Case Close    </span>
+          <% } else { %>
+            <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs font-medium">—</span>
+          <% } %>
+        </td>   
+        <td class="px-6 py-4">
+          <div class="flex justify-center gap-2 flex-wrap">
+            <a href="/laporan/<%= r.id %>" 
+               title="Lihat detail"
+               class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded transition font-medium">
+              👁️
+            </a>
+            <a href="/laporan/pdf/<%= r.id %>" target="_blank"
+               title="Unduh PDF"
+               class="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded transition font-medium">
+              📄
+            </a>
+
+            <% if (user.role === 'admin') { %>
+            <a href="/laporan/edit/<%= r.id %>"
+               title="Edit laporan"
+               class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded transition font-medium">
+              ✏️
+            </a>
+            <a href="/laporan/delete/<%= r.id %>" 
+               title="Hapus laporan"
+               onclick="return confirm('Yakin hapus laporan ini?')"
+               class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition font-medium">
+              🗑️
+            </a>
+            <% } %>
+          </div>
+        </td>
+      </tr>
+      <% }) %>
+    <% } %>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+</div>
+
+<%- include('../layout/footer') %>

@@ -1,0 +1,149 @@
+<!-- RESUME HASIL INTERVIEW -->
+<section class="mb-8">
+  <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
+    <h3 class="text-lg font-semibold">📝 Resume Hasil Interview</h3>
+    <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Edit Resume</button>
+  </div>
+  
+  <div id="resumeInterviewDisplay" class="space-y-6">
+    <!-- Resume display akan dimuat di sini -->
+  </div>
+  
+  <div class="mt-4">
+    <button onclick="openModalResumePhone()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah Data Telepon</button>
+  </div>
+</section>
+
+<!-- MODAL RESUME INTERVIEW (Hasil + Redaksional) -->
+<div id="modalResumeInterview" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-semibold mb-4">📝 Edit Resume Interview</h3>
+    <form id="formResumeInterview" onsubmit="submitResumeInterview(event)" class="grid gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-2">Hasil Interview</label>
+        <textarea name="hasil_interview" placeholder="Hasil Interview" class="w-full border p-2 rounded h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Redaksional</label>
+        <textarea name="redaksional" placeholder="Redaksional (opsional)" class="w-full border p-2 rounded h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModalResumeInterview()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL PHONE DATA ENTRY (Telepon ke berapa, Tanggal, Jam) -->
+<div id="modalResumePhone" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-semibold mb-4">📞 Tambah Data Telepon</h3>
+    <form id="formResumePhone" onsubmit="submitResumePhone(event)" class="grid gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-2">Telepon ke berapa? *</label>
+        <select name="telepon_ke" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+          <option value="">-- Pilih --</option>
+          <option value="1">Telepon 1</option>
+          <option value="2">Telepon 2</option>
+          <option value="3">Telepon 3</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Tanggal Telepon *</label>
+        <input type="date" name="tanggal_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Jam Telepon *</label>
+        <input type="time" name="jam_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModalResumePhone()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ===== RESUME INTERVIEW FUNCTIONS =====
+function openModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.remove('hidden'); }
+function closeModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.add('hidden'); document.getElementById('formResumeInterview').reset(); }
+function openModalResumePhone(){ document.getElementById('modalResumePhone').classList.remove('hidden'); }
+function closeModalResumePhone(){ document.getElementById('modalResumePhone').classList.add('hidden'); document.getElementById('formResumePhone').reset(); }
+
+async function submitResumeInterview(e){
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formResumeInterview')));
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    if(res.ok){ closeModalResumeInterview(); loadResumeInterviewList(); } else { alert('Gagal menyimpan resume'); }
+  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function submitResumePhone(e){
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formResumePhone')));
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview/phone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    if(res.ok){ closeModalResumePhone(); loadResumeInterviewList(); } else { alert('Gagal menyimpan data telepon'); }
+  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function loadResumeInterviewList(){
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview');
+    const resume = await res.json();
+    const container = document.getElementById('resumeInterviewDisplay');
+    
+    if (!resume.id) {
+      container.innerHTML = '<p class="text-gray-500 text-center py-4">Belum ada resume interview</p>';
+      return;
+    }
+    
+    let html = '';
+    
+    // Display resume data
+    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 mb-4">';
+    html += '<h4 class="font-semibold text-lg mb-3 text-blue-600">📋 Data Resume:</h4>';
+    if (resume.hasil_interview) {
+      html += '<div class="mb-3">';
+      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Hasil Interview</p>';
+      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.hasil_interview || '-') + '</p>';
+      html += '</div>';
+    }
+    if (resume.redaksional) {
+      html += '<div>';
+      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Redaksional</p>';
+      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.redaksional || '-') + '</p>';
+      html += '</div>';
+    }
+    html += '</div>';
+    
+    // Display phone data in table
+    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">';
+    html += '<h4 class="font-semibold text-lg mb-3 text-green-600">📞 Data Telepon:</h4>';
+    html += '<div class="overflow-x-auto"><table class="w-full border text-sm text-gray-600 dark:text-gray-300">';
+    html += '<thead><tr class="dark:bg-slate-800"><th class="border p-2">Ke</th><th class="border p-2">Tanggal</th><th class="border p-2">Jam</th></tr></thead>';
+    html += '<tbody>';
+    
+    for (let i = 1; i <= 3; i++) {
+      const dateCol = `tgl_telpon_${i}`;
+      const timeCol = `jam_telpon_${i}`;
+      const hasData = resume[dateCol] || resume[timeCol];
+      html += '<tr>';
+      html += `<td class="border p-2 text-center font-medium">Telepon ${i}</td>`;
+      html += `<td class="border p-2">${resume[dateCol] ? new Date(resume[dateCol]).toLocaleDateString('id-ID') : '-'}</td>`;
+      html += `<td class="border p-2">${resume[timeCol] || '-'}</td>`;
+      html += '</tr>';
+    }
+    
+    html += '</tbody></table></div>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+  }catch(err){
+    console.error('Load Resume Interview error', err);
+  }
+}
+</script>

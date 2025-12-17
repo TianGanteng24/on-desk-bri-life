@@ -1,0 +1,74 @@
+<%- include('../layout/header', { user }) %>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+
+<form method="POST" action="/laporan/store"
+  class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8">
+
+<h2 class="text-3xl font-bold border-b pb-4 dark:border-slate-700">
+  📝 Input Laporan Investigasi
+</h2>
+
+<!-- DATA PEMEGANG POLIS -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Data Pemegang Polis</legend>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <input name="nama_pemegang_polis" placeholder="Nama Pemegang Polis" required
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="no_peserta" placeholder="No Peserta" required
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="nama_tertanggung" placeholder="Nama Tertanggung" required
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="no_telepon" placeholder="No Telepon"
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+  </div>
+  <textarea name="alamat" placeholder="Alamat"
+    class="w-full mt-4 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+</fieldset>
+
+<!-- DATA ASURANSI -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Data Asuransi</legend>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <input name="masa_asuransi" placeholder="Masa Asuransi"
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="uang_pertanggungan" placeholder="Uang Pertanggungan"
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="tanggal_lahir" type="date" placeholder="Tanggal Lahir"
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <input name="tanggal_meninggal" type="date" placeholder="Tanggal Meninggal"
+      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <select name="status_asuransi" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <option value="">-- Pilih Status Asuransi --</option>
+      <option value="ongoing">On Going</option>
+      <option value="done">Done</option>
+      <option value="case-closed">Case Closed</option>
+    </select>
+  </div>
+</fieldset>
+
+<!-- KRONOLOGIS & DOKUMEN -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Kronologis & Dokumen</legend>
+  <div class="space-y-4 mt-4">
+    <textarea name="kronologis" placeholder="Kronologis"
+      class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+    <textarea name="kelengkapan_dokumen" placeholder="Kelengkapan Dokumen"
+      class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+  </div>
+</fieldset>
+
+<!-- BUTTONS -->
+<div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
+  <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+    Batal
+  </a>
+  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">
+    💾 Simpan
+  </button>
+</div>
+
+</form>
+</div>
+
+<%- include('../layout/footer') %>

@@ -1,0 +1,197 @@
+<%- include('../layout/header', { user }) %>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+
+<form action="/laporan/update/<%= data.id %>" method="POST"
+  class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8">
+
+<h2 class="text-3xl font-bold border-b pb-4 dark:border-slate-700">
+  ✏️ Edit Laporan Investigasi
+</h2>
+
+<!-- DATA PEMEGANG POLIS -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Data Pemegang Polis</legend>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div>
+      <label class="text-sm font-medium">Nama Pemegang Polis *</label>
+      <input name="nama_pemegang_polis" value="<%= data.nama_pemegang_polis || '' %>" required
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">No Peserta *</label>
+      <input name="no_peserta" value="<%= data.no_peserta || '' %>" required
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Nama Tertanggung *</label>
+      <input name="nama_tertanggung" value="<%= data.nama_tertanggung || '' %>" required
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">No Telepon</label>
+      <input name="no_telepon" value="<%= data.no_telepon || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+  </div>
+  <div class="mt-4">
+    <label class="text-sm font-medium">Alamat</label>
+    <textarea name="alamat"
+      class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.alamat || '' %></textarea>
+  </div>
+</fieldset>
+
+<!-- DATA ASURANSI -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Data Asuransi</legend>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div>
+      <label class="text-sm font-medium">Masa Asuransi</label>
+      <input name="masa_asuransi" value="<%= data.masa_asuransi || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Uang Pertanggungan</label>
+      <input name="uang_pertanggungan" value="<%= data.uang_pertanggungan || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Tanggal Lahir</label>
+      <input name="tanggal_lahir" type="date" value="<%= data.tanggal_lahir ? data.tanggal_lahir.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Tanggal Meninggal</label>
+      <input name="tanggal_meninggal" type="date" value="<%= data.tanggal_meninggal ? data.tanggal_meninggal.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Status Asuransi</label>
+      <select name="status_asuransi" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        <option value="">-- Pilih Status --</option>
+        <option value="aktif" <%= data.status_asuransi === 'aktif' ? 'selected' : '' %>>Aktif</option>
+        <option value="tidak_aktif" <%= data.status_asuransi === 'tidak_aktif' ? 'selected' : '' %>>Tidak Aktif</option>
+        <option value="terminate" <%= data.status_asuransi === 'terminate' ? 'selected' : '' %>>Terminate</option>
+      </select>
+    </div>
+  </div>
+</fieldset>
+
+<!-- KRONOLOGIS & DOKUMEN -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Kronologis & Dokumen</legend>
+  <div class="space-y-4 mt-4">
+    <div>
+      <label class="text-sm font-medium">Kronologis</label>
+      <textarea name="kronologis"
+        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kronologis || '' %></textarea>
+    </div>
+    <div>
+      <label class="text-sm font-medium">Kelengkapan Dokumen</label>
+      <textarea name="kelengkapan_dokumen"
+        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kelengkapan_dokumen || '' %></textarea>
+    </div>
+  </div>
+</fieldset>
+
+<!-- BRIEF LIFE -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">BRI Life</legend>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div>
+      <label class="text-sm font-medium">PIC BRI Life</label>
+      <input name="pic_brilife" value="<%= data.pic_brilife || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Tgl Submit PIC</label>
+      <input name="tanggal_submit_pic" type="date" value="<%= data.tanggal_submit_pic ? data.tanggal_submit_pic.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Tgl Submit Investigator</label>
+      <input name="tanggal_submit_investigator" type="date" value="<%= data.tanggal_submit_investigator ? data.tanggal_submit_investigator.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">SLA BRI Life (hari)</label>
+      <input name="sla_brilife" type="number" value="<%= data.sla_brilife || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+  </div>
+</fieldset>
+
+<!-- TELEPON FOLLOW-UP -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Telepon Follow-up</legend>
+  <div class="space-y-4 mt-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm font-medium">Tgl Telepon 1</label>
+        <input name="tgl_telpon_1" type="date" value="<%= data.tgl_telpon_1 ? data.tgl_telpon_1.toISOString().split('T')[0] : '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div>
+        <label class="text-sm font-medium">Jam Telepon 1</label>
+        <input name="jam_telpon_1" type="time" value="<%= data.jam_telpon_1 || '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm font-medium">Tgl Telepon 2</label>
+        <input name="tgl_telpon_2" type="date" value="<%= data.tgl_telpon_2 ? data.tgl_telpon_2.toISOString().split('T')[0] : '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div>
+        <label class="text-sm font-medium">Jam Telepon 2</label>
+        <input name="jam_telpon_2" type="time" value="<%= data.jam_telpon_2 || '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="text-sm font-medium">Tgl Telepon 3</label>
+        <input name="tgl_telpon_3" type="date" value="<%= data.tgl_telpon_3 ? data.tgl_telpon_3.toISOString().split('T')[0] : '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div>
+        <label class="text-sm font-medium">Jam Telepon 3</label>
+        <input name="jam_telpon_3" type="time" value="<%= data.jam_telpon_3 || '' %>"
+          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+    </div>
+  </div>
+</fieldset>
+
+<!-- RESUME & INVESTIGASI -->
+<fieldset class="border rounded-lg p-4 dark:border-slate-700">
+  <legend class="text-lg font-semibold px-2">Resume Investigasi</legend>
+  <div class="space-y-4 mt-4">
+    <div>
+      <label class="text-sm font-medium">Resume Interview</label>
+      <textarea name="resume_interview"
+        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.resume_interview || '' %></textarea>
+    </div>
+    <div>
+      <label class="text-sm font-medium">Resume Hasil Investigasi</label>
+      <textarea name="resume_hasil_investigasi"
+        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.resume_hasil_investigasi || '' %></textarea>
+    </div>
+  </div>
+</fieldset>
+
+<!-- BUTTONS -->
+<div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
+  <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+    Batal
+  </a>
+  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">
+    💾 Update
+  </button>
+</div>
+
+</form>
+</div>
+
+<%- include('../layout/footer') %>

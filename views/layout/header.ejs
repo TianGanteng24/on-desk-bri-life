@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <title>Laporan Investigasi</title>
+  <script>
+    // Configure Tailwind CDN to use class-based dark mode
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = { darkMode: 'class' };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gray-100 dark:bg-slate-900 text-gray-800 dark:text-gray-200">
+
+<nav class="bg-white dark:bg-slate-800 shadow">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+    <span class="font-semibold text-lg">
+      📄 Investigasi
+    </span>
+
+    <div class="flex items-center gap-4">
+      <span class="text-sm capitalize">
+        <%= user.role %>
+      </span>
+
+      <!-- Dark Mode Switch -->
+      <button onclick="toggleDark()"
+        class="border rounded-lg px-3 py-1 text-sm">
+        🌙 / ☀️
+      </button>
+
+      <a href="/logout"
+        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+        Logout
+      </a>
+    </div>
+
+  </div>
+</nav>
+
+  <script>
+  function toggleDark() {
+    if (localStorage.theme === 'dark') {
+      localStorage.theme = 'light'
+      document.documentElement.classList.remove('dark')
+    } else {
+      localStorage.theme = 'dark'
+      document.documentElement.classList.add('dark')
+    }
+  }
+
+
+  </script>
+
+  <script>
+    // Initialize theme: prefer localStorage, fall back to system preference
+    (function(){
+      try {
+        const stored = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    function toggleDark() {
+      try {
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Attach toggle to partial button if present
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('darkToggle');
+      if (btn) btn.addEventListener('click', toggleDark);
+    });
+  </script>
+

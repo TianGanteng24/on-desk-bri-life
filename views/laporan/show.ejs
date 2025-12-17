@@ -1,0 +1,917 @@
+<%- include('../layout/header', { user }) %>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
+
+
+<div class="mb-6 flex justify-between items-center border-b pb-4 dark:border-slate-700">
+  <h2 class="text-3xl font-bold">📄 Detail Laporan Investigasi</h2>
+  <a href="/laporan" class="text-blue-600 hover:text-blue-800">← Kembali</a>
+</div>
+
+<section class="mb-8">
+<h3 class="font-semibold border-b pb-3 mb-4">Data Pemegang Polis</h3>
+
+<div class="grid md:grid-cols-2 gap-6">
+  <div>
+    <p class="text-sm text-gray-500">Nama Pemegang Polis</p>
+    <p><%= data.nama_pemegang_polis || '-' %></p>
+  </div>
+  <div>
+    <p class="text-sm text-gray-500">No Peserta</p>
+    <p><%= data.no_peserta || '-' %></p>
+  </div>
+  <div>
+    <p class="text-sm text-gray-500">Nama Tertanggung</p>
+    <p><%= data.nama_tertanggung || '-' %></p>
+  </div>
+  <div>
+    <p class="text-sm text-gray-500">No Telepon</p>
+    <p><%= data.no_telepon || '-' %></p>
+  </div>
+  <div class="md:col-span-2">
+    <p class="text-sm text-gray-500">Alamat</p>
+    <p><%= data.alamat || '-' %></p>
+  </div>
+</div>
+</section>
+
+
+<!-- DATA ASURANSI -->
+<section class="mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">Data Asuransi</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Masa Asuransi</p>
+      <p class="text-base font-medium"><%= data.masa_asuransi || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Uang Pertanggungan</p>
+      <p class="text-base font-medium"><%= data.uang_pertanggungan || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Lahir</p>
+      <p class="text-base font-medium"><%= data.tanggal_lahir ? new Date(data.tanggal_lahir).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Meninggal</p>
+      <p class="text-base font-medium"><%= data.tanggal_meninggal ? new Date(data.tanggal_meninggal).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Status Asuransi</p>
+      <% if (data.status_asuransi === 'done') { %>
+        <span class="inline-block px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded-full text-sm font-medium">✓ Done</span>
+      <% } else if (data.status_asuransi === 'ongoing') { %>
+        <span class="inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100 rounded-full text-sm font-medium">⊝ On Going</span>
+      <% } else if (data.status_asuransi === 'case-closed') { %>
+        <span class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 rounded-full text-sm font-medium">✕ Case Closed</span>
+      <% } else { %>
+        <span class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm font-medium">—</span>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<!-- KRONOLOGIS & DOKUMEN -->
+<section class="mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">Kronologis & Dokumen</h3>
+  <div class="space-y-6">
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Kronologis</p>
+      <p class="text-base whitespace-pre-wrap bg-gray-50 dark:bg-slate-900 p-4 rounded"><%= data.kronologis || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Kelengkapan Dokumen</p>
+      <p class="text-base whitespace-pre-wrap bg-gray-50 dark:bg-slate-900 p-4 rounded"><%= data.kelengkapan_dokumen || '-' %></p>
+    </div>
+  </div>
+</section>
+
+<!-- Deswa -->
+<section class="mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">DESWA</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">PIC DESWA</p>
+      <p class="text-base font-medium"><%= data.pic_investigator_deswa || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Mulai PIC</p>
+      <p class="text-base font-medium"><%= data.tanggal_mulai_deswa ? new Date(data.tanggal_mulai_deswa).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Selesai Investigator</p>
+      <p class="text-base font-medium"><%= data.tanggal_selesai_deswa ? new Date(data.tanggal_selesai_deswa).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">SLA DESWA (hari)</p>
+      <p class="text-base font-medium"><%= data.sla_deswa || '-' %></p>
+    </div>
+  </div>
+</section>
+
+<!-- BRIEF LIFE -->
+<section class="mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">BRI Life</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">PIC BRI Life</p>
+      <p class="text-base font-medium"><%= data.pic_brilife || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC</p>
+      <p class="text-base font-medium"><%= data.tanggal_submit_pic ? new Date(data.tanggal_submit_pic).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit Investigator</p>
+      <p class="text-base font-medium"><%= data.tanggal_submit_investigator ? new Date(data.tanggal_submit_investigator).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">SLA BRI Life (hari)</p>
+      <p class="text-base font-medium"><%= data.sla_brilife || '-' %></p>
+    </div>
+  </div>
+</section>
+
+<section class="mb-8">
+<h3 class="font-semibold border-b pb-3 mb-4 text-green-600">� Hasil On Desk Investigation & Penelponan</h3>
+
+<!-- HASIL ON DESK INVESTIGATION + PENELPONAN LOG -->
+<div id="onDeskWithPenelponan" class="space-y-6">
+  <!-- Data akan dimuat di sini -->
+</div>
+
+<div class="mt-4 space-y-3">
+  <button onclick="openModalOnDesk()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah On Desk Investigation</button>
+  <button onclick="openModalPenelponan()" class="px-4 py-2 bg-green-600 text-white rounded">➕ Tambah Telepon</button>
+</div>
+
+</section>
+
+<!-- MODAL PENELPONAN -->
+<div id="modalPenelponan" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-semibold mb-4">Tambah Log Telepon</h3>
+    <form id="formPenelponan" onsubmit="submitPenelponan(event)" class="grid gap-3 dark:bg-slate-800">
+      <input type="date" name="tanggal_telepon" required class="border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      <input type="time" name="jam_telepon" required class="border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      <input type="text" name="hasil_telepon" required placeholder="Hasil Telepon" class="border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModalPenelponan()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModalPenelponan(){ document.getElementById('modalPenelponan').classList.remove('hidden'); }
+function closeModalPenelponan(){ document.getElementById('modalPenelponan').classList.add('hidden'); document.getElementById('formPenelponan').reset(); }
+async function submitPenelponan(e){
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formPenelponan')));
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/penelponan', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+    if(res.ok){ closeModalPenelponan(); location.reload(); } else { alert('Gagal menyimpan telepon'); }
+  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+}
+</script>
+
+<!-- RESUME HASIL INTERVIEW -->
+<section class="mb-8">
+  <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
+    <h3 class="text-lg font-semibold">📝 Resume Hasil Interview</h3>
+    <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Edit Resume</button>
+  </div>
+  
+  <div id="resumeInterviewDisplay" class="space-y-6">
+    <!-- Resume display akan dimuat di sini -->
+  </div>
+  
+  <div class="mt-4">
+    <button onclick="openModalResumePhone()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah Data Telepon</button>
+  </div>
+</section>
+
+<!-- MODAL RESUME INTERVIEW (Hasil + Redaksional) -->
+<div id="modalResumeInterview" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-semibold mb-4">📝 Edit Resume Interview</h3>
+    <form id="formResumeInterview" onsubmit="submitResumeInterview(event)" class="grid gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-2">Hasil Interview</label>
+        <textarea name="hasil_interview" placeholder="Hasil Interview" class="w-full border p-2 rounded h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Redaksional</label>
+        <textarea name="redaksional" placeholder="Redaksional (opsional)" class="w-full border p-2 rounded h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModalResumeInterview()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL PHONE DATA ENTRY (Telepon ke berapa, Tanggal, Jam) -->
+<div id="modalResumePhone" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+    <h3 class="text-lg font-semibold mb-4">📞 Tambah Data Telepon</h3>
+    <form id="formResumePhone" onsubmit="submitResumePhone(event)" class="grid gap-3">
+      <div>
+        <label class="block text-sm font-medium mb-2">Telepon ke berapa? *</label>
+        <select name="telepon_ke" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+          <option value="">-- Pilih --</option>
+          <option value="1">Telepon 1</option>
+          <option value="2">Telepon 2</option>
+          <option value="3">Telepon 3</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Tanggal Telepon *</label>
+        <input type="date" name="tanggal_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">Jam Telepon *</label>
+        <input type="time" name="jam_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModalResumePhone()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ===== RESUME INTERVIEW FUNCTIONS =====
+function openModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.remove('hidden'); }
+function closeModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.add('hidden'); document.getElementById('formResumeInterview').reset(); }
+function openModalResumePhone(){ document.getElementById('modalResumePhone').classList.remove('hidden'); }
+function closeModalResumePhone(){ document.getElementById('modalResumePhone').classList.add('hidden'); document.getElementById('formResumePhone').reset(); }
+
+async function submitResumeInterview(e){
+  e.preventDefault();
+  const formData = Object.fromEntries(new FormData(document.getElementById('formResumeInterview')));
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData)});
+    if(res.ok){ closeModalResumeInterview(); loadResumeInterviewList(); } else { alert('Gagal menyimpan resume'); }
+  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function submitResumePhone(e){
+  e.preventDefault();
+  const formData = Object.fromEntries(new FormData(document.getElementById('formResumePhone')));
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview/phone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData)});
+    if(res.ok){ closeModalResumePhone(); loadResumeInterviewList(); } else { alert('Gagal menyimpan data telepon'); }
+  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function loadResumeInterviewList(){
+  try{
+    const res = await fetch('/laporan/<%= data.id %>/resume-interview');
+    const resume = await res.json();
+    const container = document.getElementById('resumeInterviewDisplay');
+    
+    if (!resume.id) {
+      container.innerHTML = '<p class="text-gray-500 text-center py-4">Belum ada resume interview</p>';
+      return;
+    }
+    
+    let html = '';
+    
+    // Display resume data
+    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 mb-4">';
+    html += '<h4 class="font-semibold text-lg mb-3 text-blue-600">📋 Data Resume:</h4>';
+    if (resume.hasil_interview) {
+      html += '<div class="mb-3">';
+      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Hasil Interview</p>';
+      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.hasil_interview || '-') + '</p>';
+      html += '</div>';
+    }
+    if (resume.redaksional) {
+      html += '<div>';
+      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Redaksional</p>';
+      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.redaksional || '-') + '</p>';
+      html += '</div>';
+    }
+    html += '</div>';
+    
+    // Display phone data in table
+    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">';
+    html += '<h4 class="font-semibold text-lg mb-3 text-green-600">📞 Data Telepon:</h4>';
+    html += '<div class="overflow-x-auto"><table class="w-full border text-sm text-gray-600 dark:text-gray-300">';
+    html += '<thead><tr class="dark:bg-slate-800"><th class="border p-2">Ke</th><th class="border p-2">Tanggal</th><th class="border p-2">Jam</th></tr></thead>';
+    html += '<tbody>';
+    
+    for (let i = 1; i <= 3; i++) {
+      const dateCol = `tgl_telpon_${i}`;
+      const timeCol = `jam_telpon_${i}`;
+      const hasData = resume[dateCol] || resume[timeCol];
+      html += '<tr>';
+      html += `<td class="border p-2 text-center font-medium">Telepon ${i}</td>`;
+      html += `<td class="border p-2">${resume[dateCol] ? new Date(resume[dateCol]).toLocaleDateString('id-ID') : '-'}</td>`;
+      html += `<td class="border p-2">${resume[timeCol] || '-'}</td>`;
+      html += '</tr>';
+    }
+    
+    html += '</tbody></table></div>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+  }catch(err){
+    console.error('Load Resume Interview error', err);
+  }
+}
+</script>
+
+
+<!-- RESUME INVESTIGASI -->
+<section class="mb-8">
+  <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
+    <h3 class="text-lg font-semibold">📋 Resume Investigasi</h3>
+    <button onclick="openModalResumeInvestigasi()" class="px-3 py-1 bg-green-600 text-white rounded text-sm">➕ Tambah</button>
+  </div>
+  
+  <div id="resumeInvestigasiList" class="space-y-4">
+    <!-- Data akan dimuat di sini -->
+  </div>
+  
+  <% if(data.resume_hasil_investigasi) { %>
+  <div class="mt-4 p-4 bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 rounded">
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Resume dari laporan utama:</p>
+    <p class="text-base whitespace-pre-wrap"><%= data.resume_hasil_investigasi %></p>
+  </div>
+  <% } %>
+</section>
+
+<!-- MODAL RESUME INVESTIGASI -->
+<div id="modalResumeInvestigasi" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4">
+    <h3 class="text-2xl font-bold mb-6">📋 Resume Investigasi</h3>
+    <form id="formResumeInvestigasi" onsubmit="submitResumeInvestigasi(event)" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-2">Hasil Resume *</label>
+        <textarea name="hasil" required placeholder="Masukkan hasil/kesimpulan dari investigasi"
+          class="w-full border rounded-lg px-4 py-2 h-32 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+        <button type="button" onclick="closeModalResumeInvestigasi()" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          Batal
+        </button>
+        <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+          💾 Simpan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- BUTTONS -->
+<div class="flex justify-between border-t pt-4 text-sm text-gray-500">
+  <div>
+    Dibuat: <%= new Date(data.created_at).toLocaleString('id-ID') %><br>
+    Update: <%= new Date(data.updated_at).toLocaleString('id-ID') %>
+  </div>
+  <a href="/laporan/pdf/<%= data.id %>" target="_blank"
+     class="bg-orange-600 text-white px-5 py-2 rounded">📥 PDF</a>
+</div>
+
+
+    <a href="/laporan/edit/<%= data.id %>" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium">
+      ✏️ Edit
+    </a>
+    <a href="/laporan/delete/<%= data.id %>" onclick="return confirm('Yakin hapus laporan ini?')" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">
+      🗑️ Delete
+    </a>
+
+    <% if (user.role === 'deswa') { %>
+    <button onclick="openModalDeswa()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Deswa</button>
+    <% } %>
+
+    <% if (user.role === 'bri') { %>
+    <button onclick="openModalBri()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">BRI</button>
+    <% } %>
+  </div>
+</div>
+
+</div>
+
+</div>
+
+<!-- MODAL INPUT DESWA PROCESS METADATA -->
+<div id="modalDeswa" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4">
+    
+    <h3 class="text-2xl font-bold mb-6">📋 Input Deswa Process</h3>
+    
+    <form id="formDeswa" onsubmit="submitDeswa(event)" class="space-y-4">
+      
+      <div>
+        <label class="block text-sm font-medium mb-2">PIC Investigator *</label>
+        <input type="text" name="pic_investigator" required placeholder="Nama PIC investigator"
+          class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Tanggal Mulai *</label>
+          <input type="date" name="tanggal_mulai" required
+            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Tanggal Selesai *</label>
+          <input type="date" name="tanggal_selesai" required
+            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">SLA Proses (hari) *</label>
+        <input type="number" name="sla_proses" required placeholder="Jumlah hari" min="1"
+          class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+        <button type="button" onclick="closeModalDeswa()" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          Batal
+        </button>
+        <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
+          💾 Simpan
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- MODAL INPUT HASIL ON DESK INVESTIGATION -->
+<div id="modalOnDesk" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    
+    <h3 class="text-2xl font-bold mb-6">📝 Input Hasil On Desk Investigation</h3>
+    
+    <form id="formOnDesk" onsubmit="submitOnDesk(event)" class="space-y-4">
+      
+      <!-- FASILITAS KESEHATAN -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Nama Faskes *</label>
+          <select id="faskesSelect" name="nama_faskes" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600" required>
+            <option value="">-- memuat... --</option>
+          </select>
+          <input id="newFaskes" type="text" placeholder="Nama faskes baru (jika memilih Lainnya)" class="mt-2 w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 hidden">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">No Kontak</label>
+          <input type="text" name="no_kontak" placeholder="Cth: 021-12345678"
+            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Alamat Faskes</label>
+        <textarea name="alamat_faskes" placeholder="Alamat lengkap fasilitas kesehatan"
+          class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+
+      <!-- DATA INVESTIGASI -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Tanggal Investigasi *</label>
+          <input type="date" name="tanggal_investigasi" required
+            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Nama Petugas</label>
+          <input type="text" name="nama_petugas" placeholder="Nama petugas yang menginvestigasi"
+            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        </div>
+      </div>
+
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Hasil Investigasi *</label>
+        <textarea name="hasil_investigasi" placeholder="Hasil investigasi pada fasilitas kesehatan ini" required
+          class="w-full border rounded-lg px-4 py-2 h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+        <button type="button" onclick="closeModalOnDesk()" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
+          Batal
+        </button>
+        <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
+          💾 Simpan
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+// ===== MODAL CONTROLS =====
+function openModalOnDesk() { document.getElementById('modalOnDesk').classList.remove('hidden'); }
+function closeModalOnDesk() { document.getElementById('modalOnDesk').classList.add('hidden'); document.getElementById('formOnDesk').reset(); }
+function openModalDeswa() { document.getElementById('modalDeswa').classList.remove('hidden'); }
+function closeModalDeswa() { document.getElementById('modalDeswa').classList.add('hidden'); document.getElementById('formDeswa').reset(); }
+
+// ===== HASIL ON DESK INVESTIGATION =====
+async function submitOnDesk(event) {
+  event.preventDefault();
+  const form = document.getElementById('formOnDesk');
+  const formData = new FormData(form);
+  const sel = document.getElementById('faskesSelect');
+  if (sel) {
+    const val = sel.value;
+    if (val === '__other__') {
+      const newName = document.getElementById('newFaskes').value.trim();
+      if (newName) {
+        const r = await fetch('/faskes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ nama_faskes: newName }) });
+        const j = await r.json();
+        formData.set('nama_faskes', j.nama_faskes || newName);
+      }
+    } else {
+      formData.set('nama_faskes', val);
+    }
+  }
+  const data = Object.fromEntries(formData);
+  try {
+    const response = await fetch('/laporan/<%= data.id %>/hasil-on-desk', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+    });
+    if (response.ok) {
+      alert('Data on desk investigation berhasil disimpan');
+      closeModalOnDesk();
+      loadOnDeskList();
+    } else {
+      alert('Gagal menyimpan data');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan');
+  }
+}
+
+// ===== HASIL ON DESK INVESTIGATION + PENELPONAN =====
+async function loadOnDeskList() {
+  try {
+    // Load on desk results
+    const responseOnDesk = await fetch('/laporan/<%= data.id %>/hasil-on-desk');
+    const onDeskResults = await responseOnDesk.json();
+    
+    // Load penelponan logs
+    const responsePenelponan = await fetch('/laporan/<%= data.id %>/penelponan');
+    const penelponanResults = await responsePenelponan.json();
+    
+    const container = document.getElementById('onDeskWithPenelponan');
+    
+    if (onDeskResults.length === 0 && penelponanResults.length === 0) {
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data on desk investigation dan penelponan</p>';
+      return;
+    }
+    
+    // Display on desk results
+    let html = '';
+    
+    if (onDeskResults.length > 0) {
+      html += '<div class="mb-6"><h4 class="font-semibold text-lg mb-4 text-blue-600">📋 Hasil On Desk Investigation:</h4>';
+      html += onDeskResults.map((item, idx) => `
+        <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 mb-4">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h5 class="font-semibold text-lg"><%= data.id %>-${idx + 1}. ${item.nama_faskes}</h5>
+              <p class="text-sm text-gray-600 dark:text-gray-400">${item.no_kontak || '-'} | ${new Date(item.tanggal_investigasi).toLocaleDateString('id-ID')}</p>
+            </div>
+            <button onclick="deleteOnDesk(${item.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+              🗑️ Hapus
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-3 text-sm">
+            <div>
+              <p class="text-gray-600 dark:text-gray-400">Alamat</p>
+              <p class="font-medium">${item.alamat_faskes || '-'}</p>
+            </div>
+            <div>
+              <p class="text-gray-600 dark:text-gray-400">Petugas</p>
+              <p class="font-medium">${item.nama_petugas || '-'}</p>
+            </div>
+            <div>
+              <p class="text-gray-600 dark:text-gray-400">Peneloponan Hari ke</p>
+              <p class="font-medium">${item.penelponan_hari || '-'}</p>
+            </div>
+            <div>
+              <p class="text-gray-600 dark:text-gray-400">Tanggal Investigasi</p>
+              <p class="font-medium">${new Date(item.tanggal_investigasi).toLocaleDateString('id-ID')}</p>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Hasil Investigasi</p>
+            <p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-3 rounded text-sm">${item.hasil_investigasi || '-'}</p>
+          </div>
+        </div>
+      `).join('');
+      html += '</div>';
+    }
+    
+    // Display penelponan logs
+    if (penelponanResults.length > 0) {
+      html += '<div class="mb-6"><h4 class="font-semibold text-lg mb-4 text-green-600">📞 Log Penelponan On Desk:</h4>';
+      html += '<div class="overflow-x-auto"><table class="w-full border text-sm text-gray-600 dark:text-gray-300">';
+      html += '<thead><tr class="dark:bg-slate-800"><th class="border p-2">Ke</th><th class="border p-2">Tanggal</th><th class="border p-2">Jam</th><th class="border p-2">Hasil</th><th class="border p-2">Aksi</th></tr></thead>';
+      html += '<tbody>';
+      html += penelponanResults.map((item, idx) => `
+        <tr>
+          <td class="border p-2 text-center">${idx + 1}</td>
+          <td class="border p-2">${new Date(item.tanggal_telepon).toLocaleDateString('id-ID')}</td>
+          <td class="border p-2">${item.jam_telepon || '-'}</td>
+          <td class="border p-2">${item.hasil_telepon || '-'}</td>
+          <td class="border p-2"><button onclick="deletePenelponan(${item.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs">Hapus</button></td>
+        </tr>
+      `).join('');
+      html += '</tbody></table></div></div>';
+    }
+    
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('Error loading on desk list:', error);
+  }
+}
+
+async function deleteOnDesk(id) {
+  if (!confirm('Yakin hapus data ini?')) return;
+  try {
+    const response = await fetch(`/laporan/<%= data.id %>/hasil-on-desk/${id}`, { method: 'DELETE' });
+    if (response.ok) {
+      alert('Data berhasil dihapus');
+      loadOnDeskList();
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function deletePenelponan(id) {
+  if (!confirm('Yakin hapus penelponan ini?')) return;
+  try {
+    const response = await fetch(`/laporan/<%= data.id %>/penelponan/${id}`, { method: 'DELETE' });
+    if (response.ok) {
+      alert('Penelponan berhasil dihapus');
+      loadOnDeskList();
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+// ===== DESWA PROCESS METADATA =====
+async function submitDeswa(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formDeswa')));
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/deswa', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      alert('Deswa process berhasil disimpan');
+      closeModalDeswa();
+      loadDeswaMetadataList();
+    } else {
+      alert('Gagal menyimpan Deswa');
+    }
+  } catch(err) {
+    console.error(err);
+    alert('Terjadi kesalahan');
+  }
+}
+
+async function loadDeswaMetadataList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/deswa');
+    const rows = await res.json();
+    const container = document.getElementById('deswaMetadataList');
+    
+    if (!rows.length) {
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada Deswa process data</p>';
+      return;
+    }
+    
+    container.innerHTML = rows.map(r => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h4 class="font-semibold text-lg">${r.pic_investigator}</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              ${new Date(r.tanggal_mulai).toLocaleDateString('id-ID')} - ${new Date(r.tanggal_selesai).toLocaleDateString('id-ID')}
+            </p>
+          </div>
+          <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+            🗑️ Hapus
+          </button>
+        </div>
+        <div class="text-sm">
+          <p class="text-gray-600 dark:text-gray-400">SLA Proses</p>
+          <p class="font-medium">${r.sla_proses || '-'} hari</p>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    console.error('Load Deswa metadata error', err);
+  }
+}
+
+async function deleteDeswa(id) {
+  if (!confirm('Yakin hapus Deswa process ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/deswa/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('Deswa dihapus');
+      loadDeswaMetadataList();
+    }
+  } catch(err) {
+    console.error(err);
+  }
+}
+
+// ===== FASKES MASTER DATA =====
+async function loadFaskesOptions() {
+  try {
+    const res = await fetch('/faskes');
+    const rows = await res.json();
+    const sel = document.getElementById('faskesSelect');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Pilih Faskes --</option>' + rows.map(r => `<option value="${r.nama_faskes}">${r.nama_faskes}</option>`).join('') + '<option value="__other__">Lainnya (tambahkan)</option>';
+    sel.addEventListener('change', () => {
+      const newF = document.getElementById('newFaskes');
+      if (sel.value === '__other__') newF.classList.remove('hidden'); else newF.classList.add('hidden');
+    });
+  } catch(err) {
+    console.error('loadFaskesOptions', err);
+  }
+}
+
+// ===== LOAD ALL LISTS ON PAGE READY =====
+document.addEventListener('DOMContentLoaded', () => {
+  loadOnDeskList();
+  loadDeswaMetadataList();
+  loadResumeInvestigasiList();
+  loadResumeInterviewList();
+  loadBriList();
+  loadFaskesOptions();
+});
+</script>
+<!-- MODAL BRI -->
+<div id="modalBri" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4">
+    <h3 class="text-2xl font-bold mb-4">📝 Input BRI Submission</h3>
+    <form id="formBri" onsubmit="submitBri(event)" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-2">PIC Investigator *</label>
+        <input type="text" name="pic_investigator" required class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Analis</label>
+          <input type="date" name="tanggal_submit_pic_analis" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Investigator</label>
+          <input type="date" name="tanggal_submit_pic_investigator" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-2">SLA (hari)</label>
+        <input type="number" name="sla" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+      </div>
+      <div class="flex justify-end gap-3 pt-4">
+        <button type="button" onclick="closeModalBri()" class="px-6 py-2 border rounded-lg">Batal</button>
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ===== RESUME INVESTIGASI =====
+function openModalResumeInvestigasi() { document.getElementById('modalResumeInvestigasi').classList.remove('hidden'); }
+function closeModalResumeInvestigasi() { document.getElementById('modalResumeInvestigasi').classList.add('hidden'); document.getElementById('formResumeInvestigasi').reset(); }
+
+async function submitResumeInvestigasi(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formResumeInvestigasi')));
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/resume-investigasi', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) {
+      alert('Resume investigasi berhasil disimpan');
+      closeModalResumeInvestigasi();
+      loadResumeInvestigasiList();
+    } else {
+      alert('Gagal menyimpan resume investigasi');
+    }
+  } catch(err) {
+    console.error(err);
+    alert('Terjadi kesalahan');
+  }
+}
+
+async function loadResumeInvestigasiList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/resume-investigasi');
+    const rows = await res.json();
+    const container = document.getElementById('resumeInvestigasiList');
+    
+    if (!rows.length) {
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada resume investigasi</p>';
+      return;
+    }
+    
+    container.innerHTML = rows.map((r, idx) => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg mb-2">Resume #${idx + 1}</h4>
+            <p class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">${r.hasil || '-'}</p>
+          </div>
+          <button onclick="deleteResumeInvestigasi(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded whitespace-nowrap">
+            🗑️ Hapus
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    console.error('Load Resume Investigasi error', err);
+  }
+}
+
+async function deleteResumeInvestigasi(id) {
+  if (!confirm('Yakin hapus resume investigasi ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/resume-investigasi/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('Resume investigasi dihapus');
+      loadResumeInvestigasiList();
+    }
+  } catch(err) {
+    console.error(err);
+  }
+}
+
+</script>
+
+<script>
+// BRI Modal & Functions
+function openModalBri() { document.getElementById('modalBri').classList.remove('hidden'); }
+function closeModalBri() { document.getElementById('modalBri').classList.add('hidden'); document.getElementById('formBri').reset(); }
+
+async function submitBri(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formBri')));
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) { alert('BRI data tersimpan'); closeModalBri(); loadBriList(); } else alert('Gagal menyimpan BRI');
+  } catch(err) { console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function loadBriList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri');
+    const rows = await res.json();
+    const container = document.getElementById('briList');
+    if (!rows.length) { container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data BRI</p>'; return; }
+    container.innerHTML = rows.map(r => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-center mb-2">
+          <div>
+            <h4 class="font-semibold">${r.pic_investigator}</h4>
+            <p class="text-sm text-gray-500">${r.tanggal_submit_pic_analis || '-'} | ${r.tanggal_submit_pic_investigator || '-'}</p>
+          </div>
+          <button onclick="deleteBri(${r.id})" class="px-3 py-1 bg-red-500 text-white rounded text-xs">Hapus</button>
+        </div>
+        <p class="text-sm">SLA: ${r.sla || '-'}</p>
+      </div>
+    `).join('');
+  } catch(err) { console.error('Load BRI error', err); }
+}
+
+async function deleteBri(id) {
+  if (!confirm('Yakin hapus data BRI ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
+    if (res.ok) { alert('BRI dihapus'); loadBriList(); }
+  } catch(err) { console.error(err); }
+}
+</script>
+
+</div>
+
+</div>
+
+<%- include('../layout/footer') %>

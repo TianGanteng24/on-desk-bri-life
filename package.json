@@ -4,8 +4,32 @@
     "body-parser": "^2.2.1",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
+    "express-session": "^1.18.2",
+    "moment": "^2.30.1",
     "multer": "^2.0.2",
     "mysql2": "^3.16.0",
-    "path": "^0.12.7"
-  }
+    "path": "^0.12.7",
+    "pdfkit": "^0.17.2",
+    "sweetalert2": "^11.26.10"
+  },
+  "name": "project-bri",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TianGanteng24/on-desk-bri-life.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TianGanteng24/on-desk-bri-life/issues"
+  },
+  "homepage": "https://github.com/TianGanteng24/on-desk-bri-life#readme"
 }
