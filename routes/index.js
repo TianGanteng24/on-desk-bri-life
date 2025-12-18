@@ -293,20 +293,67 @@ router.get('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
 });
 
 
-/* PENELPONAN - add log telepon tied to laporan_id */
-router.post('/laporan/:id/penelponan', auth, async (req, res) => {
+router.post('/hasil-on-desk/:onDeskId/penelponan', auth, async (req, res) => {
   try {
     const { tanggal_telepon, jam_telepon, hasil_telepon } = req.body;
-    const [result] = await db.query(
-      'INSERT INTO penelponan (laporan_id, tanggal_telepon, jam_telepon, hasil_telepon) VALUES (?, ?, ?, ?)',
-      [req.params.id, tanggal_telepon, jam_telepon, hasil_telepon]
+
+    // Get laporan_id from hasil_on_desk table
+    const [onDeskRows] = await db.query(
+      'SELECT laporan_id FROM hasil_on_desk WHERE id = ?',
+      [req.params.onDeskId]
     );
-    res.json({ id: result.insertId });
+
+    if (!onDeskRows.length) {
+      return res.status(404).json({ error: 'Hasil on desk tidak ditemukan' });
+    }
+
+    const laporanId = onDeskRows[0].laporan_id;
+
+    // Check for duplicate (same on-desk, same date and time)
+    const [existing] = await db.query(
+      'SELECT id FROM penelponan WHERE hasil_on_desk_id = ? AND tanggal_telepon = ? AND jam_telepon = ?',
+      [req.params.onDeskId, tanggal_telepon, jam_telepon]
+    );
+
+    if (existing.length) {
+      return res.status(409).json({
+        error: 'Log penelponan dengan tanggal dan jam yang sama sudah ada untuk on-desk ini'
+      });
+    }
+
+    const [result] = await db.query(
+      `INSERT INTO penelponan
+       (laporan_id, hasil_on_desk_id, tanggal_telepon, jam_telepon, hasil_telepon)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        laporanId,
+        req.params.onDeskId,
+        tanggal_telepon,
+        jam_telepon,
+        hasil_telepon
+      ]
+    );
+
+    res.json({ success: true, id: result.insertId });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
+});
+
+router.get('/hasil-on-desk/:onDeskId/penelponan', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM penelponan WHERE hasil_on_desk_id=? ORDER BY id ASC',
+      [req.params.onDeskId]
+    );
+    res.json(rows);
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Database error' });
   }
 });
+
 
 /* GET PENELPONAN */
 router.get('/laporan/:id/penelponan', auth, async (req, res) => {
@@ -503,7 +550,6 @@ router.post('/laporan/:id/resume', auth, async (req, res) => {
 });
 
 
-/* STORE HASIL ON DESK */
 router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
   try {
     const {
@@ -512,11 +558,10 @@ router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
       alamat_faskes,
       tanggal_investigasi,
       nama_petugas,
-      penelponan_hari,
       hasil_investigasi
     } = req.body;
 
-    await db.query(`
+    const [result] = await db.query(`
       INSERT INTO hasil_on_desk (
         laporan_id,
         nama_faskes,
@@ -524,9 +569,8 @@ router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
         alamat_faskes,
         tanggal_investigasi,
         nama_petugas,
-        penelponan_hari,
         hasil_investigasi
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       req.params.id,
       nama_faskes,
@@ -534,12 +578,16 @@ router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
       alamat_faskes,
       tanggal_investigasi,
       nama_petugas,
-      penelponan_hari,
       hasil_investigasi
     ]);
 
-    res.json({ success: true });
+    res.json({ success: true, id: result.insertId });
   } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({
+        error: 'Data hasil on desk sudah ada'
+      });
+    }
     console.log(err);
     res.status(500).json({ error: 'Database error' });
   }
