@@ -32,7 +32,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
     <input name="masa_asuransi" placeholder="Masa Asuransi"
       class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-    <input name="uang_pertanggungan" placeholder="Uang Pertanggungan"
+    <input id="uang_pertanggungan" name="uang_pertanggungan" placeholder="Uang Pertanggungan"
       class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
     <input name="tanggal_lahir" type="date" placeholder="Tanggal Lahir"
       class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
@@ -70,5 +70,30 @@
 
 </form>
 </div>
+
+<script>
+  // Format Uang Pertanggungan dengan separator
+  const uangInput = document.getElementById('uang_pertanggungan');
+  
+  if (uangInput) {
+    uangInput.addEventListener('input', function(e) {
+      let value = this.value.replace(/\D/g, ''); // Hapus semua karakter bukan digit
+      
+      // Format dengan separator titik setiap 3 digit
+      let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      
+      this.value = formatted;
+    });
+    
+    // Handle paste event
+    uangInput.addEventListener('paste', function(e) {
+      setTimeout(() => {
+        let value = this.value.replace(/\D/g, '');
+        let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        this.value = formatted;
+      }, 10);
+    });
+  }
+</script>
 
 <%- include('../layout/footer') %>
