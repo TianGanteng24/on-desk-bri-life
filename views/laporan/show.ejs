@@ -119,11 +119,11 @@
       <p class="text-base font-medium"><%= data.pic_brilife || '-' %></p>
     </div>
     <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC Analis</p>
       <p class="text-base font-medium"><%= data.tanggal_submit_pic ? new Date(data.tanggal_submit_pic).toLocaleDateString('id-ID') : '-' %></p>
     </div>
     <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit Investigator</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC Investigator</p>
       <p class="text-base font-medium"><%= data.tanggal_submit_investigator ? new Date(data.tanggal_submit_investigator).toLocaleDateString('id-ID') : '-' %></p>
     </div>
     <div>
@@ -415,9 +415,22 @@ async function loadResumeInterviewList(){
     <button onclick="openModalBri()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">BRI</button>
     <% } %>
   </div>
-</div>
 
-</div>
+<!-- BRI SECTION -->
+<section class="mt-8 mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">📊 BRI Submission Data</h3>
+  <div id="briList" class="space-y-4">
+    <!-- BRI data akan dimuat di sini -->
+  </div>
+</section>
+
+<!-- DESWA SECTION WITH METADATA -->
+<section class="mt-8 mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">📊 DESWA Process Data</h3>
+  <div id="deswaMetadataList" class="space-y-4">
+    <!-- DESWA data akan dimuat di sini -->
+  </div>
+</section>
 
 </div>
 
@@ -438,20 +451,20 @@ async function loadResumeInterviewList(){
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Mulai *</label>
-          <input type="date" name="tanggal_mulai" required
+          <input type="date" name="tanggal_mulai" id="deswaStartDate" required onchange="calculateDeswaSLA()"
             class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Selesai *</label>
-          <input type="date" name="tanggal_selesai" required
+          <input type="date" name="tanggal_selesai" id="deswaEndDate" required onchange="calculateDeswaSLA()"
             class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-2">SLA Proses (hari) *</label>
-        <input type="number" name="sla_proses" required placeholder="Jumlah hari" min="1"
-          class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        <label class="block text-sm font-medium mb-2">SLA Proses (hari) - Auto Calculate</label>
+        <input type="number" name="sla_proses" id="deswaSlaDisplay" readonly placeholder="Akan otomatis ter-hitung"
+          class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 bg-gray-100 dark:bg-slate-800">
       </div>
 
       <!-- BUTTONS -->
@@ -699,6 +712,21 @@ async function deletePenelponan(id) {
 }
 
 // ===== DESWA PROCESS METADATA =====
+function calculateDeswaSLA() {
+  const startDate = document.getElementById('deswaStartDate').value;
+  const endDate = document.getElementById('deswaEndDate').value;
+  const slaDisplay = document.getElementById('deswaSlaDisplay');
+  
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const sla = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    slaDisplay.value = sla >= 0 ? sla : 0;
+  } else {
+    slaDisplay.value = '';
+  }
+}
+
 async function submitDeswa(event) {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(document.getElementById('formDeswa')));
@@ -806,16 +834,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Analis</label>
-          <input type="date" name="tanggal_submit_pic_analis" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+          <input type="date" name="tanggal_submit_pic_analis" id="briStartDate" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()">
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Investigator</label>
-          <input type="date" name="tanggal_submit_pic_investigator" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+          <input type="date" name="tanggal_submit_pic_investigator" id="briEndDate" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()">
         </div>
       </div>
       <div>
-        <label class="block text-sm font-medium mb-2">SLA (hari)</label>
-        <input type="number" name="sla" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700">
+        <label class="block text-sm font-medium mb-2">SLA (hari) - Auto Calculate</label>
+        <input type="number" name="sla" id="briSlaDisplay" readonly placeholder="Akan otomatis ter-hitung" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 bg-gray-100 dark:bg-slate-800">
       </div>
       <div class="flex justify-end gap-3 pt-4">
         <button type="button" onclick="closeModalBri()" class="px-6 py-2 border rounded-lg">Batal</button>
@@ -899,6 +927,88 @@ async function deleteResumeInvestigasi(id) {
 function openModalBri() { document.getElementById('modalBri').classList.remove('hidden'); }
 function closeModalBri() { document.getElementById('modalBri').classList.add('hidden'); document.getElementById('formBri').reset(); }
 
+function calculateBriSLA() {
+  const startDate = document.getElementById('briStartDate').value;
+  const endDate = document.getElementById('briEndDate').value;
+  const slaDisplay = document.getElementById('briSlaDisplay');
+  
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const sla = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    slaDisplay.value = sla >= 0 ? sla : 0;
+  } else {
+    slaDisplay.value = '';
+  }
+}
+
+async function submitBri(event) {
+  event.preventDefault();
+  const formData = Object.fromEntries(new FormData(document.getElementById('formBri')));
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(formData)
+    });
+    if (res.ok) {
+      alert('BRI submission berhasil disimpan');
+      closeModalBri();
+      loadBriList();
+    } else {
+      alert('Gagal menyimpan BRI');
+    }
+  } catch(err) {
+    console.error(err);
+    alert('Terjadi kesalahan');
+  }
+}
+
+async function loadBriList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri');
+    const rows = await res.json();
+    const container = document.getElementById('briList');
+    
+    if (!rows.length) {
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada BRI data</p>';
+      return;
+    }
+    
+    container.innerHTML = rows.map(r => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg mb-2">${r.pic_investigator}</h4>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <p><span class="text-gray-600 dark:text-gray-400">Submit PIC Analis:</span> ${r.tanggal_submit_pic_analis ? new Date(r.tanggal_submit_pic_analis).toLocaleDateString('id-ID') : '-'}</p>
+              <p><span class="text-gray-600 dark:text-gray-400">Submit Investigator:</span> ${r.tanggal_submit_pic_investigator ? new Date(r.tanggal_submit_pic_investigator).toLocaleDateString('id-ID') : '-'}</p>
+              <p><span class="text-gray-600 dark:text-gray-400">SLA:</span> ${r.sla || '-'} hari</p>
+            </div>
+          </div>
+          <button onclick="deleteBri(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded whitespace-nowrap">
+            🗑️ Hapus
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    console.error('Load BRI error', err);
+  }
+}
+
+async function deleteBri(id) {
+  if (!confirm('Yakin hapus BRI data ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('BRI data dihapus');
+      loadBriList();
+    }
+  } catch(err) {
+    console.error(err);
+  }
+}
+</script>
+<script>
 async function submitBri(event) {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(document.getElementById('formBri')));

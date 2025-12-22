@@ -660,9 +660,13 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
     const {
       pic_investigator,
       tanggal_mulai,
-      tanggal_selesai,
-      sla_proses
+      tanggal_selesai
     } = req.body;
+
+    // Auto-calculate SLA (hari) = tanggal_selesai - tanggal_mulai
+    const start = new Date(tanggal_mulai);
+    const end = new Date(tanggal_selesai);
+    const sla_proses = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
     await db.query(`
       INSERT INTO deswa (
@@ -724,9 +728,16 @@ router.post('/laporan/:id/bri', auth, async (req, res) => {
     const {
       pic_investigator,
       tanggal_submit_pic_analis,
-      tanggal_submit_pic_investigator,
-      sla
+      tanggal_submit_pic_investigator
     } = req.body;
+
+    // Auto-calculate SLA (hari) = tanggal_submit_pic_investigator - tanggal_submit_pic_analis
+    let sla = null;
+    if (tanggal_submit_pic_analis && tanggal_submit_pic_investigator) {
+      const start = new Date(tanggal_submit_pic_analis);
+      const end = new Date(tanggal_submit_pic_investigator);
+      sla = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    }
 
     await db.query(`
       INSERT INTO bri (
