@@ -6,21 +6,28 @@ const path = require('path');
    HELPER
 ======================= */
 function labelCell(doc, x, y, w, h, text) {
+    // Menyetel ketebalan garis secara eksplisit sebelum menggambar kotak
+    doc.lineWidth(0.7); 
     doc.rect(x, y, w, h).fill('#f9f9f9').stroke();
     doc.fillColor('#000').fontSize(8)
         .text(text || '', x + 4, y + 6, { width: w - 8 });
 }
 
 function valueCell(doc, x, y, w, h, text, align = 'left') {
+    // Menyetel ketebalan garis secara eksplisit sebelum menggambar kotak
+    doc.lineWidth(0.7);
     doc.rect(x, y, w, h).stroke();
     doc.fillColor('#000').fontSize(8)
         .text(text || '-', x + 4, y + 6, {
             width: w - 8,
-            align
+            align: align,
+            lineBreak: true
         });
 }
 
 function sectionHeader(doc, x, y, w, text, color) {
+    // Menyetel ketebalan garis secara eksplisit sebelum menggambar kotak
+    doc.lineWidth(0.7);
     doc.rect(x, y, w, 18).fill(color).stroke();
     doc.fillColor('#000')
         .fontSize(9)
@@ -69,6 +76,9 @@ module.exports = async (req, res) => {
     const W = 555;
     const COL = 138;
 
+    // Ketebalan garis default untuk dokumen
+    doc.lineWidth(0.7);
+
     /* =======================
         HEADER DENGAN LOGO
     ======================= */
@@ -82,10 +92,10 @@ module.exports = async (req, res) => {
     try {
         doc.image(pathLeftLogo, x, y, { width: logoSize, height: logoSize });
     } catch (e) {
-        doc.rect(x, y, logoSize, logoSize).stroke();
+        doc.lineWidth(0.7).rect(x, y, logoSize, logoSize).stroke();
     }
 
-    doc.rect(labelX, y + 5, labelWidth, 40).fill('#FFF200').stroke();
+    doc.lineWidth(0.7).rect(labelX, y + 5, labelWidth, 40).fill('#FFF200').stroke();
     doc.fillColor('#000').fontSize(12).font('Helvetica-Bold')
         .text('LAPORAN HASIL ON DESK INVESTIGASI', labelX, y + 18, { 
             width: labelWidth, 
@@ -95,7 +105,7 @@ module.exports = async (req, res) => {
     try {
         doc.image(pathRightLogo, x + W - logoSize, y, { width: logoSize, height: logoSize });
     } catch (e) {
-        doc.rect(x + W - logoSize, y, logoSize, logoSize).stroke();
+        doc.lineWidth(0.7).rect(x + W - logoSize, y, logoSize, logoSize).stroke();
     }
 
     doc.font('Helvetica');
@@ -167,26 +177,25 @@ module.exports = async (req, res) => {
     valueCell(doc, x+COL*3, y, COL, 22, bri?.sla);
     y += 22;
 
-    labelCell(doc, x, y, COL, 22, '11. Alamat');
-    valueCell(doc, x+COL, y, COL*3, 22, lap?.alamat, { width: COL*3 - 8, align: 'justify', lineBreak: true });
-    y += 22;
+    labelCell(doc, x, y, COL, 60, '11. Alamat');
+    // Alamat dibuat lebar dan tinggi (60) agar seragam ketebalannya
+    valueCell(doc, x+COL, y, COL*3, 60, lap?.alamat, 'justify');
+    y += 60;
 
     labelCell(doc, x, y, COL, 22, '12. Kelengkapan Dokumen');
     valueCell(doc, x+COL, y, COL*3, 22, lap?.kelengkapan_dokumen);
-    y += 30;
+    y += 35;
 
     /* =======================
-        RESUME INTERVIEW (DENGAN DUA CELL TERPISAH)
+        RESUME INTERVIEW
     ======================= */
     sectionHeader(doc, x, y, W, 'RESUME HASIL INTERVIEW TERTANGGUNG/AHLI WARIS', '#92D050');
     y += 18;
 
-    // Cell 1: Hasil Resume dari Database
     const hasilInterview = interview?.hasil_interview || '-';
     valueCell(doc, x, y, W, 60, hasilInterview);
     y += 60;
 
-    // Cell 2: Teks Petunjuk (Gali informasi...)
     const petunjukText = "Gali informasi mengenai Kronologi kematian / perawatan, Pekerjaan apa dan dimana, Kronologis pinjaman di bank, kondisi keseharian, riwayat Berobat & Obat2 yg di minum, Riwayat Merokok / Miras, life style. Penggalian Domisili - sudah berapa lama disana.";
     valueCell(doc, x, y, W, 40, petunjukText);
     y += 50;
@@ -198,7 +207,7 @@ module.exports = async (req, res) => {
     y += 18;
 
     desk.forEach(d => {
-        if (y > 650) { doc.addPage(); y = 30; }
+        if (y > 620) { doc.addPage(); y = 30; }
 
         labelCell(doc, x, y, COL, 22, 'Tgl Investigasi');
         valueCell(doc, x+COL, y, COL, 22, formatDate(d.tanggal_investigasi));
@@ -217,7 +226,7 @@ module.exports = async (req, res) => {
         let temuanText = d.hasil_investigasi || '-';
         const logs = telpMap[d.id] || [];
         if (logs.length) {
-            temuanText = 'Hasil : ' + temuanText + '\n\nLog Telepon:\n';
+            temuanText += '\n\nLog Telepon:\n';
             logs.forEach((p, i) => {
                 temuanText += `- ${i+1}. ${formatDate(p.tanggal_telepon)} ${p.jam_telepon || ''}\n`;
             });
@@ -231,7 +240,7 @@ module.exports = async (req, res) => {
     /* =======================
         RESUME AKHIR
     ======================= */
-    if (y > 720) { doc.addPage(); y = 30; }
+    if (y > 700) { doc.addPage(); y = 30; }
     sectionHeader(doc, x, y, W, 'RESUME HASIL INVESTIGASI', '#92D050');
     y += 18;
     valueCell(doc, x, y, W, 40, resume?.hasil || '-');
