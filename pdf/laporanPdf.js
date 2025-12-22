@@ -150,25 +150,25 @@ module.exports = async (req, res) => {
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '8. Pengisi form Kronologis');
-    valueCell(doc, x+COL, y, COL, 22, lap?.pengisi_kronologis);
+    valueCell(doc, x+COL, y, COL, 22, lap?.kronologis);
     labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Submit PIC Analis Klaim');
     valueCell(doc, x+COL*3, y, COL, 22, formatDate(bri?.tgl_submit_analis_klaim));
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '9. Status');
-    valueCell(doc, x+COL, y, COL, 22, lap?.status);
+    valueCell(doc, x+COL, y, COL, 22, lap?.status_asuransi);
     labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Submit PIC Investigator');
     valueCell(doc, x+COL*3, y, COL, 22, formatDate(bri?.tgl_submit_pic_investigator));
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '10. No Telpon');
-    valueCell(doc, x+COL, y, COL, 22, lap?.no_telpon);
+    valueCell(doc, x+COL, y, COL, 22, lap?.no_telepon);
     labelCell(doc, x+COL*2, y, COL, 22, 'SLA');
     valueCell(doc, x+COL*3, y, COL, 22, bri?.sla);
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '11. Alamat');
-    valueCell(doc, x+COL, y, COL*3, 22, lap?.alamat);
+    valueCell(doc, x+COL, y, COL*3, 22, lap?.alamat, { width: COL*3 - 8, align: 'justify', lineBreak: true });
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '12. Kelengkapan Dokumen');

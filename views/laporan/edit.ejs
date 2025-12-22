@@ -69,9 +69,9 @@
       <label class="text-sm font-medium">Status Asuransi</label>
       <select name="status_asuransi" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
         <option value="">-- Pilih Status --</option>
-        <option value="aktif" <%= data.status_asuransi === 'aktif' ? 'selected' : '' %>>Aktif</option>
-        <option value="tidak_aktif" <%= data.status_asuransi === 'tidak_aktif' ? 'selected' : '' %>>Tidak Aktif</option>
-        <option value="terminate" <%= data.status_asuransi === 'terminate' ? 'selected' : '' %>>Terminate</option>
+        <option value="done" <%= data.status_asuransi === 'done' ? 'selected' : '' %>>Done</option>
+        <option value="ongoing" <%= data.status_asuransi === 'ongoing' ? 'selected' : '' %>>On Going</option>
+        <option value="case-closed" <%= data.status_asuransi === 'case-closed' ? 'selected' : '' %>>Case-Closed</option>
       </select>
     </div>
   </div>
@@ -117,66 +117,6 @@
       <label class="text-sm font-medium">SLA BRI Life (hari)</label>
       <input name="sla_brilife" type="number" value="<%= data.sla_brilife || '' %>"
         class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-    </div>
-  </div>
-</fieldset>
-
-<!-- TELEPON FOLLOW-UP -->
-<fieldset class="border rounded-lg p-4 dark:border-slate-700">
-  <legend class="text-lg font-semibold px-2">Telepon Follow-up</legend>
-  <div class="space-y-4 mt-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="text-sm font-medium">Tgl Telepon 1</label>
-        <input name="tgl_telpon_1" type="date" value="<%= data.tgl_telpon_1 ? data.tgl_telpon_1.toISOString().split('T')[0] : '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-      <div>
-        <label class="text-sm font-medium">Jam Telepon 1</label>
-        <input name="jam_telpon_1" type="time" value="<%= data.jam_telpon_1 || '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="text-sm font-medium">Tgl Telepon 2</label>
-        <input name="tgl_telpon_2" type="date" value="<%= data.tgl_telpon_2 ? data.tgl_telpon_2.toISOString().split('T')[0] : '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-      <div>
-        <label class="text-sm font-medium">Jam Telepon 2</label>
-        <input name="jam_telpon_2" type="time" value="<%= data.jam_telpon_2 || '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label class="text-sm font-medium">Tgl Telepon 3</label>
-        <input name="tgl_telpon_3" type="date" value="<%= data.tgl_telpon_3 ? data.tgl_telpon_3.toISOString().split('T')[0] : '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-      <div>
-        <label class="text-sm font-medium">Jam Telepon 3</label>
-        <input name="jam_telpon_3" type="time" value="<%= data.jam_telpon_3 || '' %>"
-          class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-      </div>
-    </div>
-  </div>
-</fieldset>
-
-<!-- RESUME & INVESTIGASI -->
-<fieldset class="border rounded-lg p-4 dark:border-slate-700">
-  <legend class="text-lg font-semibold px-2">Resume Investigasi</legend>
-  <div class="space-y-4 mt-4">
-    <div>
-      <label class="text-sm font-medium">Resume Interview</label>
-      <textarea name="resume_interview"
-        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.resume_interview || '' %></textarea>
-    </div>
-    <div>
-      <label class="text-sm font-medium">Resume Hasil Investigasi</label>
-      <textarea name="resume_hasil_investigasi"
-        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.resume_hasil_investigasi || '' %></textarea>
     </div>
   </div>
 </fieldset>
