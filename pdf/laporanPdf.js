@@ -77,41 +77,92 @@ module.exports = async (req, res) => {
     doc.font('Helvetica');
     y += 30;
 
-    /* =======================
-       DATA PENGAJUAN
-    ======================= */
-    sectionHeader(doc, x, y, W, 'DATA PENGAJUAN INVESTIGASI', '#D9D9D9');
-    y += 18;
+/* =======================
+   DATA PENGAJUAN INVESTIGASI
+======================= */
+sectionHeader(doc, x, y, W, 'DATA PENGAJUAN INVESTIGASI', '#92D050');
+y += 18;
 
-    labelCell(doc, x, y, COL, 22, '1. Nama Pemegang Polis');
-    valueCell(doc, x+COL, y, COL, 22, lap.nama_pemegang_polis);
-    labelCell(doc, x+COL*2, y, COL, 22, 'PIC Investigator');
-    valueCell(doc, x+COL*3, y, COL, 22, deswa?.pic_investigator);
-    y += 22;
+/* 1 */
+labelCell(doc, x, y, COL, 22, '1. Nama Pemegang Polis');
+valueCell(doc, x+COL, y, COL, 22, lap?.nama_pemegang_polis);
+doc.font('Helvetica-Bold')
+    .text('PT DESWA INVISCO MULTITAMA', x+COL*2, y+11, { align: 'center' });
+y += 22;
 
-    labelCell(doc, x, y, COL, 22, '2. No. Peserta');
-    valueCell(doc, x+COL, y, COL, 22, lap.no_peserta);
-    labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Terima');
-    valueCell(doc, x+COL*3, y, COL, 22, formatDate(deswa?.tanggal_mulai));
-    y += 22;
+/* 2 */
+labelCell(doc, x, y, COL, 22, '2. No. Peserta');
+valueCell(doc, x+COL, y, COL, 22, lap?.no_peserta);
+labelCell(doc, x+COL*2, y, COL, 22, 'PIC Investigator');
+valueCell(doc, x+COL*3, y, COL, 22, deswa?.pic_investigator);
+y += 22;
 
-    labelCell(doc, x, y, COL, 22, '3. Nama Tertanggung');
-    valueCell(doc, x+COL, y, COL, 22, lap.nama_tertanggung);
-    labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Selesai');
-    valueCell(doc, x+COL*3, y, COL, 22, formatDate(deswa?.tanggal_selesai));
-    y += 22;
+/* 3 */
+labelCell(doc, x, y, COL, 22, '3. Nama Tertanggung');
+valueCell(doc, x+COL, y, COL, 22, lap?.nama_tertanggung);
+labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Terima');
+valueCell(doc, x+COL*3, y, COL, 22, formatDate(deswa?.tanggal_mulai));
+y += 22;
 
-    labelCell(doc, x, y, COL, 22, '4. Masa Asuransi');
-    valueCell(doc, x+COL, y, COL, 22, lap.masa_asuransi);
-    labelCell(doc, x+COL*2, y, COL, 22, 'SLA Proses (hari kerja)');
-    valueCell(doc, x+COL*3, y, COL, 22, deswa?.sla_proses);
-    y += 22;
+/* 4 */
+labelCell(doc, x, y, COL, 22, '4. Masa Asuransi');
+valueCell(doc, x+COL, y, COL, 22, lap?.masa_asuransi);
+labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Selesai');
+valueCell(doc, x+COL*3, y, COL, 22, formatDate(deswa?.tanggal_selesai));
+y += 22;
 
-    labelCell(doc, x, y, COL, 22, '5. Uang Pertanggungan');
-    valueCell(doc, x+COL, y, COL, 22, lap.uang_pertanggungan);
-    labelCell(doc, x+COL*2, y, COL, 22, 'BRI LIFE');
-    valueCell(doc, x+COL*3, y, COL, 22, bri?.pic_investigator);
-    y += 30;
+/* 5 */
+labelCell(doc, x, y, COL, 22, '5. Uang Pertanggungan');
+valueCell(doc, x+COL, y, COL, 22, lap?.uang_pertanggungan);
+labelCell(doc, x+COL*2, y, COL, 22, 'SLA Proses (hari kerja)');
+valueCell(doc, x+COL*3, y, COL, 22, deswa?.sla_proses);
+y += 22;
+
+/* 6 */
+labelCell(doc, x, y, COL, 22, '6. Tanggal Meninggal');
+valueCell(doc, x+COL, y, COL, 22, formatDate(lap?.tanggal_meninggal));
+doc.font('Helvetica-Bold')
+    .text('BRI LIFE', x+COL*2, y+11, { align: 'center' });
+y += 22;
+
+/* 7 */
+labelCell(doc, x, y, COL, 22, '7. Tanggal Lahir');
+valueCell(doc, x+COL, y, COL, 22, formatDate(lap?.tanggal_lahir));
+labelCell(doc, x+COL*2, y, COL, 22, 'PIC Investigator');
+valueCell(doc, x+COL*3, y, COL, 22, bri?.pic_investigator);
+y += 22;
+
+/* 8 */
+labelCell(doc, x, y, COL, 22, '8. Pengisi form Kronologis');
+valueCell(doc, x+COL, y, COL, 22, lap?.pengisi_kronologis);
+labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Submit PIC Analis Klaim');
+valueCell(doc, x+COL*3, y, COL, 22, formatDate(bri?.tgl_submit_analis_klaim));
+y += 22;
+
+/* 9 */
+labelCell(doc, x, y, COL, 22, '9. Status');
+valueCell(doc, x+COL, y, COL, 22, lap?.status);
+labelCell(doc, x+COL*2, y, COL, 22, 'Tanggal Submit PIC Investigator');
+valueCell(doc, x+COL*3, y, COL, 22, formatDate(bri?.tgl_submit_pic_investigator));
+y += 22;
+
+/* 10 */
+labelCell(doc, x, y, COL, 22, '10. No Telpon');
+valueCell(doc, x+COL, y, COL, 22, lap?.no_telpon);
+labelCell(doc, x+COL*2, y, COL, 22, 'SLA');
+valueCell(doc, x+COL*3, y, COL, 22, bri?.sla);
+y += 22;
+
+/* 11 */
+labelCell(doc, x, y, COL, 22, '11. Alamat');
+valueCell(doc, x+COL, y, COL*3, 22, lap?.alamat);
+y += 22;
+
+/* 12 */
+labelCell(doc, x, y, COL, 22, '12. Kelengkapan Dokumen');
+valueCell(doc, x+COL, y, COL*3, 22, lap?.kelengkapan_dokumen);
+y += 30;
+
 
     /* =======================
        RESUME INTERVIEW
