@@ -43,6 +43,31 @@ function formatDate(dateString) {
     return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
 }
 
+// ❗ hanya untuk memusatkan teks (TANPA BORDER)
+function centerTextBetweenColumns(doc, x, y, w, h, text) {
+    doc.font('Helvetica-Bold')
+        .fontSize(8)
+        .fillColor('#000')
+        .text(text || '-', x, y + (h / 2) - 4, {
+            width: w,
+            align: 'center'
+        });
+}
+
+function spanTwoColumnsNoMiddleLine(doc, x, y, colW, h) {
+    // garis kiri
+    doc.moveTo(x, y).lineTo(x, y + h).stroke();
+
+    // garis kanan
+    doc.moveTo(x + colW * 2, y).lineTo(x + colW * 2, y + h).stroke();
+
+    // garis atas
+    doc.moveTo(x, y).lineTo(x + colW * 2, y).stroke();
+
+    // garis bawah
+    doc.moveTo(x, y + h).lineTo(x + colW * 2, y + h).stroke();
+}
+
 /* =======================
    CONTROLLER
 ======================= */
@@ -119,8 +144,19 @@ module.exports = async (req, res) => {
 
     labelCell(doc, x, y, COL, 22, '1. Nama Pemegang Polis');
     valueCell(doc, x+COL, y, COL, 22, lap?.nama_pemegang_polis);
-    doc.font('Helvetica-Bold').fontSize(8)
-        .text('PT DESWA INVISCO MULTITAMA', x+COL*2, y+8, { width: COL, align: 'center' });
+    // gambar cell gabungan TANPA garis tengah
+spanTwoColumnsNoMiddleLine(doc, x + COL * 2, y, COL, 22);
+
+// teks di tengah
+centerTextBetweenColumns(
+    doc,
+    x + COL * 2,
+    y,
+    COL * 2,
+    22,
+    'PT DESWA INVISCO MULTITAMA'
+);
+
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '2. No. Peserta');
@@ -149,8 +185,17 @@ module.exports = async (req, res) => {
 
     labelCell(doc, x, y, COL, 22, '6. Tanggal Meninggal');
     valueCell(doc, x+COL, y, COL, 22, formatDate(lap?.tanggal_meninggal));
-    doc.font('Helvetica-Bold').fontSize(8)
-        .text('BRI LIFE', x+COL*2, y+8, { width: COL, align: 'center' });
+    spanTwoColumnsNoMiddleLine(doc, x + COL * 2, y, COL, 22);
+
+centerTextBetweenColumns(
+    doc,
+    x + COL * 2,
+    y,
+    COL * 2,
+    22,
+    'BRI LIFE'
+);
+
     y += 22;
 
     labelCell(doc, x, y, COL, 22, '7. Tanggal Lahir');
