@@ -1,13 +1,33 @@
 const express = require('express');
 const db = require('../config/db');
 const generatePdf = require('../pdf/laporanPdf');
+const crypto = require('crypto');
+
 
 const router = express.Router();
 
-function auth(req, res, next) {
+async function auth(req, res, next) {
   if (!req.session.user) {
     return res.redirect('/login');
   }
+
+  const [rows] = await db.query(
+    'SELECT session_token FROM users WHERE id=?',
+    [req.session.user.id]
+  );
+
+  // user dihapus / tidak valid
+  if (!rows.length) {
+    req.session.destroy(() => res.redirect('/login'));
+    return;
+  }
+
+  // ❌ token tidak cocok → user login di tempat lain
+  if (rows[0].session_token !== req.session.user.session_token) {
+    req.session.destroy(() => res.redirect('/login'));
+    return;
+  }
+
   next();
 }
 
@@ -30,14 +50,33 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const [rows] = await db.query('SELECT * FROM users WHERE username=?', [username]);
+    const [rows] = await db.query(
+      'SELECT * FROM users WHERE username=?',
+      [username]
+    );
     if (!rows.length) return res.redirect('/login');
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.redirect('/login');
 
-    req.session.user = user;
+    // 🔐 generate session token unik
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+
+    // 🔁 simpan token baru (menimpa token lama)
+    await db.query(
+      'UPDATE users SET session_token=? WHERE id=?',
+      [sessionToken, user.id]
+    );
+
+    // simpan di session
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      session_token: sessionToken
+    };
+
     res.redirect('/laporan');
   } catch (error) {
     console.log(error);

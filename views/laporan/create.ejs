@@ -34,10 +34,16 @@
       class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
     <input id="uang_pertanggungan" name="uang_pertanggungan" placeholder="Uang Pertanggungan"
       class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-    <input name="tanggal_lahir" type="date" placeholder="Tanggal Lahir"
-      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-    <input name="tanggal_meninggal" type="date" placeholder="Tanggal Meninggal"
-      class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    <div class="flex items-center space-x-2">
+      <label class="text-xs text-gray-600 dark:text-gray-400">Tanggal Lahir</label>
+      <input name="tanggal_lahir" type="date" placeholder="Tanggal Lahir"
+        class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div class="flex items-center space-x-2">
+      <label class="text-xs text-gray-600 dark:text-gray-400">Tanggal Meninggal</label>
+      <input name="tanggal_meninggal" type="date" placeholder="Tanggal Meninggal"
+        class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
     <select name="status_asuransi" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
       <option value="">-- Pilih Status Asuransi --</option>
       <option value="ongoing">On Going</option>
