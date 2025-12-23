@@ -12,18 +12,12 @@ async function auth(req, res, next) {
   }
 
   const [rows] = await db.query(
-    'SELECT session_token FROM users WHERE id=?',
+    'SELECT is_logged_in FROM users WHERE id=?',
     [req.session.user.id]
   );
 
-  // user dihapus / tidak valid
-  if (!rows.length) {
-    req.session.destroy(() => res.redirect('/login'));
-    return;
-  }
-
-  // ❌ token tidak cocok → user login di tempat lain
-  if (rows[0].session_token !== req.session.user.session_token) {
+  // user tidak valid
+  if (!rows.length || rows[0].is_logged_in !== 1) {
     req.session.destroy(() => res.redirect('/login'));
     return;
   }
@@ -54,27 +48,33 @@ router.post('/login', async (req, res) => {
       'SELECT * FROM users WHERE username=?',
       [username]
     );
-    if (!rows.length) return res.redirect('/login');
+    if (!rows.length) {
+      return res.render('auth/login', { error: 'User tidak ditemukan' });
+    }
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.redirect('/login');
+    if (!ok) {
+      return res.render('auth/login', { error: 'Password salah' });
+    }
 
-    // 🔐 generate session token unik
-    const sessionToken = crypto.randomBytes(32).toString('hex');
+    // 🔒 CEK APAKAH USER SEDANG AKTIF
+    if (user.is_logged_in === 1) {
+      return res.render('auth/login', {
+        error: 'Akun ini sedang digunakan. Silakan logout terlebih dahulu.'
+      });
+    }
 
-    // 🔁 simpan token baru (menimpa token lama)
+    // ✅ tandai user sedang login
     await db.query(
-      'UPDATE users SET session_token=? WHERE id=?',
-      [sessionToken, user.id]
+      'UPDATE users SET is_logged_in=1 WHERE id=?',
+      [user.id]
     );
 
-    // simpan di session
     req.session.user = {
       id: user.id,
       username: user.username,
-      role: user.role,
-      session_token: sessionToken
+      role: user.role
     };
 
     res.redirect('/laporan');
@@ -84,10 +84,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/* LOGOUT */
-router.get('/logout', (req, res) => {
+
+router.get('/logout', auth, async (req, res) => {
+  await db.query(
+    'UPDATE users SET is_logged_in=0 WHERE id=?',
+    [req.session.user.id]
+  );
+
   req.session.destroy(() => res.redirect('/login'));
 });
+
 
 
 /* =========================
