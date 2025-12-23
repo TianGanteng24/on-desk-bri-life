@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
+const db = require('./config/db');
 
 const routes = require('./routes');
 
@@ -13,10 +14,25 @@ app.use(bodyParser.urlencoded({ extended: false })); // Parse form data
 app.use(express.static('public'));
 
 app.use(session({
-  secret: 'laporan-investigasi-secret',
+  secret: 'projek-bri',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
+
+/* REQUEST LOGGING */
+app.use((req, res, next) => {
+  if (req.path === '/auto-logout' || req.path === '/heartbeat') {
+    console.log(`📍 ${req.method} ${req.path}`, {
+      sessionUser: req.session?.user?.username || 'no-session',
+      timestamp: new Date().toLocaleTimeString('id-ID')
+    });
+  }
+  next();
+});
 
 /* VIEW ENGINE */
 app.set('view engine', 'ejs');
@@ -24,6 +40,17 @@ app.set('views', path.join(__dirname, 'views'));
 
 /* ROUTER */
 app.use('/', routes);
+
+app.use((req, res, next) => {
+  if (req.session.user) {
+    db.query(
+      'UPDATE users SET last_activity=NOW() WHERE id=?',
+      [req.session.user.id]
+    );
+  }
+  next();
+});
+
 
 /* SERVER */
 app.listen(3000, () => {

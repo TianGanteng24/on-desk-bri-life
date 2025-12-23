@@ -1,10 +1,78 @@
 <!DOCTYPE html>
 <html class="dark">
 <head>
+  <meta charset="UTF-8">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white">
   <%- body %>
+
   <script src="/js/darkmode.js"></script>
+
+  <!-- HEARTBEAT (Update last_activity) -->
+  <script>
+    setInterval(() => {
+      fetch('/heartbeat', {
+        method: 'POST',
+        credentials: 'same-origin'
+      }).catch(err => console.error('Heartbeat error:', err));
+    }, 5000); // ✅ 30 DETIK
+  </script>
+
+  <script>
+  function instantLogout() {
+    console.log('🔴 Logout triggered - sending to server');
+    
+    // Method 1: sendBeacon (most reliable for page close)
+    if (navigator.sendBeacon) {
+      const success = navigator.sendBeacon('/auto-logout', new Blob([''], { type: 'application/x-www-form-urlencoded' }));
+      console.log('📡 sendBeacon result:', success);
+    }
+    
+    // Method 2: Fetch dengan keepalive (fallback)
+    try {
+      fetch('/auto-logout', {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logout: true })
+      }).then(r => {
+        console.log('✅ Fetch logout response:', r.status);
+      }).catch(e => {
+        console.error('❌ Fetch error:', e);
+      });
+    } catch (e) {
+      console.error('❌ Fetch creation error:', e);
+    }
+  }
+
+  // EVENT 1: TAB DITINGGAL / SWITCH TAB
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      console.log('⚠️ Tab hidden (visibilitychange)');
+      instantLogout();
+    }
+  });
+
+  // EVENT 2: TAB/WINDOW AKAN DITUTUP (beforeunload)
+  window.addEventListener('beforeunload', (event) => {
+    console.log('⚠️ Page akan ditutup (beforeunload)');
+    instantLogout();
+  });
+
+  // EVENT 3: TAB DITUTUP / BROWSER CLOSE (pagehide)
+  window.addEventListener('pagehide', (event) => {
+    console.log('⚠️ Page hidden/closed (pagehide)');
+    instantLogout();
+  });
+
+  // EVENT 4: UNLOAD
+  window.addEventListener('unload', (event) => {
+    console.log('⚠️ Page unloading (unload)');
+    instantLogout();
+  });
+</script>
+
 </body>
 </html>

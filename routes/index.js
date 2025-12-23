@@ -7,21 +7,12 @@ const crypto = require('crypto');
 const router = express.Router();
 
 async function auth(req, res, next) {
+  // Check if user session exists
   if (!req.session.user) {
     return res.redirect('/login');
   }
 
-  const [rows] = await db.query(
-    'SELECT is_logged_in FROM users WHERE id=?',
-    [req.session.user.id]
-  );
-
-  // user tidak valid
-  if (!rows.length || rows[0].is_logged_in !== 1) {
-    req.session.destroy(() => res.redirect('/login'));
-    return;
-  }
-
+  // Session is valid, proceed
   next();
 }
 
@@ -58,25 +49,14 @@ router.post('/login', async (req, res) => {
       return res.render('auth/login', { error: 'Password salah' });
     }
 
-    // 🔒 CEK APAKAH USER SEDANG AKTIF
-    if (user.is_logged_in === 1) {
-      return res.render('auth/login', {
-        error: 'Akun ini sedang digunakan. Silakan logout terlebih dahulu.'
-      });
-    }
-
-    // ✅ tandai user sedang login
-    await db.query(
-      'UPDATE users SET is_logged_in=1 WHERE id=?',
-      [user.id]
-    );
-
+    // ✅ Set session user (no database update needed)
     req.session.user = {
       id: user.id,
       username: user.username,
       role: user.role
     };
 
+    console.log(`✅ User ${user.id} (${user.username}) logged in`);
     res.redirect('/laporan');
   } catch (error) {
     console.log(error);
@@ -86,14 +66,48 @@ router.post('/login', async (req, res) => {
 
 
 router.get('/logout', auth, async (req, res) => {
-  await db.query(
-    'UPDATE users SET is_logged_in=0 WHERE id=?',
-    [req.session.user.id]
-  );
-
-  req.session.destroy(() => res.redirect('/login'));
+  const userId = req.session?.user?.id;
+  req.session.destroy(() => {
+    console.log(`✅ User ${userId} logged out (session destroyed)`);
+    res.redirect('/login');
+  });
 });
 
+
+router.post('/auto-logout', async (req, res) => {
+  const userId = req.session?.user?.id;
+  
+  if (!userId) {
+    console.log('⚠️ Auto logout: No user in session');
+    return res.status(200).json({ status: 'no-session' });
+  }
+
+  try {
+    // Simply destroy the session (no database update needed)
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('❌ Session destroy error:', err);
+        } else {
+          console.log(`✅ User ${userId} auto-logged out (session destroyed)`);
+        }
+      });
+    }
+
+    res.status(200).json({ status: 'logged-out', userId });
+  } catch (err) {
+    console.error('❌ Auto logout error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/heartbeat', auth, async (req, res) => {
+  await db.query(
+    'UPDATE users SET last_activity=NOW() WHERE id=?',
+    [req.session.user.id]
+  );
+  res.sendStatus(204);
+});
 
 
 /* =========================
@@ -102,10 +116,6 @@ router.get('/logout', auth, async (req, res) => {
 router.get('/', (req, res) => {
   res.redirect('/login');
 });
-
-/* =========================
-   LAPORAN INVESTIGASI
-========================= */
 
 /* INDEX */
 router.get('/laporan', auth, async (req, res) => {
@@ -120,11 +130,10 @@ router.get('/laporan', auth, async (req, res) => {
   }
 });
 
-/* CREATE FORM */
-router.get('/laporan/create', auth, (req, res) => {
-  res.render('laporan/create', { user: req.session.user });
-});
-
+/* =========================
+   LAPORAN INVESTIGASI
+========================= */
+/* SHOW */
 router.get('/laporan/:id', auth, async (req, res) => {
   try {
     const laporanId = req.params.id;
@@ -187,10 +196,12 @@ router.get('/laporan/:id', auth, async (req, res) => {
     // 4. RENDER (SEMUA VARIABEL TERISI)
     // ===============================
     res.render('laporan/show', {
+      dataLaporan,
       data: dataLaporan,
       penelponan: penelponanRows || [],
       resume_interview: resumeRows || [],
-      user: req.session.user
+      user: req.session.user,
+      created_by: dataLaporan.created_by // ID user pembuat
     });
 
   } catch (err) {
@@ -198,8 +209,6 @@ router.get('/laporan/:id', auth, async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
-
 
 /* STORE */
 router.post('/laporan/store', async (req, res) => {

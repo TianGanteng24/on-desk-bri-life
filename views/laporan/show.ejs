@@ -1,4 +1,8 @@
 <%- include('../layout/header', { user }) %>
+<%
+  const isOwner = user && data.created_by === user.id;
+%>
+
 
 <div class="max-w-6xl mx-auto px-6 py-8">
 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
@@ -150,9 +154,11 @@
 <div id="onDeskWithPenelponan" class="space-y-6">
   <!-- Data akan dimuat di sini -->
 </div>
+<% if (isOwner) { %>
 <div class="mt-4">
   <button onclick="openModalOnDesk()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah On Desk Investigation</button>
 </div>
+<% } %>
 
 </section>
 <!-- MODAL PENELPONAN -->
@@ -211,16 +217,20 @@ async function submitPenelponan(e){
 <section class="mb-8">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📝 Resume Hasil Interview</h3>
+    <% if (isOwner) { %>
     <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Edit Resume</button>
+    <% } %>
   </div>
   
   <div id="resumeInterviewDisplay" class="space-y-6">
     <!-- Resume display akan dimuat di sini -->
   </div>
   
+  <% if (isOwner) { %>
   <div class="mt-4">
     <button onclick="openModalResumePhone()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah Data Telepon</button>
   </div>
+  <% } %>
 </section>
 
 <!-- MODAL RESUME INTERVIEW (Hasil + Redaksional) -->
@@ -362,7 +372,9 @@ async function loadResumeInterviewList(){
 <section class="mb-8">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📋 Resume Investigasi</h3>
+    <% if (isOwner) { %>
     <button onclick="openModalResumeInvestigasi()" class="px-3 py-1 bg-green-600 text-white rounded text-sm">➕ Tambah</button>
+    <% } %>
   </div>
   
   <div id="resumeInvestigasiList" class="space-y-4">
@@ -409,13 +421,14 @@ async function loadResumeInterviewList(){
      class="bg-orange-600 text-white px-5 py-2 rounded">📥 PDF</a>
 </div>
 
-
+<% if (isOwner) { %>
     <a href="/laporan/edit/<%= data.id %>" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium">
       ✏️ Edit
     </a>
     <a href="/laporan/delete/<%= data.id %>" onclick="return confirm('Yakin hapus laporan ini?')" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium">
       🗑️ Delete
     </a>
+<% } %>
 
     <% if (user.role === 'deswa') { %>
     <button onclick="openModalDeswa()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Deswa</button>
