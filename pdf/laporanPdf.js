@@ -8,8 +8,8 @@ const path = require('path');
 function labelCell(doc, x, y, w, h, text) {
     // Menyetel ketebalan garis secara eksplisit sebelum menggambar kotak
     doc.lineWidth(0.7); 
-    doc.rect(x, y, w, h).fill('#f9f9f9').stroke();
-    doc.fillColor('#000').fontSize(8)
+    doc.rect(x, y, w, h).stroke();
+    doc.font('Helvetica-Bold').fillColor('#000').fontSize(8)
         .text(text || '', x + 4, y + 6, { width: w - 8 });
 }
 
@@ -17,7 +17,7 @@ function valueCell(doc, x, y, w, h, text, align = 'left') {
     // Menyetel ketebalan garis secara eksplisit sebelum menggambar kotak
     doc.lineWidth(0.7);
     doc.rect(x, y, w, h).stroke();
-    doc.fillColor('#000').fontSize(8)
+    doc.font('Helvetica-Bold').fillColor('#000').fontSize(8)
         .text(text || '-', x + 4, y + 6, {
             width: w - 8,
             align: align,
