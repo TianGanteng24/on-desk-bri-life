@@ -90,6 +90,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
     const [laporanRows] = await db.query(`
       SELECT 
         l.*,
+        u.username AS created_by_name,
 
         -- DESWA
         d.pic_investigator       AS pic_investigator_deswa,
@@ -104,6 +105,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
         b.sla                    AS sla_brilife
 
       FROM laporan_investigasi l
+      LEFT JOIN users u ON u.id = l.created_by
       LEFT JOIN deswa d ON d.laporan_id = l.id
       LEFT JOIN bri b   ON b.laporan_id = l.id
       WHERE l.id = ?
@@ -185,8 +187,9 @@ router.post('/laporan/store', async (req, res) => {
         tanggal_meninggal,
         status_asuransi,
         kronologis,
-        kelengkapan_dokumen
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        kelengkapan_dokumen,
+        created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       nama_pemegang_polis,
       no_peserta,
@@ -199,7 +202,8 @@ router.post('/laporan/store', async (req, res) => {
       tanggal_meninggal,
       status_asuransi,
       kronologis,
-      kelengkapan_dokumen
+      kelengkapan_dokumen,
+      req.session.user.id
     ]);
 
     res.redirect('/laporan');

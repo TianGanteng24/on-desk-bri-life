@@ -5,7 +5,10 @@
 
 
 <div class="mb-6 flex justify-between items-center border-b pb-4 dark:border-slate-700">
-  <h2 class="text-3xl font-bold">📄 Detail Laporan Investigasi</h2>
+  <div>
+    <h2 class="text-3xl font-bold">📄 Detail Laporan Investigasi</h2>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Pembuat Dokumen: <span class="font-semibold"><%= data.created_by_name || '-' %></span></p>
+  </div>
   <a href="/laporan" class="text-blue-600 hover:text-blue-800">← Kembali</a>
 </div>
 
@@ -72,18 +75,25 @@
   </div>
 </section>
 
-<!-- KRONOLOGIS & DOKUMEN -->
 <section class="mb-8">
   <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">Kronologis & Dokumen</h3>
-  <div class="space-y-6">
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Kronologis</p>
-      <p class="text-base whitespace-pre-wrap bg-gray-50 dark:bg-slate-900 p-4 rounded"><%= data.kronologis || '-' %></p>
+  
+  <div class="grid grid-cols-1 gap-6">
+    
+    <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border dark:border-slate-700 shadow-sm">
+      <p class="text-sm font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wide">Kronologis</p>
+      <div class="text-base leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+        <%= data.kronologis || 'Tidak ada data kronologis.' %>
+      </div>
     </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Kelengkapan Dokumen</p>
-      <p class="text-base whitespace-pre-wrap bg-gray-50 dark:bg-slate-900 p-4 rounded"><%= data.kelengkapan_dokumen || '-' %></p>
+
+    <div class="bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border dark:border-slate-700 shadow-sm">
+      <p class="text-sm font-bold text-green-600 dark:text-green-400 mb-2 uppercase tracking-wide">Kelengkapan Dokumen</p>
+      <div class="text-base leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+        <%= data.kelengkapan_dokumen || 'Tidak ada data dokumen.' %>
+      </div>
     </div>
+
   </div>
 </section>
 
