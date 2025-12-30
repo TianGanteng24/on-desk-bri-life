@@ -91,6 +91,13 @@
       <textarea name="kelengkapan_dokumen"
         class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kelengkapan_dokumen || '' %></textarea>
     </div>
+
+    <!-- ➕ Tambahan baru -->
+    <div>
+      <label class="text-sm font-medium">Pengisi Form Kronologis *</label>
+      <input name="pengisi_form_kronologis" value="<%= data.pengisi_form_kronologis || '' %>" required
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
   </div>
 </fieldset>
 

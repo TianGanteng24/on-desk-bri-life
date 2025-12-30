@@ -130,6 +130,11 @@ router.get('/laporan', auth, async (req, res) => {
   }
 });
 
+/* CREATE */
+router.get('/laporan/create', auth, (req, res) => {
+  res.render('laporan/create', { user: req.session.user });
+});
+
 /* =========================
    LAPORAN INVESTIGASI
 ========================= */
@@ -211,7 +216,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
 });
 
 /* STORE */
-router.post('/laporan/store', async (req, res) => {
+router.post('/laporan/store', auth, async (req, res) => {
   try {
     const {
       nama_pemegang_polis,
@@ -225,7 +230,8 @@ router.post('/laporan/store', async (req, res) => {
       tanggal_meninggal,
       status_asuransi,
       kronologis,
-      kelengkapan_dokumen
+      kelengkapan_dokumen,
+      pengisi_form_kronologis  // ⬅️ BARU
     } = req.body;
 
     await db.query(`
@@ -242,8 +248,9 @@ router.post('/laporan/store', async (req, res) => {
         status_asuransi,
         kronologis,
         kelengkapan_dokumen,
+        pengisi_form_kronologis,   -- ⬅️ BARU
         created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       nama_pemegang_polis,
       no_peserta,
@@ -257,6 +264,7 @@ router.post('/laporan/store', async (req, res) => {
       status_asuransi,
       kronologis,
       kelengkapan_dokumen,
+      pengisi_form_kronologis,     // ⬅️ BARU
       req.session.user.id
     ]);
 
@@ -286,32 +294,61 @@ router.get('/laporan/edit/:id', auth, async (req, res) => {
 router.post('/laporan/update/:id', auth, async (req, res) => {
   try {
     const {
-      nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
-      alamat, masa_asuransi, uang_pertanggungan, tanggal_lahir,
-      tanggal_meninggal, status_asuransi, kronologis, kelengkapan_dokumen
+      nama_pemegang_polis,
+      no_peserta,
+      nama_tertanggung,
+      no_telepon,
+      alamat,
+      masa_asuransi,
+      uang_pertanggungan,
+      tanggal_lahir,
+      tanggal_meninggal,
+      status_asuransi,
+      kronologis,
+      kelengkapan_dokumen,
+      pengisi_form_kronologis   // ⬅️ BARU
     } = req.body;
 
-    // Pastikan req.params.id disertakan di akhir array parameter
     await db.query(`
       UPDATE laporan_investigasi SET
-        nama_pemegang_polis = ?, no_peserta = ?, nama_tertanggung = ?, 
-        no_telepon = ?, alamat = ?, masa_asuransi = ?, 
-        uang_pertanggungan = ?, tanggal_lahir = ?, tanggal_meninggal = ?, 
-        status_asuransi = ?, kronologis = ?, kelengkapan_dokumen = ?
+        nama_pemegang_polis = ?,
+        no_peserta = ?,
+        nama_tertanggung = ?,
+        no_telepon = ?,
+        alamat = ?,
+        masa_asuransi = ?,
+        uang_pertanggungan = ?,
+        tanggal_lahir = ?,
+        tanggal_meninggal = ?,
+        status_asuransi = ?,
+        kronologis = ?,
+        kelengkapan_dokumen = ?,
+        pengisi_form_kronologis = ?   -- ⬅️ BARU
       WHERE id = ?
     `, [
-      nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
-      alamat, masa_asuransi, uang_pertanggungan, tanggal_lahir,
-      tanggal_meninggal, status_asuransi, kronologis, kelengkapan_dokumen,
+      nama_pemegang_polis,
+      no_peserta,
+      nama_tertanggung,
+      no_telepon,
+      alamat,
+      masa_asuransi,
+      uang_pertanggungan,
+      tanggal_lahir,
+      tanggal_meninggal,
+      status_asuransi,
+      kronologis,
+      kelengkapan_dokumen,
+      pengisi_form_kronologis,        // ⬅️ BARU
       req.params.id
     ]);
 
     res.redirect('/laporan/' + req.params.id);
   } catch (err) {
     console.error("UPDATE ERROR:", err);
-    res.status(500).send('Gagal mengemas kini laporan: ' + err.message);
+    res.status(500).send('Gagal mengupdate laporan: ' + err.message);
   }
 });
+
 
 /* DELETE */
 router.get('/laporan/delete/:id', auth, async (req, res) => {

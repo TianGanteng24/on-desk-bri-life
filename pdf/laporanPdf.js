@@ -20,6 +20,15 @@ function getTextHeight(doc, text, width, fontSize = 8) {
     }) + 8;
 }
 
+/* Membersihkan teks dari karakter aneh */
+function cleanText(text) {
+  if (!text) return '-';
+  return text
+    .replace(/[^a-zA-Z0-9.,/()'"\-\s\n]/g, '') // buang karakter aneh
+    .replace(/\r\n/g, '\n')
+    .trim();
+}
+
 /* =======================
    CELL
 ======================= */
@@ -34,7 +43,7 @@ function valueCell(doc, x, y, w, h, text, align = 'left') {
     doc.lineWidth(0.7);
     doc.rect(x, y, w, h).stroke();
     doc.font('Helvetica').fontSize(8).fillColor('#000')
-        .text(text || '-', x + 4, y + 5, {
+        .text(cleanText(text) || '-', x + 4, y + 5, {
             width: w - 8,
             align,
             lineBreak: true
@@ -76,7 +85,7 @@ function dynamicRow2(doc, x, y, colW, label, value) {
 
 function fullWidthValueRow(doc, x, y, w, text, align = 'left') {
     const h = getTextHeight(doc, text, w);
-    valueCell(doc, x, y, w, h, text, align);
+    valueCell(doc, x, y, w, h, cleanText(text), align);
     return h;
 }
 
@@ -104,12 +113,12 @@ function interviewRow(doc, x, y, w, text) {
     const valueW = w - labelW;
     const h = Math.max(20, getTextHeight(doc, text, valueW));
     labelCell(doc, x, y, labelW, h, 'Ket :');
-    valueCell(doc, x + labelW, y, valueW, h, text);
+    valueCell(doc, x + labelW, y, valueW, h, cleanText(text));
     return h;
 }
 
 /* =======================
-   CONTROLLER
+   CONTROLLER (FULL)
 ======================= */
 module.exports = async (req, res) => {
     const doc = new PDFDocument({ size: 'A4', margin: 20 });
@@ -169,17 +178,29 @@ module.exports = async (req, res) => {
     centerTextBetweenColumns(doc, x + COL * 2, y, COL * 2, h6, 'BRI LIFE');
     y += h6;
 
-    y += dynamicRow4(doc, x, y, COL, { label: '7. Tanggal Lahir', value: formatDate(lap?.tanggal_lahir) }, { label: 'PIC Investigator', value: bri?.pic_investigator });
-    y += dynamicRow4(doc, x, y, COL, { label: '8. Pengisi Form Kronologis', value: lap?.created_by_name }, { label: 'Tanggal Submit Analis Klaim', value: formatDate(bri?.tgl_submit_analis_klaim) });
+    y += dynamicRow4(doc, x, y, COL, { label: '7. Tanggal Lahir', value: formatDate(lap?.tanggal_lahir) },
+        { label: 'PIC Investigator', value: bri?.pic_investigator });
+
+    /* =======================
+       PATCH TERPENTING
+       Pengisi Form Kronologis
+    ======================== */
+    y += dynamicRow4(
+        doc, x, y, COL,
+        { label: '8. Pengisi Form Kronologis', value: cleanText(lap?.pengisi_form_kronologis) },
+        { label: 'Tanggal Submit Analis Klaim', value: formatDate(bri?.tgl_submit_analis_klaim) }
+    );
+
     y += dynamicRow4(doc, x, y, COL, { label: '9. Status', value: lap?.status_asuransi }, { label: 'Tanggal Submit PIC Investigator', value: formatDate(bri?.tgl_submit_pic_investigator) });
+
     y += dynamicRow4(doc, x, y, COL, { label: '10. No Telpon', value: lap?.no_telepon }, { label: 'SLA', value: bri?.sla });
     y += dynamicRow2(doc, x, y, COL, '11. Alamat', lap?.alamat);
-    y += dynamicRow2(doc, x, y, COL, '12. Kelengkapan Dokumen', lap?.kelengkapan_dokumen);
+    y += dynamicRow2(doc, x, y, COL, '12. Kelengkapan Dokumen', cleanText(lap?.kelengkapan_dokumen));
 
     /* KRONOLOGIS */
     sectionHeader(doc, x, y, W, 'KRONOLOGIS', '#92D050');
     y += 22;
-    y += fullWidthValueRow(doc, x, y, W, lap?.kronologis || '-');
+    y += fullWidthValueRow(doc, x, y, W, cleanText(lap?.kronologis));
 
     /* RESUME INTERVIEW */
     sectionHeader(doc, x, y, W, 'RESUME HASIL INTERVIEW TERTANGGUNG / AHLI WARIS', '#92D050');
@@ -218,7 +239,7 @@ module.exports = async (req, res) => {
         y += dynamicRow2(doc, x, y, COL, 'Nama Faskes', d.nama_faskes);
         y += dynamicRow2(doc, x, y, COL, 'Alamat Faskes', d.alamat_faskes);
 
-        let temuan = d.hasil_investigasi || '-';
+        let temuan = cleanText(d.hasil_investigasi) || '-';
         (telpMap[d.id] || []).forEach((p, i) => {
             temuan += `\n${i + 1}. ${formatDate(p.tanggal_telepon)} ${p.jam_telepon || ''}`;
         });

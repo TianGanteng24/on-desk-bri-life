@@ -56,13 +56,23 @@
 <!-- KRONOLOGIS & DOKUMEN -->
 <fieldset class="border rounded-lg p-4 dark:border-slate-700">
   <legend class="text-lg font-semibold px-2">Kronologis & Dokumen</legend>
+  
   <div class="space-y-4 mt-4">
     <textarea name="kronologis" placeholder="Kronologis"
       class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+
     <textarea name="kelengkapan_dokumen" placeholder="Kelengkapan Dokumen"
       class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
+
+    <!-- ➕ Tambahan baru -->
+    <div>
+      <label class="text-sm font-medium">Pengisi Form Kronologis *</label>
+      <input name="pengisi_form_kronologis" placeholder="Nama Pengisi Form Kronologis" required
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
   </div>
 </fieldset>
+
 
 <!-- BUTTONS -->
 <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
