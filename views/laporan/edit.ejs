@@ -74,6 +74,46 @@
         <option value="case-closed" <%= data.status_asuransi === 'case-closed' ? 'selected' : '' %>>Case-Closed</option>
       </select>
     </div>
+    <div>
+      <label class="text-sm font-medium">Tanggal Mulai Asuransi</label>
+      <input name="tgl_mulai_asuransi" type="date" value="<%= data.tgl_mulai_asuransi ? data.tgl_mulai_asuransi.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Tanggal Akhir Asuransi</label>
+      <input name="tgl_akhir_asuransi" type="date" value="<%= data.tgl_akhir_asuransi ? data.tgl_akhir_asuransi.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Usia Polis (hari)</label>
+      <input name="usia_polis" type="number" value="<%= data.usia_polis || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Jenis Klaim</label>
+      <select name="jenis_klaim" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        <option value="">-- Pilih Jenis Klaim --</option>
+        <option value="Klaim Meninggal" <%= data.jenis_klaim === 'Klaim Meninggal' ? 'selected' : '' %>>Klaim Meninggal</option>
+        <option value="Penyakit Kritis" <%= data.jenis_klaim === 'Penyakit Kritis' ? 'selected' : '' %>>Penyakit Kritis</option>
+        <option value="Perawatan" <%= data.jenis_klaim === 'Perawatan' ? 'selected' : '' %>>Perawatan</option>
+        <option value="Lainnya" <%= data.jenis_klaim === 'Lainnya' ? 'selected' : '' %>>Lainnya</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-sm font-medium">Jenis Produk</label>
+      <input name="jenis_produk" value="<%= data.jenis_produk || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Nomor KTP/Passport</label>
+      <input name="no_identitas" value="<%= data.no_identitas || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+  </div>
+  <div class="mt-4">
+    <label class="text-sm font-medium">Rekomendasi</label>
+    <textarea name="rekomendasi"
+      class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.rekomendasi || '' %></textarea>
   </div>
 </fieldset>
 

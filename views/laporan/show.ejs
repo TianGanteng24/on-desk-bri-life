@@ -49,10 +49,6 @@
   <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">Data Asuransi</h3>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Masa Asuransi</p>
-      <p class="text-base font-medium"><%= data.masa_asuransi || '-' %></p>
-    </div>
-    <div>
       <p class="text-sm text-gray-600 dark:text-gray-400">Uang Pertanggungan</p>
       <p class="text-base font-medium">Rp. <%= data.uang_pertanggungan || '-' %></p>
     </div>
@@ -76,7 +72,39 @@
         <span class="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-sm font-medium">—</span>
       <% } %>
     </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Mulai Asuransi</p>
+      <p class="text-base font-medium"><%= data.tgl_mulai_asuransi ? new Date(data.tgl_mulai_asuransi).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Akhir Asuransi</p>
+      <p class="text-base font-medium"><%= data.tgl_akhir_asuransi ? new Date(data.tgl_akhir_asuransi).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Usia Polis (hari)</p>
+      <p class="text-base font-medium"><%= data.usia_polis || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Jenis Klaim</p>
+      <p class="text-base font-medium"><%= data.jenis_klaim || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Jenis Produk</p>
+      <p class="text-base font-medium"><%= data.jenis_produk || '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Nomor KTP/Passport</p>
+      <p class="text-base font-medium"><%= data.no_identitas || '-' %></p>
+    </div>
   </div>
+  <% if (data.rekomendasi) { %>
+  <div class="mt-4 bg-gray-50 dark:bg-slate-900 p-5 rounded-xl border dark:border-slate-700 shadow-sm">
+    <p class="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-2 uppercase tracking-wide">Rekomendasi</p>
+    <div class="text-base leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+      <%= data.rekomendasi %>
+    </div>
+  </div>
+  <% } %>
 </section>
 
 <section class="mb-8">
@@ -157,20 +185,51 @@
   </div>
 </section>
 
-<section class="mb-8">
-<h3 class="font-semibold border-b pb-3 mb-4 text-green-600">� Hasil On Desk Investigation & Penelponan</h3>
+<section class="mt-12">
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-2xl font-bold dark:text-white">🔍 Hasil Konfirmasi / Investigasi</h3>
+    <button onclick="document.getElementById('modalOnDesk').classList.remove('hidden')" 
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">
+      + Tambah Investigasi
+    </button>
+  </div>
 
-<!-- HASIL ON DESK INVESTIGATION + PENELPONAN LOG -->
-<div id="onDeskWithPenelponan" class="space-y-6">
-  <!-- Data akan dimuat di sini -->
-</div>
-<% if (isOwner) { %>
-<div class="mt-4">
-  <button onclick="openModalOnDesk()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah On Desk Investigation</button>
-</div>
-<% } %>
-
+  <div class="overflow-x-auto rounded-xl border dark:border-slate-700">
+    <table class="w-full text-left text-sm">
+      <thead class="bg-gray-100 dark:bg-slate-700 dark:text-white uppercase text-xs">
+        <tr>
+          <th class="p-4">Tanggal / Petugas</th>
+          <th class="p-4">Faskes / Alamat</th>
+          <th class="p-4">Hasil Investigasi</th>
+          <th class="p-4">Analisa</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y dark:divide-slate-700 bg-white dark:bg-slate-800 dark:text-slate-300">
+        <% if (desk && desk.length > 0) { %>
+          <% desk.forEach(d => { %>
+            <tr>
+              <td class="p-4">
+                <p class="font-bold"><%= d.tanggal_investigasi ? new Date(d.tanggal_investigasi).toLocaleDateString('id-ID') : '-' %></p>
+                <p class="text-xs text-gray-500"><%= d.nama_petugas %></p>
+              </td>
+              <td class="p-4">
+                <p class="font-bold"><%= d.nama_faskes %></p>
+                <p class="text-xs text-gray-500 line-clamp-2"><%= d.alamat_faskes %></p>
+              </td>
+              <td class="p-4 whitespace-pre-line"><%= d.hasil_investigasi %></td>
+              <td class="p-4 whitespace-pre-line text-blue-600 dark:text-blue-400 font-medium"><%= d.analisa %></td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="4" class="p-8 text-center text-gray-500 italic">Belum ada hasil investigasi yang diinput.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 </section>
+
 <!-- MODAL PENELPONAN -->
 <div id="modalPenelponan" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
@@ -226,7 +285,7 @@ async function submitPenelponan(e){
 <!-- RESUME HASIL INTERVIEW -->
 <section class="mb-8">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
-    <h3 class="text-lg font-semibold">📝 Resume Hasil Interview</h3>
+    <h3 class="text-lg font-semibold">📝 Resume Hasil Interview Ahli Waris</h3>
     <% if (isOwner) { %>
     <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Edit Resume</button>
     <% } %>
@@ -235,12 +294,7 @@ async function submitPenelponan(e){
   <div id="resumeInterviewDisplay" class="space-y-6">
     <!-- Resume display akan dimuat di sini -->
   </div>
-  
-  <% if (isOwner) { %>
-  <div class="mt-4">
-    <button onclick="openModalResumePhone()" class="px-4 py-2 bg-blue-600 text-white rounded">➕ Tambah Data Telepon</button>
-  </div>
-  <% } %>
+
 </section>
 
 <!-- MODAL RESUME INTERVIEW (Hasil + Redaksional) -->
@@ -252,10 +306,6 @@ async function submitPenelponan(e){
         <label class="block text-sm font-medium mb-2">Hasil Interview</label>
         <textarea name="hasil_interview" placeholder="Hasil Interview" class="w-full border p-2 rounded h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
       </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Redaksional</label>
-        <textarea name="redaksional" placeholder="Redaksional (opsional)" class="w-full border p-2 rounded h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
-      </div>
       <div class="flex justify-end gap-2">
         <button type="button" onclick="closeModalResumeInterview()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
         <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
@@ -264,35 +314,6 @@ async function submitPenelponan(e){
   </div>
 </div>
 
-<!-- MODAL PHONE DATA ENTRY (Telepon ke berapa, Tanggal, Jam) -->
-<div id="modalResumePhone" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
-    <h3 class="text-lg font-semibold mb-4">📞 Tambah Data Telepon</h3>
-    <form id="formResumePhone" onsubmit="submitResumePhone(event)" class="grid gap-3">
-      <div>
-        <label class="block text-sm font-medium mb-2">Telepon ke berapa? *</label>
-        <select name="telepon_ke" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
-          <option value="">-- Pilih --</option>
-          <option value="1">Telepon 1</option>
-          <option value="2">Telepon 2</option>
-          <option value="3">Telepon 3</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Tanggal Telepon *</label>
-        <input type="date" name="tanggal_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-2">Jam Telepon *</label>
-        <input type="time" name="jam_telepon" required class="w-full border p-2 rounded dark:bg-slate-700 dark:border-slate-600">
-      </div>
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeModalResumePhone()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
-        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <script>
 // ===== RESUME INTERVIEW FUNCTIONS =====
@@ -341,35 +362,7 @@ async function loadResumeInterviewList(){
       html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.hasil_interview || '-') + '</p>';
       html += '</div>';
     }
-    if (resume.redaksional) {
-      html += '<div>';
-      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Redaksional</p>';
-      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.redaksional || '-') + '</p>';
-      html += '</div>';
-    }
-    html += '</div>';
-    
-    // Display phone data in table
-    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">';
-    html += '<h4 class="font-semibold text-lg mb-3 text-green-600">📞 Data Telepon:</h4>';
-    html += '<div class="overflow-x-auto"><table class="w-full border text-sm text-gray-600 dark:text-gray-300">';
-    html += '<thead><tr class="dark:bg-slate-800"><th class="border p-2">Ke</th><th class="border p-2">Tanggal</th><th class="border p-2">Jam</th></tr></thead>';
-    html += '<tbody>';
-    
-    for (let i = 1; i <= 3; i++) {
-      const dateCol = `tgl_telpon_${i}`;
-      const timeCol = `jam_telpon_${i}`;
-      const hasData = resume[dateCol] || resume[timeCol];
-      html += '<tr>';
-      html += `<td class="border p-2 text-center font-medium">Telepon ${i}</td>`;
-      html += `<td class="border p-2">${resume[dateCol] ? new Date(resume[dateCol]).toLocaleDateString('id-ID') : '-'}</td>`;
-      html += `<td class="border p-2">${resume[timeCol] || '-'}</td>`;
-      html += '</tr>';
-    }
-    
-    html += '</tbody></table></div>';
-    html += '</div>';
-    
+
     container.innerHTML = html;
   }catch(err){
     console.error('Load Resume Interview error', err);
@@ -398,6 +391,136 @@ async function loadResumeInterviewList(){
   </div>
   <% } %>
 </section>
+<section class="mt-12">
+  <div class="flex justify-between items-center border-b-2 pb-3 mb-6 dark:border-slate-700">
+    <h3 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+      <i class="fas fa-file-signature text-indigo-500"></i> Resume Analisa & Putusan Internal
+    </h3>
+   <% if (user && user.role === 'bri') { %>
+      <button onclick="openAnalisaModal()" 
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 shadow-md">
+        <i class="fas fa-plus"></i> Input / Edit Analisa
+      </button>
+    <% } %>
+  </div>
+
+  <div class="overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+          <th class="p-4 font-bold border-b dark:border-slate-700 text-sm uppercase">Analisa PIC Investigator</th>
+          <th class="p-4 font-bold border-b dark:border-slate-700 text-sm uppercase">Analisa MA</th>
+          <th class="p-4 font-bold border-b dark:border-slate-700 text-sm uppercase w-40 text-center">Putusan Klaim</th>
+          <th class="p-4 font-bold border-b dark:border-slate-700 text-sm uppercase">Analisa Putusan</th>
+        </tr>
+      </thead>
+      <tbody class="text-slate-700 dark:text-slate-300">
+        <% if (data.analisa_pic_investigator || data.analisa_ma || data.putusan_klaim) { %>
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+            <td class="p-4 align-top border-b dark:border-slate-700">
+              <div class="whitespace-pre-line text-sm leading-relaxed"><%= data.analisa_pic_investigator || '-' %></div>
+            </td>
+            <td class="p-4 align-top border-b dark:border-slate-700">
+              <div class="whitespace-pre-line text-sm leading-relaxed"><%= data.analisa_ma || '-' %></div>
+            </td>
+            <td class="p-4 align-top border-b dark:border-slate-700 text-center">
+              <span class="inline-block px-4 py-1.5 rounded-full text-xs font-black tracking-wider
+                <%= data.putusan_klaim === 'LAYAK BAYAR' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 
+                    data.putusan_klaim === 'TOLAK' ? 'bg-red-100 text-red-700 border border-red-200' : 
+                    data.putusan_klaim === 'TUNDA' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-600' %>">
+                <%= data.putusan_klaim || 'BELUM DITENTUKAN' %>
+              </span>
+            </td>
+            <td class="p-4 align-top border-b dark:border-slate-700">
+              <div class="whitespace-pre-line text-sm leading-relaxed text-slate-500 italic"><%= data.analisa_putusan || '-' %></div>
+            </td>
+          </tr>
+        <% } else { %>
+          <tr>
+            <td colspan="4" class="p-12 text-center">
+              <div class="flex flex-col items-center justify-center text-slate-400">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p class="italic text-lg font-medium">Belum ada data analisa internal untuk laporan ini.</p>
+                <p class="text-sm">Klik tombol "Input / Edit Analisa" untuk mulai mengisi.</p>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div id="modalAnalisa" class="fixed inset-0 z-[999] hidden overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen px-4 py-6">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeAnalisaModal()"></div>
+
+    <div class="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all">
+      <div class="px-8 py-6 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+        <div>
+          <h3 class="text-2xl font-bold text-slate-800 dark:text-white">Form Analisa Internal</h3>
+          <p class="text-xs text-slate-500 mt-1">Data ini akan ditampilkan pada laporan PDF bagian akhir.</p>
+        </div>
+        <button onclick="closeAnalisaModal()" class="text-slate-400 hover:text-red-500 transition-colors">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+
+      <form action="/laporan/<%= data.id %>/analisa-internal" method="POST" class="p-8 space-y-6">
+        
+        <div class="space-y-2 text-left">
+          <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">Analisa PIC Investigator</label>
+          <textarea name="analisa_pic_investigator" rows="3" placeholder="Masukkan analisa investigator..." 
+                    class="w-full border-2 rounded-xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:bg-slate-900 dark:border-slate-700 dark:text-white"><%= data.analisa_pic_investigator || '' %></textarea>
+        </div>
+
+        <div class="space-y-2 text-left">
+          <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">Analisa MA (Medical Analyst)</label>
+          <textarea name="analisa_ma" rows="3" placeholder="Masukkan analisa medis..." 
+                    class="w-full border-2 rounded-xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:bg-slate-900 dark:border-slate-700 dark:text-white"><%= data.analisa_ma || '' %></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2 text-left">
+            <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight text-indigo-600">Putusan Klaim</label>
+            <textarea name="putusan_klaim" rows="3" placeholder="Keterangan putusan klaim..." 
+                      class="w-full border-2 rounded-xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:bg-slate-900 dark:border-slate-700 dark:text-white font-bold cursor-pointer"><%= data.putusan_klaim || '' %></textarea>
+          </div>
+        </div>
+
+        <div class="space-y-2 text-left">
+          <label class="block text-sm font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">Analisa Putusan</label>
+          <textarea name="analisa_putusan" rows="3" placeholder="Keterangan dasar putusan..." 
+                    class="w-full border-2 rounded-xl p-4 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:bg-slate-900 dark:border-slate-700 dark:text-white"><%= data.analisa_putusan || '' %></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+          <button type="button" onclick="closeAnalisaModal()" 
+                  class="px-6 py-3 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-white font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+            Batal
+          </button>
+          <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-all">
+            💾 Simpan Analisa
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openAnalisaModal() {
+    const modal = document.getElementById('modalAnalisa');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Kunci scroll layar
+  }
+
+  function closeAnalisaModal() {
+    const modal = document.getElementById('modalAnalisa');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Aktifkan scroll kembali
+  }
+</script>
 
 <!-- MODAL RESUME INVESTIGASI -->
 <div id="modalResumeInvestigasi" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -515,67 +638,57 @@ async function loadResumeInterviewList(){
 </div>
 
 <!-- MODAL INPUT HASIL ON DESK INVESTIGATION -->
-<div id="modalOnDesk" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-    
-    <h3 class="text-2xl font-bold mb-6">📝 Input Hasil On Desk Investigation</h3>
-    
-    <form id="formOnDesk" onsubmit="submitOnDesk(event)" class="space-y-4">
-      
-      <!-- FASILITAS KESEHATAN -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Nama Faskes *</label>
-          <select id="faskesSelect" name="nama_faskes" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600" required>
-            <option value="">-- memuat... --</option>
-          </select>
-          <input id="newFaskes" type="text" placeholder="Nama faskes baru (jika memilih Lainnya)" class="mt-2 w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 hidden">
+<div id="modalOnDesk" class="fixed inset-0 z-[1000] hidden overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen p-4 text-center">
+    <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="document.getElementById('modalOnDesk').classList.add('hidden')"></div>
+
+    <div class="inline-block w-full max-w-2xl overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-2xl relative">
+      <form action="/laporan/<%= data.id %>/hasil-ondesk" method="POST" class="p-8">
+        <h3 class="text-2xl font-bold mb-6 dark:text-white border-b pb-4">Input Hasil Investigasi (On-Desk)</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-bold mb-1 dark:text-white">Nama Faskes</label>
+            <input type="text" name="nama_faskes" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-1 dark:text-white">Tanggal Investigasi</label>
+            <input type="date" name="tanggal_investigasi" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          </div>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">No Kontak</label>
-          <input type="text" name="no_kontak" placeholder="Cth: 021-12345678"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-bold mb-1 dark:text-white">Nama Petugas</label>
+            <input type="text" name="nama_petugas" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-1 dark:text-white">No. Kontak</label>
+            <input type="text" name="no_kontak" class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label class="block text-sm font-medium mb-2">Alamat Faskes</label>
-        <textarea name="alamat_faskes" placeholder="Alamat lengkap fasilitas kesehatan"
-          class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"></textarea>
-      </div>
-
-      <!-- DATA INVESTIGASI -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2">Tanggal Investigasi *</label>
-          <input type="date" name="tanggal_investigasi" required
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+        <div class="mb-4">
+          <label class="block text-sm font-bold mb-1 dark:text-white">Alamat Faskes</label>
+          <textarea name="alamat_faskes" rows="2" class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Nama Petugas</label>
-          <input type="text" name="nama_petugas" placeholder="Nama petugas yang menginvestigasi"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+
+        <div class="mb-4">
+          <label class="block text-sm font-bold mb-1 dark:text-white">Hasil Investigasi</label>
+          <textarea name="hasil_investigasi" rows="4" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ceritakan temuan di lapangan..."></textarea>
         </div>
-      </div>
 
+        <div class="mb-6">
+          <label class="block text-sm font-bold mb-1 dark:text-white">Analisa (Simpulan)</label>
+          <textarea name="analisa" rows="3" required class="w-full border-2 border-blue-200 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Analisa singkat terhadap temuan..."></textarea>
+        </div>
 
-      <div>
-        <label class="block text-sm font-medium mb-2">Hasil Investigasi *</label>
-        <textarea name="hasil_investigasi" placeholder="Hasil investigasi pada fasilitas kesehatan ini" required
-          class="w-full border rounded-lg px-4 py-2 h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
-      </div>
-
-      <!-- BUTTONS -->
-      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
-        <button type="button" onclick="closeModalOnDesk()" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-          Batal
-        </button>
-        <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
-          💾 Simpan
-        </button>
-      </div>
-
-    </form>
+        <div class="flex justify-end gap-3">
+          <button type="button" onclick="document.getElementById('modalOnDesk').classList.add('hidden')" class="px-6 py-2 text-gray-500">Batal</button>
+          <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold shadow-lg hover:bg-blue-700">Simpan Data</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 

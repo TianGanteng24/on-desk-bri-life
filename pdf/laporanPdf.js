@@ -1,256 +1,286 @@
 const PDFDocument = require('pdfkit');
 const db = require('../config/db');
-const path = require('path');
 
 /* =======================
-   HELPER DASAR
+   HELPER DASAR (RESPONSIVE)
 ======================= */
 function formatDate(dateString) {
-    if (!dateString) return '-';
+    if (!dateString || dateString === '0000-00-00') return '-';
     const d = new Date(dateString);
     if (isNaN(d)) return dateString;
-    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
-function getTextHeight(doc, text, width, fontSize = 8) {
-    doc.fontSize(fontSize);
-    return doc.heightOfString(text || '-', {
-        width: width - 8,
-        lineBreak: true
-    }) + 8;
-}
-
-/* Membersihkan teks dari karakter aneh */
 function cleanText(text) {
-  if (!text) return '-';
-  return text
-    .replace(/[^a-zA-Z0-9.,/()'"\-\s\n]/g, '') // buang karakter aneh
-    .replace(/\r\n/g, '\n')
-    .trim();
+    if (!text) return '-';
+    // Menghapus karakter non-standar namun tetap mendukung baris baru
+    return text.toString().replace(/[^a-zA-Z0-9.,/()'"\-\s\n]/g, '').trim();
+}
+
+function autoRowHeight(doc, text, width, min = 18) {
+    if (!text) return min;
+    const h = doc.heightOfString(cleanText(text), { width: width - 8, lineBreak: true }) + 10;
+    return Math.max(min, h);
+}
+
+function checkPage(doc, y, need = 50) {
+    if (y + need > 760) {
+        doc.addPage();
+        return 40;
+    }
+    return y;
 }
 
 /* =======================
-   CELL
+   CELL STYLING
 ======================= */
-function labelCell(doc, x, y, w, h, text) {
-    doc.lineWidth(0.7);
+function cell(doc, x, y, w, h, text, opt = {}) {
+    doc.lineWidth(0.6);
     doc.rect(x, y, w, h).stroke();
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#000')
-        .text(text || '', x + 4, y + 5, { width: w - 8 });
+    
+    const cleaned = cleanText(text);
+    doc.font(opt.bold ? 'Helvetica-Bold' : 'Helvetica')
+        .fontSize(8)
+        .fillColor('#000');
+
+    const textHeight = doc.heightOfString(cleaned, { width: w - 8 });
+    const textY = y + (h - textHeight) / 2;
+
+    doc.text(cleaned, x + 4, textY, { 
+        width: w - 8, 
+        align: opt.align || 'left',
+        lineBreak: true 
+    });
 }
 
-function valueCell(doc, x, y, w, h, text, align = 'left') {
-    doc.lineWidth(0.7);
-    doc.rect(x, y, w, h).stroke();
-    doc.font('Helvetica').fontSize(8).fillColor('#000')
-        .text(cleanText(text) || '-', x + 4, y + 5, {
-            width: w - 8,
-            align,
-            lineBreak: true
-        });
+function headerCell(doc, x, y, w, h, text) {
+    doc.rect(x, y, w, h).fill('#E7E6E6').stroke();
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#000');
+    const textHeight = doc.heightOfString(text, { width: w });
+    doc.text(text, x, y + (h - textHeight) / 2, { width: w, align: 'center' });
 }
 
-function sectionHeader(doc, x, y, w, text, color) {
-    doc.rect(x, y, w, 18).fill(color).stroke();
+function sectionTitle(doc, x, y, w, text) {
+    doc.rect(x, y, w, 18).fill('#92D050').stroke();
     doc.font('Helvetica-Bold').fontSize(9).fillColor('#000')
-        .text(text, x, y + 4, { width: w, align: 'center' });
+        .text(text, x, y + 5, { width: w, align: 'center' });
 }
 
 /* =======================
-   ROW
-======================= */
-function dynamicRow4(doc, x, y, colW, a, b) {
-    const h = Math.max(
-        getTextHeight(doc, a.label, colW),
-        getTextHeight(doc, a.value, colW),
-        getTextHeight(doc, b.label, colW),
-        getTextHeight(doc, b.value, colW)
-    );
-    labelCell(doc, x, y, colW, h, a.label);
-    valueCell(doc, x + colW, y, colW, h, a.value);
-    labelCell(doc, x + colW * 2, y, colW, h, b.label);
-    valueCell(doc, x + colW * 3, y, colW, h, b.value);
-    return h;
-}
-
-function dynamicRow2(doc, x, y, colW, label, value) {
-    const h = Math.max(
-        getTextHeight(doc, label, colW),
-        getTextHeight(doc, value, colW * 3)
-    );
-    labelCell(doc, x, y, colW, h, label);
-    valueCell(doc, x + colW, y, colW * 3, h, value);
-    return h;
-}
-
-function fullWidthValueRow(doc, x, y, w, text, align = 'left') {
-    const h = getTextHeight(doc, text, w);
-    valueCell(doc, x, y, w, h, cleanText(text), align);
-    return h;
-}
-
-/* =======================
-   MERGE 2 KOLOM
-======================= */
-function spanTwoColumnsNoMiddleLine(doc, x, y, colW, h) {
-    doc.lineWidth(0.7);
-    doc.rect(x, y, colW * 2, h).stroke();
-}
-
-function centerTextBetweenColumns(doc, x, y, w, h, text) {
-    doc.font('Helvetica-Bold').fontSize(8)
-        .text(text || '-', x, y + (h / 2) - 4, {
-            width: w,
-            align: 'center'
-        });
-}
-
-/* =======================
-   INTERVIEW
-======================= */
-function interviewRow(doc, x, y, w, text) {
-    const labelW = 30;
-    const valueW = w - labelW;
-    const h = Math.max(20, getTextHeight(doc, text, valueW));
-    labelCell(doc, x, y, labelW, h, 'Ket :');
-    valueCell(doc, x + labelW, y, valueW, h, cleanText(text));
-    return h;
-}
-
-/* =======================
-   CONTROLLER (FULL)
+   CONTROLLER
 ======================= */
 module.exports = async (req, res) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 20 });
+    const doc = new PDFDocument({ size: 'A4', margin: 25 });
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
 
     const id = req.params.id;
 
-    const [[lap]] = await db.query(`SELECT l.*, u.username AS created_by_name FROM laporan_investigasi l LEFT JOIN users u ON u.id = l.created_by WHERE l.id=?`, [id]);
-    const [[deswa]] = await db.query(`SELECT * FROM deswa WHERE laporan_id=?`, [id]);
-    const [[bri]] = await db.query(`SELECT * FROM bri WHERE laporan_id=?`, [id]);
-    const [[interview]] = await db.query(`SELECT * FROM resume_hasil_interview WHERE laporan_id=?`, [id]);
-    const [[resume]] = await db.query(`SELECT * FROM resume_investigasi WHERE laporan_id=?`, [id]);
+    // Fetch Data
+    const [[lap]] = await db.query(`SELECT * FROM laporan_investigasi WHERE id=?`, [id]);
+    const [[deswa]] = await db.query(`SELECT * FROM deswa WHERE laporan_id=? LIMIT 1`, [id]);
+    const [[bri]] = await db.query(`SELECT * FROM bri WHERE laporan_id=? LIMIT 1`, [id]);
     const [desk] = await db.query(`SELECT * FROM hasil_on_desk WHERE laporan_id=?`, [id]);
-    const [penelponan] = await db.query(`SELECT * FROM penelponan WHERE laporan_id=? ORDER BY hasil_on_desk_id, tanggal_telepon`, [id]);
+    const [[resumeInv]] = await db.query(`SELECT * FROM resume_investigasi WHERE laporan_id=? LIMIT 1`, [id]);
+    const [[resumeInt]] = await db.query(`SELECT * FROM resume_hasil_interview WHERE laporan_id=? LIMIT 1`, [id]);
 
-    const telpMap = {};
-    penelponan.forEach(p => {
-        if (!telpMap[p.hasil_on_desk_id]) telpMap[p.hasil_on_desk_id] = [];
-        telpMap[p.hasil_on_desk_id].push(p);
+    const x = 25;
+    const W = 545;
+    let y = 30;
+
+    // 1. HEADER
+    doc.font('Helvetica-Bold').fontSize(11).text('FORMULIR INVESTIGASI BRI LIFE', x, y);
+    y += 15;
+    doc.fontSize(8).font('Helvetica-Bold').text('BRI LIFE', x, y);
+    doc.text('VENDOR', x + 300, y);
+    doc.font('Helvetica').text('PT DESWA INVISCO MULTITAMA', x + 350, y);
+    y += 20;
+
+    // 2. INTERNAL & VENDOR INFO
+    const infoRows = [
+        ['1', 'PIC Investigator', bri?.pic_investigator, '1', 'PIC Investigator', deswa?.pic_investigator],
+        ['2', 'Tgl Submit PIC Analis', formatDate(bri?.tanggal_submit_pic_analis), '2', 'Tanggal Terima', formatDate(deswa?.tanggal_mulai)],
+        ['3', 'Tgl Submit PIC Investigator', formatDate(bri?.tanggal_submit_pic_investigator), '3', 'Tanggal Selesai', formatDate(deswa?.tanggal_selesai)],
+        ['4', 'SLA', bri?.sla, '4', 'SLA Proses (hari)', deswa?.sla_proses]
+    ];
+
+    infoRows.forEach(r => {
+        const hRow = Math.max(autoRowHeight(doc, r[2], 92), autoRowHeight(doc, r[5], 123), 18);
+        y = checkPage(doc, y, hRow);
+        cell(doc, x, y, 20, hRow, r[0], { align: 'center' });
+        cell(doc, x + 20, y, 140, hRow, r[1]);
+        cell(doc, x + 160, y, 92, hRow, r[2]);
+        cell(doc, x + 252, y, 20, hRow, r[3], { align: 'center' });
+        cell(doc, x + 272, y, 150, hRow, r[4]);
+        cell(doc, x + 422, y, 123, hRow, r[5]);
+        y += hRow;
+    });
+    y += 15;
+
+    // 3. INFORMASI DATA POLIS
+    sectionTitle(doc, x, y, W, 'INFORMASI DATA POLIS');
+    y += 18;
+    const polisMap = [
+        ['1', 'Nama Pemegang Polis', lap?.nama_pemegang_polis, '6', 'Jenis Klaim', lap?.jenis_klaim],
+        ['2', 'Nama Tertanggung', lap?.nama_tertanggung, '7', 'Jenis Produk', lap?.jenis_produk],
+        ['3', 'Nomor Polis', lap?.no_peserta, '8', 'JUP / Nilai Klaim', lap?.uang_pertanggungan],
+        ['4', 'Tgl Mulai Asuransi', formatDate(lap?.tgl_mulai_asuransi), '9', 'Alamat Ahli Waris', ''],
+        ['5', 'Tgl Akhir Asuransi', formatDate(lap?.tgl_akhir_asuransi), '10', 'No KTP/Pasport', lap?.no_identitas]
+    ];
+
+    polisMap.forEach(r => {
+        const hRow = Math.max(autoRowHeight(doc, r[2], 92), autoRowHeight(doc, r[5], 123), 18);
+        y = checkPage(doc, y, hRow);
+        cell(doc, x, y, 20, hRow, r[0], { align: 'center' });
+        cell(doc, x + 20, y, 140, hRow, r[1]);
+        cell(doc, x + 160, y, 92, hRow, r[2]);
+        cell(doc, x + 252, y, 20, hRow, r[3], { align: 'center' });
+        cell(doc, x + 272, y, 150, hRow, r[4]);
+        cell(doc, x + 422, y, 123, hRow, r[5]);
+        y += hRow;
     });
 
-    const x = 20, W = 555, COL = 138;
-    let y = 20;
+    // Tgl Meninggal & Alamat
+    const hAdr = autoRowHeight(doc, lap?.alamat, 123, 25);
+    y = checkPage(doc, y, hAdr);
+    cell(doc, x, y, 20, hAdr, '6', { align: 'center' });
+    cell(doc, x + 20, y, 140, hAdr, 'Tanggal Meninggal Dunia');
+    cell(doc, x + 160, y, 92, hAdr, formatDate(lap?.tanggal_meninggal));
+    cell(doc, x + 252, y, 20, hAdr, '');
+    cell(doc, x + 272, y, 150, hAdr, 'Detail Alamat', { bold: true });
+    cell(doc, x + 422, y, 123, hAdr, lap?.alamat);
+    y += hAdr;
 
-    /* HEADER */
-    const logo = 50;
-    doc.image(path.join(__dirname,'../public/img/DIG.jpeg'), x, y, { width: logo });
-    doc.rect(x + logo + 10, y + 5, W - logo * 2 - 20, 40).fill('#FFF200').stroke();
-    doc.font('Helvetica-Bold').fontSize(12).fill('#000')
-        .text('LAPORAN HASIL ON DESK INVESTIGASI', x + logo + 10, y + 18, {
-            width: W - logo * 2 - 20, align: 'center'
-        });
-    doc.image(path.join(__dirname,'../public/img/dim.jpeg'), x + W - logo, y, { width: logo });
-    y += 65;
+    // Usia Polis & Rekomendasi
+    const hRek = autoRowHeight(doc, lap?.rekomendasi, 103, 18);
+    y = checkPage(doc, y, hRek);
+    cell(doc, x, y, 20, hRek, '7', { align: 'center' });
+    cell(doc, x + 20, y, 140, hRek, 'Usia Polis');
+    cell(doc, x + 160, y, 92, hRek, lap?.usia_polis);
+    cell(doc, x + 252, y, 20, hRek, '11', { align: 'center' });
+    cell(doc, x + 272, y, 170, hRek, 'Rekomendasi');
+    cell(doc, x + 442, y, 103, hRek, lap?.rekomendasi);
+    y += hRek + 15;
 
-    /* DATA PENGAJUAN */
-    sectionHeader(doc, x, y, W, 'DATA PENGAJUAN INVESTIGASI', '#92D050');
-    y += 22;
+    // =========================================================
+    // 4. CATATAN INFORMASI DATA POLIS (KRONOLOGIS & DIAGNOSA)
+    // =========================================================
+    const teksKronologis = lap?.kronologis || '-';
+    // Hitung tinggi kronologis + tinggi title + tinggi subtitle
+    const hKronContent = autoRowHeight(doc, teksKronologis, W, 80);
+    const totalBlockHeight = hKronContent + 18 + 18 + 10; 
 
-    let h1 = Math.max(20, getTextHeight(doc, lap?.nama_pemegang_polis, COL));
-    labelCell(doc, x, y, COL, h1, '1. Nama Pemegang Polis');
-    valueCell(doc, x + COL, y, COL, h1, lap?.nama_pemegang_polis);
-    spanTwoColumnsNoMiddleLine(doc, x + COL * 2, y, COL, h1);
-    centerTextBetweenColumns(doc, x + COL * 2, y, COL * 2, h1, 'PT DESWA INVISCO MULTITAMA');
-    y += h1;
+    // Cek halaman agar Title, Subtitle, dan Value tidak terpisah
+    y = checkPage(doc, y, totalBlockHeight);
 
-    y += dynamicRow4(doc, x, y, COL, { label: '2. No Peserta', value: lap?.no_peserta }, { label: 'PIC Investigator', value: deswa?.pic_investigator });
-    y += dynamicRow4(doc, x, y, COL, { label: '3. Nama Tertanggung', value: lap?.nama_tertanggung }, { label: 'Tanggal Terima', value: formatDate(deswa?.tanggal_mulai) });
-    y += dynamicRow4(doc, x, y, COL, { label: '4. Masa Asuransi', value: lap?.masa_asuransi }, { label: 'Tanggal Selesai', value: formatDate(deswa?.tanggal_selesai) });
-    y += dynamicRow4(doc, x, y, COL, { label: '5. Uang Pertanggungan', value: lap?.uang_pertanggungan }, { label: 'SLA Proses', value: deswa?.sla_proses });
+    // Judul Utama (Section Title)
+    sectionTitle(doc, x, y, W, 'CATATAN INFORMASI DATA POLIS');
+    y += 18;
 
-    let h6 = 20;
-    labelCell(doc, x, y, COL, h6, '6. Tanggal Meninggal');
-    valueCell(doc, x + COL, y, COL, h6, formatDate(lap?.tanggal_meninggal));
-    spanTwoColumnsNoMiddleLine(doc, x + COL * 2, y, COL, h6);
-    centerTextBetweenColumns(doc, x + COL * 2, y, COL * 2, h6, 'BRI LIFE');
-    y += h6;
+    // Sub-Judul (Subtitle) - Diagnosa / ICD 10
+    headerCell(doc, x, y, W, 18, 'Diagnosa / ICD 10');
+    y += 18;
 
-    y += dynamicRow4(doc, x, y, COL, { label: '7. Tanggal Lahir', value: formatDate(lap?.tanggal_lahir) },
-        { label: 'PIC Investigator', value: bri?.pic_investigator });
+    // Isi Kronologis
+    doc.lineWidth(0.6);
+    doc.rect(x, y, W, hKronContent).stroke();
+    
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#000');
+    doc.text('Kronologis Sampai Kematian:', x + 8, y + 8); // Label di dalam kotak
+    
+    doc.font('Helvetica').fontSize(8).fillColor('#000');
+    doc.text(cleanText(teksKronologis), x + 8, y + 22, { 
+        width: W - 16, 
+        align: 'justify', 
+        lineGap: 2 
+    });
 
-    /* =======================
-       PATCH TERPENTING
-       Pengisi Form Kronologis
-    ======================== */
-    y += dynamicRow4(
-        doc, x, y, COL,
-        { label: '8. Pengisi Form Kronologis', value: cleanText(lap?.pengisi_form_kronologis) },
-        { label: 'Tanggal Submit Analis Klaim', value: formatDate(bri?.tgl_submit_analis_klaim) }
-    );
+    y += hKronContent + 15;
 
-    y += dynamicRow4(doc, x, y, COL, { label: '9. Status', value: lap?.status_asuransi }, { label: 'Tanggal Submit PIC Investigator', value: formatDate(bri?.tgl_submit_pic_investigator) });
+    // 5. RESUME HASIL INVESTIGASI (AHLI WARIS)
+    sectionTitle(doc, x, y, W, 'RESUME HASIL INVESTIGASI');
+    y += 18;
+    headerCell(doc, x, y, W, 18, 'AHLI WARIS');
+    y += 18;
+    const teksAhliWaris = resumeInt?.hasil_interview || '-';
+    const hAhliWaris = autoRowHeight(doc, teksAhliWaris, W, 30);
+    y = checkPage(doc, y, hAhliWaris);
+    cell(doc, x, y, W, hAhliWaris, teksAhliWaris);
+    y += hAhliWaris + 15;
 
-    y += dynamicRow4(doc, x, y, COL, { label: '10. No Telpon', value: lap?.no_telepon }, { label: 'SLA', value: bri?.sla });
-    y += dynamicRow2(doc, x, y, COL, '11. Alamat', lap?.alamat);
-    y += dynamicRow2(doc, x, y, COL, '12. Kelengkapan Dokumen', cleanText(lap?.kelengkapan_dokumen));
-
-    /* KRONOLOGIS */
-    sectionHeader(doc, x, y, W, 'KRONOLOGIS', '#92D050');
-    y += 22;
-    y += fullWidthValueRow(doc, x, y, W, cleanText(lap?.kronologis));
-
-    /* RESUME INTERVIEW */
-    sectionHeader(doc, x, y, W, 'RESUME HASIL INTERVIEW TERTANGGUNG / AHLI WARIS', '#92D050');
-    y += 22;
-
-    let interviewText = "-";
-    if (interview) {
-        const logs = [];
-        if (interview.tgl_telpon_1) logs.push(`${formatDate(interview.tgl_telpon_1)} ${interview.jam_telpon_1 || ''}`);
-        if (interview.tgl_telpon_2) logs.push(`${formatDate(interview.tgl_telpon_2)} ${interview.jam_telpon_2 || ''}`);
-        if (interview.tgl_telpon_3) logs.push(`${formatDate(interview.tgl_telpon_3)} ${interview.jam_telpon_3 || ''}`);
-        interviewText =
-            (logs.length ? `Waktu Telepon: ${logs.join(', ')}\n` : '') +
-            (interview.redaksional ? `Redaksional: ${interview.redaksional}\n\n` : '') +
-            (interview.hasil_interview || '-');
-    }
-
-    y += interviewRow(doc, x, y, W, interviewText);
-
-    y += fullWidthValueRow(
-        doc,
-        x,
-        y,
-        W,
-        'Gali informasi mengenai Kronologi kematian / perawatan, Pekerjaan apa dan dimana, Kronologis pinjaman di bank, kondisi keseharian, riwayat Berobat & Obat2 yg di minum, Riwayat Merokok / Miras, life style. Penggalian Domisili - sudah berapa lama disana.',
-        'center'
-    );
-
-    /* HASIL ON DESK */
-    sectionHeader(doc, x, y, W, 'HASIL ON DESK INVESTIGASI', '#92D050');
-    y += 22;
+    // 6. HASIL KONFIRMASI / INVESTIGASI (Tabel on_desk)
+    sectionTitle(doc, x, y, W, 'HASIL KONFIRMASI / INVESTIGASI'); y += 18;
+    const wT = [50, 60, 70, 80, 145, 140];
+    const headers = ['Tanggal', 'Activity', 'Nama Petugas', 'Nama Faskes', 'Hasil Investigasi', 'Analisa'];
+    headers.forEach((h, i) => {
+        const px = x + wT.slice(0, i).reduce((a, b) => a + b, 0);
+        headerCell(doc, px, y, wT[i], 18, h);
+    });
+    y += 18;
 
     desk.forEach(d => {
-        if (y > 700) { doc.addPage(); y = 20; }
-        y += dynamicRow4(doc, x, y, COL, { label: 'Tgl Investigasi', value: formatDate(d.tanggal_investigasi) }, { label: 'Nama Petugas', value: d.nama_petugas });
-        y += dynamicRow2(doc, x, y, COL, 'Nama Faskes', d.nama_faskes);
-        y += dynamicRow2(doc, x, y, COL, 'Alamat Faskes', d.alamat_faskes);
-
-        let temuan = cleanText(d.hasil_investigasi) || '-';
-        (telpMap[d.id] || []).forEach((p, i) => {
-            temuan += `\n${i + 1}. ${formatDate(p.tanggal_telepon)} ${p.jam_telepon || ''}`;
-        });
-
-        y += dynamicRow2(doc, x, y, COL, 'Temuan Investigasi', temuan);
+        const hRow = Math.max(autoRowHeight(doc, d.hasil_investigasi, wT[4]), autoRowHeight(doc, d.analisa, wT[5]), 18);
+        y = checkPage(doc, y, hRow);
+        let curX = x;
+        cell(doc, curX, y, wT[0], hRow, formatDate(d.tanggal_investigasi), {align:'center'}); curX += wT[0];
+        cell(doc, curX, y, wT[1], hRow, d.activity || 'Visit'); curX += wT[1];
+        cell(doc, curX, y, wT[2], hRow, d.nama_petugas); curX += wT[2];
+        cell(doc, curX, y, wT[3], hRow, d.nama_faskes); curX += wT[3];
+        cell(doc, curX, y, wT[4], hRow, d.hasil_investigasi); curX += wT[4];
+        cell(doc, curX, y, wT[5], hRow, d.analisa || '-');
+        y += hRow;
     });
+    y += 15;
 
-    /* RESUME */
-    sectionHeader(doc, x, y, W, 'RESUME HASIL INVESTIGASI', '#92D050');
-    y += 22;
-    y += interviewRow(doc, x, y, W, resume?.hasil || '-');
+    // 7. ANALISA INVESTIGATOR INDEPENDENT (Resume Investigasi)
+    sectionTitle(doc, x, y, W, 'ANALISA INVESTIGATOR INDEPENDENT');
+    y += 18;
+    const teksAnalisaInv = resumeInv?.hasil || '-';
+    const hResInv = autoRowHeight(doc, teksAnalisaInv, W, 40);
+    y = checkPage(doc, y, hResInv);
+    cell(doc, x, y, W, hResInv, teksAnalisaInv);
+    y += hResInv + 15;
+
+   // 8. ANALISA PIC INVESTIGATOR (INTERNAL BRI)
+    const teksAnlPic = lap?.analisa_pic_investigator || '-';
+    const hAnlPic = autoRowHeight(doc, teksAnlPic, W, 40);
+    
+    // LOGIKA PENYATUAN: Cek apakah (Tinggi Judul 18 + Padding 2 + Tinggi Isi hAnlPic) muat di sisa halaman
+    // Jika tidak muat, checkPage akan membuat halaman baru sebelum Judul digambar
+    y = checkPage(doc, y, hAnlPic + 20); 
+
+    sectionTitle(doc, x, y, W, 'ANALISA PIC INVESTIGATOR'); 
+    y += 18; // Pindah ke bawah judul
+    
+    cell(doc, x, y, W, hAnlPic, teksAnlPic);
+    y += hAnlPic + 15;
+
+    // 9. ANALISA MA
+    sectionTitle(doc, x, y, W, 'ANALISA MA'); y += 18;
+    const hAnlMa = autoRowHeight(doc, lap?.analisa_ma, W, 40);
+    y = checkPage(doc, y, hAnlMa);
+    cell(doc, x, y, W, hAnlMa, lap?.analisa_ma || '-');
+    y += hAnlMa + 15;
+
+    // 10. PUTUSAN KLAIM
+    sectionTitle(doc, x, y, W, 'ANALISA DAN PUTUSAN'); y += 18;
+    cell(doc, x, y, 150, 25, 'PUTUSAN KLAIM', { bold: true });
+    cell(doc, x + 150, y, W - 150, 25, lap?.putusan_klaim || '-', { bold: true, align: 'center' });
+    y += 25;
+
+    const hAnlPut = autoRowHeight(doc, lap?.analisa_putusan, W - 150, 40);
+    y = checkPage(doc, y, hAnlPut);
+    cell(doc, x, y, 150, hAnlPut, 'ANALISA PUTUSAN', { bold: true });
+    cell(doc, x + 150, y, W - 150, hAnlPut, lap?.analisa_putusan || '-');
+    y += hAnlPut + 30;
+
+    // 11. TANDA TANGAN
+    y = checkPage(doc, y, 100);
+    const tW = W / 3;
+    ['Department Head', 'Team Leader', 'MA'].forEach((t, i) => {
+        headerCell(doc, x + (tW * i), y, tW, 18, t);
+        cell(doc, x + (tW * i), y + 18, tW, 65, '');
+    });
 
     doc.end();
 };

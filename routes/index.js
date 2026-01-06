@@ -197,6 +197,11 @@ router.get('/laporan/:id', auth, async (req, res) => {
       LIMIT 1
     `, [laporanId]);
 
+    const [desk] = await db.query(
+            `SELECT * FROM hasil_on_desk WHERE laporan_id = ? ORDER BY created_at DESC`, 
+            [laporanId]
+        );
+
     // ===============================
     // 4. RENDER (SEMUA VARIABEL TERISI)
     // ===============================
@@ -206,6 +211,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
       penelponan: penelponanRows || [],
       resume_interview: resumeRows || [],
       user: req.session.user,
+      desk: desk,
       created_by: dataLaporan.created_by // ID user pembuat
     });
 
@@ -215,66 +221,85 @@ router.get('/laporan/:id', auth, async (req, res) => {
   }
 });
 
-/* STORE */
+/* STORE LAPORAN */
 router.post('/laporan/store', auth, async (req, res) => {
   try {
-    const {
-      nama_pemegang_polis,
-      no_peserta,
-      nama_tertanggung,
-      no_telepon,
-      alamat,
-      masa_asuransi,
-      uang_pertanggungan,
-      tanggal_lahir,
-      tanggal_meninggal,
-      status_asuransi,
-      kronologis,
-      kelengkapan_dokumen,
-      pengisi_form_kronologis  // ⬅️ BARU
-    } = req.body;
+    const d = req.body;
 
-    await db.query(`
+    // Proteksi: Jika status_asuransi terkirim dua kali (array), ambil satu saja.
+    const status_fix = Array.isArray(d.status_asuransi) ? d.status_asuransi[0] : d.status_asuransi;
+
+    // Susun array values secara manual agar urutan masuk ke database tepat
+    const values = [
+      d.nama_pemegang_polis,       // 1
+      d.no_peserta,                // 2
+      d.nama_tertanggung,          // 3
+      d.no_telepon,                // 4
+      d.alamat,                    // 5
+      d.uang_pertanggungan,        // 6
+      d.tanggal_lahir || null,     // 7
+      d.tanggal_meninggal || null,  // 8
+      status_fix,                  // 9
+      d.kronologis,                // 10
+      d.kelengkapan_dokumen,       // 11
+      d.pengisi_form_kronologis,   // 12
+      d.tgl_mulai_asuransi || null,// 13
+      d.tgl_akhir_asuransi || null, // 14
+      d.usia_polis,                // 15
+      d.jenis_klaim,               // 16
+      d.jenis_produk,              // 17
+      d.no_identitas,              // 18
+      d.rekomendasi,               // 19
+      req.session.user.id          // 20
+    ];
+
+    const sql = `
       INSERT INTO laporan_investigasi (
-        nama_pemegang_polis,
-        no_peserta,
-        nama_tertanggung,
-        no_telepon,
-        alamat,
-        masa_asuransi,
-        uang_pertanggungan,
-        tanggal_lahir,
-        tanggal_meninggal,
-        status_asuransi,
-        kronologis,
-        kelengkapan_dokumen,
-        pengisi_form_kronologis,   -- ⬅️ BARU
-        created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      nama_pemegang_polis,
-      no_peserta,
-      nama_tertanggung,
-      no_telepon,
-      alamat,
-      masa_asuransi,
-      uang_pertanggungan,
-      tanggal_lahir,
-      tanggal_meninggal,
-      status_asuransi,
-      kronologis,
-      kelengkapan_dokumen,
-      pengisi_form_kronologis,     // ⬅️ BARU
-      req.session.user.id
-    ]);
+        nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
+        alamat, uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
+        status_asuransi, kronologis, kelengkapan_dokumen, pengisi_form_kronologis,
+        tgl_mulai_asuransi, tgl_akhir_asuransi, usia_polis, jenis_klaim,
+        jenis_produk, no_identitas, rekomendasi, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    await db.query(sql, values);
 
     res.redirect('/laporan');
   } catch (err) {
-    console.log(err);
-    res.status(500).send('Gagal menyimpan laporan');
+    console.error("SQL Error Detail:", err);
+    res.status(500).send('Gagal menyimpan laporan: ' + err.message);
   }
 });
 
+// Route untuk menyimpan data Analisa (PIC, MA, dan Putusan)
+router.post('/laporan/:id/analisa-store', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { 
+            analisa_pic_investigator, 
+            analisa_ma, 
+            putusan_klaim, 
+            analisa_putusan 
+        } = req.body;
+
+        // Menyimpan data ke tabel laporan_investigasi (Sesuai kolom di PDF Anda)
+        await db.query(`
+            UPDATE laporan_investigasi SET 
+                analisa_pic_investigator = ?, 
+                analisa_ma = ?, 
+                putusan_klaim = ?, 
+                analisa_putusan = ? 
+            WHERE id = ?`, 
+            [analisa_pic_investigator, analisa_ma, putusan_klaim, analisa_putusan, id]
+        );
+
+        res.redirect(`/laporan/${id}?success=Analisa Berhasil Disimpan`);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Gagal menyimpan analisa");
+    }
+});
 
 /* EDIT FORM */
 router.get('/laporan/edit/:id', auth, async (req, res) => {
@@ -299,14 +324,20 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       nama_tertanggung,
       no_telepon,
       alamat,
-      masa_asuransi,
       uang_pertanggungan,
       tanggal_lahir,
       tanggal_meninggal,
       status_asuransi,
       kronologis,
       kelengkapan_dokumen,
-      pengisi_form_kronologis   // ⬅️ BARU
+      pengisi_form_kronologis,
+      tgl_mulai_asuransi,
+      tgl_akhir_asuransi,
+      usia_polis,
+      jenis_klaim,
+      jenis_produk,
+      no_identitas,
+      rekomendasi
     } = req.body;
 
     await db.query(`
@@ -316,14 +347,20 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
         nama_tertanggung = ?,
         no_telepon = ?,
         alamat = ?,
-        masa_asuransi = ?,
         uang_pertanggungan = ?,
         tanggal_lahir = ?,
         tanggal_meninggal = ?,
         status_asuransi = ?,
         kronologis = ?,
         kelengkapan_dokumen = ?,
-        pengisi_form_kronologis = ?   -- ⬅️ BARU
+        pengisi_form_kronologis = ?,
+        tgl_mulai_asuransi = ?,
+        tgl_akhir_asuransi = ?,
+        usia_polis = ?,
+        jenis_klaim = ?,
+        jenis_produk = ?,
+        no_identitas = ?,
+        rekomendasi = ?
       WHERE id = ?
     `, [
       nama_pemegang_polis,
@@ -331,14 +368,20 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       nama_tertanggung,
       no_telepon,
       alamat,
-      masa_asuransi,
       uang_pertanggungan,
       tanggal_lahir,
       tanggal_meninggal,
       status_asuransi,
       kronologis,
       kelengkapan_dokumen,
-      pengisi_form_kronologis,        // ⬅️ BARU
+      pengisi_form_kronologis,
+      tgl_mulai_asuransi,
+      tgl_akhir_asuransi,
+      usia_polis,
+      jenis_klaim,
+      jenis_produk,
+      no_identitas,
+      rekomendasi,
       req.params.id
     ]);
 
@@ -387,6 +430,67 @@ router.get('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
   }
 });
 
+// API untuk Input Hasil On-Desk (Hasil Konfirmasi)
+router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
+    try {
+        const laporanId = req.params.id;
+        const { 
+            nama_faskes, 
+            alamat_faskes, 
+            tanggal_investigasi, 
+            nama_petugas, 
+            no_kontak, 
+            hasil_investigasi, 
+            analisa 
+        } = req.body;
+
+        // Gunakan INSERT INTO sesuai struktur tabel hasil_on_desk
+        await db.query(
+            `INSERT INTO hasil_on_desk 
+            (laporan_id, nama_faskes, alamat_faskes, tanggal_investigasi, nama_petugas, no_kontak, hasil_investigasi, analisa) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [laporanId, nama_faskes, alamat_faskes, tanggal_investigasi, nama_petugas, no_kontak, hasil_investigasi, analisa]
+        );
+
+        res.redirect('/laporan/' + laporanId);
+    } catch (err) {
+        console.error(err);
+        // Handle error Unique Key (Jika data yang sama diinput ulang)
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).send("Data investigasi ini sudah ada (Duplikat).");
+        }
+        res.status(500).send("Gagal menyimpan hasil investigasi: " + err.message);
+    }
+});
+
+// Route untuk menyimpan Analisa Internal (PIC Investigator, MA, Putusan)
+router.post('/laporan/:id/analisa-internal', auth, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const { 
+            analisa_pic_investigator, 
+            analisa_ma, 
+            putusan_klaim, 
+            analisa_putusan 
+        } = req.body;
+
+        // Update tabel laporan_investigasi berdasarkan input dari form
+        await db.query(
+            `UPDATE laporan_investigasi SET 
+             analisa_pic_investigator = ?, 
+             analisa_ma = ?, 
+             putusan_klaim = ?, 
+             analisa_putusan = ? 
+             WHERE id = ?`,
+            [analisa_pic_investigator, analisa_ma, putusan_klaim, analisa_putusan, id]
+        );
+
+        res.redirect(`/laporan/${id}`); // Kembali ke halaman detail
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Gagal menyimpan analisa internal: " + err.message);
+    }
+});
 
 router.post('/hasil-on-desk/:onDeskId/penelponan', auth, async (req, res) => {
   try {
