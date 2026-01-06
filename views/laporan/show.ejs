@@ -283,12 +283,11 @@ async function submitPenelponan(e){
 </script>
 
 <!-- RESUME HASIL INTERVIEW -->
-<section class="mb-8">
+ <br>
+<section class="mb-8 mt-3">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📝 Resume Hasil Interview Ahli Waris</h3>
-    <% if (isOwner) { %>
-    <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Edit Resume</button>
-    <% } %>
+    <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Resume</button>
   </div>
   
   <div id="resumeInterviewDisplay" class="space-y-6">
@@ -375,9 +374,7 @@ async function loadResumeInterviewList(){
 <section class="mb-8">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📋 Resume Investigasi</h3>
-    <% if (isOwner) { %>
     <button onclick="openModalResumeInvestigasi()" class="px-3 py-1 bg-green-600 text-white rounded text-sm">➕ Tambah</button>
-    <% } %>
   </div>
   
   <div id="resumeInvestigasiList" class="space-y-4">

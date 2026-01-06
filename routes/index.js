@@ -118,15 +118,38 @@ router.get('/', (req, res) => {
 });
 
 /* INDEX */
+/* HALAMAN DAFTAR LAPORAN (BY ROLE) */
 router.get('/laporan', auth, async (req, res) => {
   try {
-    const [rows] = await db.query(
-      'SELECT * FROM laporan_investigasi ORDER BY id DESC'
-    );
-    res.render('laporan/index', { rows, user: req.session.user });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send('Database error');
+    const user = req.session.user;
+    let query = '';
+    let params = [];
+
+    // Cek Role User
+    if (user.role === 'admin' || user.role === 'bri') {
+      // Jika Admin atau BRI: Tarik semua data laporan
+      query = `
+        SELECT l.*, u.username as created_by_name 
+        FROM laporan_investigasi l
+        LEFT JOIN users u ON l.created_by = u.id 
+        ORDER BY l.created_at DESC
+      `;
+    } else {
+      // Jika User Biasa: Tarik data miliknya saja
+      query = `
+        SELECT l.*, u.username as created_by_name 
+        FROM laporan_investigasi l
+        LEFT JOIN users u ON l.created_by = u.id 
+        WHERE l.created_by = ?
+        ORDER BY l.created_at DESC
+      `;
+      params = [user.id];
+    }
+
+    const [rows] = await db.query(query, params);
+    res.render('laporan/index', { data: rows, user });
+  } catch (err) {
+    res.status(500).send(err.message);
   }
 });
 
@@ -135,13 +158,11 @@ router.get('/laporan/create', auth, (req, res) => {
   res.render('laporan/create', { user: req.session.user });
 });
 
-/* =========================
-   LAPORAN INVESTIGASI
-========================= */
 /* SHOW */
 router.get('/laporan/:id', auth, async (req, res) => {
   try {
     const laporanId = req.params.id;
+    const user = req.session.user; // Pastikan nama variabel konsisten (user)
 
     // ===============================
     // 1. DATA UTAMA LAPORAN
@@ -150,19 +171,16 @@ router.get('/laporan/:id', auth, async (req, res) => {
       SELECT 
         l.*,
         u.username AS created_by_name,
-
         -- DESWA
         d.pic_investigator       AS pic_investigator_deswa,
         d.tanggal_mulai          AS tanggal_mulai_deswa,
         d.tanggal_selesai        AS tanggal_selesai_deswa,
         d.sla_proses             AS sla_deswa,
-
         -- BRI
         b.pic_investigator       AS pic_brilife,
         b.tanggal_submit_pic_analis       AS tanggal_submit_pic,
         b.tanggal_submit_pic_investigator AS tanggal_submit_investigator,
         b.sla                    AS sla_brilife
-
       FROM laporan_investigasi l
       LEFT JOIN users u ON u.id = l.created_by
       LEFT JOIN deswa d ON d.laporan_id = l.id
@@ -178,41 +196,41 @@ router.get('/laporan/:id', auth, async (req, res) => {
     const dataLaporan = laporanRows[0];
 
     // ===============================
-    // 2. LOG PENELPONAN (FULL)
+    // PROTEKSI / AKSES KONTROL
     // ===============================
-    const [penelponanRows] = await db.query(`
-      SELECT *
-      FROM penelponan
-      WHERE laporan_id = ?
-      ORDER BY id ASC
-    `, [laporanId]);
+    // Gunakan dataLaporan.created_by (bukan laporan.created_by)
+    // Gunakan user.role (sesuai definisi di atas)
+    if (user.role !== 'admin' && user.role !== 'bri' && dataLaporan.created_by !== user.id) {
+      return res.status(403).send("Anda tidak memiliki akses ke laporan ini.");
+    }
 
     // ===============================
-    // 3. RESUME INTERVIEW
+    // 2. DATA LAINNYA
     // ===============================
+    const [penelponanRows] = await db.query(`
+      SELECT * FROM penelponan WHERE laporan_id = ? ORDER BY id ASC
+    `, [laporanId]);
+
     const [resumeRows] = await db.query(`
-      SELECT *
-      FROM resume_hasil_interview
-      WHERE laporan_id = ?
-      LIMIT 1
+      SELECT * FROM resume_hasil_interview WHERE laporan_id = ? LIMIT 1
     `, [laporanId]);
 
     const [desk] = await db.query(
-            `SELECT * FROM hasil_on_desk WHERE laporan_id = ? ORDER BY created_at DESC`, 
-            [laporanId]
-        );
+      `SELECT * FROM hasil_on_desk WHERE laporan_id = ? ORDER BY created_at DESC`, 
+      [laporanId]
+    );
 
     // ===============================
-    // 4. RENDER (SEMUA VARIABEL TERISI)
+    // 3. RENDER
     // ===============================
     res.render('laporan/show', {
       dataLaporan,
       data: dataLaporan,
       penelponan: penelponanRows || [],
       resume_interview: resumeRows || [],
-      user: req.session.user,
+      user: user, // Kirim variabel user yang benar
       desk: desk,
-      created_by: dataLaporan.created_by // ID user pembuat
+      created_by: dataLaporan.created_by
     });
 
   } catch (err) {
@@ -604,15 +622,29 @@ router.get('/laporan/:id/resume-investigasi', auth, async (req, res) => {
 router.post('/laporan/:id/resume-investigasi', auth, async (req, res) => {
   try {
     const { hasil } = req.body;
-    const [result] = await db.query(
-      'INSERT INTO resume_investigasi (laporan_id, hasil) VALUES (?, ?)',
-      [req.params.id, hasil]
-    );
-    res.json({ id: result.insertId });
+    const laporanId = req.params.id;
+
+    // Cek apakah resume sudah ada untuk laporan ini
+    const [existing] = await db.query('SELECT * FROM resume_investigasi WHERE laporan_id = ?', [laporanId]);
+
+    if (existing.length > 0) {
+      // Jika sudah ada, Update data yang lama
+      await db.query(
+        'UPDATE resume_investigasi SET hasil = ? WHERE laporan_id = ?',
+        [hasil, laporanId]
+      );
+    } else {
+      // Jika belum ada, Insert data baru
+      await db.query(
+        'INSERT INTO resume_investigasi (laporan_id, hasil) VALUES (?, ?)',
+        [laporanId, hasil]
+      );
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Database error' });
   }
+  res.json({ success: true });
 });
 
 /* DELETE RESUME INVESTIGASI */

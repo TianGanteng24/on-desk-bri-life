@@ -6,7 +6,7 @@
   <div class="px-6 py-4 border-b dark:border-slate-700 flex justify-between items-center">
     <div>
       <h2 class="text-2xl font-bold">📋 Data Laporan Investigasi</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total: <%= rows.length %> laporan</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total: <%= data.length %> laporan</p>
     </div>
 
     <a href="/laporan/create"
@@ -29,14 +29,14 @@
     </thead>
 
     <tbody>
-    <% if (rows.length === 0) { %>
+    <% if (data.length === 0) { %>
       <tr>
         <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
           Belum ada data laporan. <a href="/laporan/create" class="text-emerald-600 hover:underline">Buat laporan baru</a>
         </td>
       </tr>
     <% } else { %>
-      <% rows.forEach((r, i) => { %>
+      <% data.forEach((r, i) => { %>
       <tr class="border-t dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition">
         <td class="px-6 py-4 font-medium text-gray-600 dark:text-gray-300"><%= i + 1 %></td>
         <td class="px-6 py-4 font-medium"><%= r.nama_pemegang_polis || '-' %></td>
