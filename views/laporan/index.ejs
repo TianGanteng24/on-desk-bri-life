@@ -9,10 +9,19 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total: <%= data.length %> laporan</p>
     </div>
 
-    <a href="/laporan/create"
-      class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-      ➕ Tambah Laporan
+    <div class="flex gap-2">
+  <% if (user.role === 'admin') { %>
+    <a href="/users"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+      👥 Kelola User
     </a>
+  <% } %>
+  
+  <a href="/laporan/create"
+    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+    ➕ Tambah Laporan
+  </a>
+</div>
   </div>
 
   <div class="overflow-x-auto">

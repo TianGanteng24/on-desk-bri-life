@@ -73,6 +73,71 @@ router.get('/logout', auth, async (req, res) => {
   });
 });
 
+// 1. GET: Menampilkan Daftar User
+router.get('/users', async (req, res) => {
+    try {
+       const currentUser = req.session.user; 
+
+        if (!currentUser || currentUser.role !== 'admin') {
+            return res.redirect('/login'); // Lempar ke login jika tidak ada user/bukan admin
+        }
+
+        // Ambil semua data user dari database
+        const [users] = await db.query('SELECT id, username, role FROM users');
+        
+        res.render('users/index', { 
+            user: currentUser, // Mengirim data user yang login 
+            users: users    // Mengirim daftar user hasil query
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 2. GET: Menampilkan Form Tambah User
+router.get('/users/create', (req, res) => {
+    res.render('users/create', { user: req.user });
+});
+
+// 3. POST: Menyimpan User Baru ke Database
+router.post('/users/create', async (req, res) => {
+    try {
+        const { username, password, role } = req.body;
+        
+        // Logika simpan ke database (password sebaiknya di-hash dengan bcrypt)
+        await db.query(
+            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+            [username, password, role]
+        );
+
+        res.redirect('/users'); // Kembali ke daftar user setelah berhasil
+    } catch (error) {
+      console.log(error);
+        res.status(500).send('Gagal menambah user');
+    }
+});
+
+// Route Update (POST)
+router.post('/users/update', async (req, res) => {
+    const { id, username, password, role } = req.body;
+    let query = "UPDATE users SET username=?, role=? WHERE id=?";
+    let params = [username, role, id];
+
+    if (password) {
+        query = "UPDATE users SET username=?, role=?, password=? WHERE id=?";
+        params = [username, role, password, id]; // Gunakan hash bcrypt di sini jika perlu
+    }
+
+    await db.query(query, params);
+    res.redirect('/users');
+});
+
+// Route Delete (GET)
+router.get('/users/delete/:id', async (req, res) => {
+    await db.query("DELETE FROM users WHERE id = ?", [req.params.id]);
+    res.redirect('/users');
+});
 
 router.post('/auto-logout', async (req, res) => {
   const userId = req.session?.user?.id;
