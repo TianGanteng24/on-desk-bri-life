@@ -188,41 +188,83 @@
 <section class="mt-12">
   <div class="flex justify-between items-center mb-6">
     <h3 class="text-2xl font-bold dark:text-white">🔍 Hasil Konfirmasi / Investigasi</h3>
-    <button onclick="document.getElementById('modalOnDesk').classList.remove('hidden')" 
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">
+    <button onclick="openModalOnDesk()" 
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-lg shadow-blue-200 dark:shadow-none">
       + Tambah Investigasi
     </button>
   </div>
 
-  <div class="overflow-x-auto rounded-xl border dark:border-slate-700">
+  <div class="overflow-x-auto rounded-xl border dark:border-slate-700 shadow-sm">
     <table class="w-full text-left text-sm">
-      <thead class="bg-gray-100 dark:bg-slate-700 dark:text-white uppercase text-xs">
+      <thead class="bg-gray-100 dark:bg-slate-700 dark:text-white uppercase text-xs tracking-wider">
         <tr>
-          <th class="p-4">Tanggal / Petugas</th>
-          <th class="p-4">Faskes / Alamat</th>
-          <th class="p-4">Hasil Investigasi</th>
-          <th class="p-4">Analisa</th>
+          <th class="p-4 border-b dark:border-slate-600">Tgl & Jam</th>
+          <th class="p-4 border-b dark:border-slate-600">Activity</th>
+          <th class="p-4 border-b dark:border-slate-600">Petugas / Faskes</th>
+          <th class="p-4 border-b dark:border-slate-600">Hasil & Analisa</th>
+          <th class="p-4 border-b dark:border-slate-600 text-center">Aksi</th>
         </tr>
       </thead>
       <tbody class="divide-y dark:divide-slate-700 bg-white dark:bg-slate-800 dark:text-slate-300">
         <% if (desk && desk.length > 0) { %>
           <% desk.forEach(d => { %>
-            <tr>
+            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
               <td class="p-4">
-                <p class="font-bold"><%= d.tanggal_investigasi ? new Date(d.tanggal_investigasi).toLocaleDateString('id-ID') : '-' %></p>
-                <p class="text-xs text-gray-500"><%= d.nama_petugas %></p>
+                <p class="font-bold text-blue-600 dark:text-blue-400">
+                  <%= d.tanggal_investigasi ? new Date(d.tanggal_investigasi).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) : '-' %>
+                </p>
+                <p class="text-xs text-gray-500 font-medium"><%= d.jam_telepon || '--:--' %> WIB</p>
               </td>
+
               <td class="p-4">
-                <p class="font-bold"><%= d.nama_faskes %></p>
-                <p class="text-xs text-gray-500 line-clamp-2"><%= d.alamat_faskes %></p>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase 
+                  <%= d.activity === 'Visit' ? 'bg-green-100 text-green-700' : 
+                      d.activity === 'Call' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' %>">
+                  <%= d.activity || 'Call' %>
+                </span>
               </td>
-              <td class="p-4 whitespace-pre-line"><%= d.hasil_investigasi %></td>
-              <td class="p-4 whitespace-pre-line text-blue-600 dark:text-blue-400 font-medium"><%= d.analisa %></td>
+
+              <td class="p-4">
+                <p class="font-bold text-gray-800 dark:text-white"><%= d.nama_petugas %></p>
+                <p class="text-xs text-gray-500 line-clamp-1"><%= d.nama_faskes %></p>
+                <% if(d.no_kontak) { %>
+                  <p class="text-[10px] text-blue-500 mt-1">📞 <%= d.no_kontak %></p>
+                <% } %>
+              </td>
+
+              <td class="p-4 max-w-xs">
+                <div class="mb-2">
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Hasil:</span>
+                  <p class="text-xs italic line-clamp-2 text-gray-600 dark:text-gray-400">"<%= d.hasil_investigasi %>"</p>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-blue-400 uppercase">Analisa:</span>
+                  <p class="text-xs font-semibold text-blue-600 dark:text-blue-300"><%= d.analisa %></p>
+                </div>
+              </td>
+
+              <td class="p-4">
+                <div class="flex flex-col gap-2 items-center">
+                  <button onclick='editInvestigasi(<%= JSON.stringify(d) %>)' 
+                          class="w-full px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-[10px] font-bold transition">
+                    EDIT
+                  </button>
+                  <button onclick="deleteInvestigasi('<%= d.id %>')" 
+                          class="w-full px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-[10px] font-bold transition">
+                    HAPUS
+                  </button>
+                </div>
+              </td>
             </tr>
           <% }) %>
         <% } else { %>
           <tr>
-            <td colspan="4" class="p-8 text-center text-gray-500 italic">Belum ada hasil investigasi yang diinput.</td>
+            <td colspan="5" class="p-12 text-center text-gray-400 italic">
+              <div class="flex flex-col items-center">
+                <span class="text-4xl mb-2">📁</span>
+                <p>Belum ada hasil investigasi yang diinput.</p>
+              </div>
+            </td>
           </tr>
         <% } %>
       </tbody>
@@ -561,12 +603,15 @@ async function loadResumeInterviewList(){
 <% } %>
 
     <% if (user.role === 'deswa') { %>
-    <button onclick="openModalDeswa()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">Deswa</button>
+<button onclick="openModalDeswa()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+  Update Data Deswa
+</button>
     <% } %>
 
     <% if (user.role === 'bri') { %>
-    <button onclick="openModalBri()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">BRI</button>
-    <% } %>
+<button onclick="openModalBri()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+  Update Data BRI
+</button>    <% } %>
   </div>
 
 <!-- BRI SECTION -->
@@ -636,101 +681,112 @@ async function loadResumeInterviewList(){
 
 <!-- MODAL INPUT HASIL ON DESK INVESTIGATION -->
 <div id="modalOnDesk" class="fixed inset-0 z-[1000] hidden overflow-y-auto">
-  <div class="flex items-center justify-center min-h-screen p-4 text-center">
-    <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="document.getElementById('modalOnDesk').classList.add('hidden')"></div>
-
-    <div class="inline-block w-full max-w-2xl overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-800 rounded-2xl shadow-2xl relative">
-      <form action="/laporan/<%= data.id %>/hasil-ondesk" method="POST" class="p-8">
-        <h3 class="text-2xl font-bold mb-6 dark:text-white border-b pb-4">Input Hasil Investigasi (On-Desk)</h3>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-bold mb-1 dark:text-white">Nama Faskes</label>
-            <input type="text" name="nama_faskes" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          </div>
-          <div>
-            <label class="block text-sm font-bold mb-1 dark:text-white">Tanggal Investigasi</label>
-            <input type="date" name="tanggal_investigasi" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          </div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-black/60 transition-opacity" onclick="closeModalOnDesk()"></div>
+        <div class="relative bg-white dark:bg-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+            <div class="bg-blue-600 p-4">
+                <h3 id="modalTitle" class="text-xl font-bold text-white">Input Hasil Investigasi</h3>
+            </div>
+          
+            <form id="formOnDesk" action="/laporan/<%= data.id %>/hasil-ondesk" method="POST" class="p-6">
+                <input type="hidden" name="id" id="ondesk_id"> 
+                <input type="hidden" name="laporan_id" value="<%= data.id %>">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Faskes / Instansi</label>
+                        <input type="text" name="nama_faskes" id="f_nama_faskes" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Activity</label>
+                        <select name="activity" id="f_activity" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white" required>
+                            <option value="Call">Call</option>
+                            <option value="Email">Email</option>
+                            <option value="Visit">Visit</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tanggal Investigasi</label>
+                        <input type="date" name="tanggal_investigasi" id="f_tanggal" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Jam (WIB)</label>
+                        <input type="time" name="jam_telepon" id="f_jam" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Petugas</label>
+                        <input type="text" name="nama_petugas" id="f_nama_petugas" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">No. Kontak</label>
+                        <input type="text" name="no_kontak" id="f_no_kontak" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Hasil Investigasi (Temuan)</label>
+                    <textarea name="hasil_investigasi" id="f_hasil" rows="3" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white" placeholder="Contoh: Petugas RS menyatakan pasien memiliki riwayat..."></textarea>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Analisa / Simpulan</label>
+                    <textarea name="analisa" id="f_analisa" rows="2" required class="w-full border-blue-200 border-2 rounded-lg p-2 dark:bg-slate-700 dark:text-white" placeholder="Analisa singkat..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+                    <button type="button" onclick="closeModalOnDesk()" class="px-5 py-2 text-gray-500 font-semibold hover:text-gray-700">Batal</button>
+                    <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 dark:shadow-none transition">Simpan Data</button>
+                </div>
+            </form>
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-bold mb-1 dark:text-white">Nama Petugas</label>
-            <input type="text" name="nama_petugas" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          </div>
-          <div>
-            <label class="block text-sm font-bold mb-1 dark:text-white">No. Kontak</label>
-            <input type="text" name="no_kontak" class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          </div>
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-sm font-bold mb-1 dark:text-white">Alamat Faskes</label>
-          <textarea name="alamat_faskes" rows="2" class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
-        </div>
-
-        <div class="mb-4">
-          <label class="block text-sm font-bold mb-1 dark:text-white">Hasil Investigasi</label>
-          <textarea name="hasil_investigasi" rows="4" required class="w-full border rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Ceritakan temuan di lapangan..."></textarea>
-        </div>
-
-        <div class="mb-6">
-          <label class="block text-sm font-bold mb-1 dark:text-white">Analisa (Simpulan)</label>
-          <textarea name="analisa" rows="3" required class="w-full border-2 border-blue-200 rounded-lg p-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white" placeholder="Analisa singkat terhadap temuan..."></textarea>
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <button type="button" onclick="document.getElementById('modalOnDesk').classList.add('hidden')" class="px-6 py-2 text-gray-500">Batal</button>
-          <button type="submit" class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold shadow-lg hover:bg-blue-700">Simpan Data</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
 
 <script>
-// ===== MODAL CONTROLS =====
-function openModalOnDesk() { document.getElementById('modalOnDesk').classList.remove('hidden'); }
-function closeModalOnDesk() { document.getElementById('modalOnDesk').classList.add('hidden'); document.getElementById('formOnDesk').reset(); }
-function openModalDeswa() { document.getElementById('modalDeswa').classList.remove('hidden'); }
-function closeModalDeswa() { document.getElementById('modalDeswa').classList.add('hidden'); document.getElementById('formDeswa').reset(); }
+function openModalOnDesk() {
+    const form = document.getElementById('formOnDesk');
+    document.getElementById('modalTitle').innerText = 'Tambah Investigasi Baru';
+    
+    // Set Action URL untuk INSERT
+    form.action = '/laporan/<%= data.id %>/hasil-ondesk';
+    
+    form.reset();
+    document.getElementById('ondesk_id').value = '';
+    document.getElementById('modalOnDesk').classList.remove('hidden');
+}
 
-// ===== HASIL ON DESK INVESTIGATION =====
-async function submitOnDesk(event) {
-  event.preventDefault();
-  const form = document.getElementById('formOnDesk');
-  const formData = new FormData(form);
-  const sel = document.getElementById('faskesSelect');
-  if (sel) {
-    const val = sel.value;
-    if (val === '__other__') {
-      const newName = document.getElementById('newFaskes').value.trim();
-      if (newName) {
-        const r = await fetch('/faskes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ nama_faskes: newName }) });
-        const j = await r.json();
-        formData.set('nama_faskes', j.nama_faskes || newName);
-      }
-    } else {
-      formData.set('nama_faskes', val);
+function editInvestigasi(data) {
+    const form = document.getElementById('formOnDesk');
+    document.getElementById('modalTitle').innerText = 'Update Investigasi';
+    
+    // Set Action URL untuk UPDATE menggunakan ID Investigasi tersebut
+    form.action = `/laporan/ondesk/update/${data.id}`;
+    
+    // Isi data ke dalam form
+    document.getElementById('ondesk_id').value = data.id;
+    document.getElementById('f_nama_faskes').value = data.nama_faskes;
+    document.getElementById('f_activity').value = data.activity;
+    
+    // Format tanggal ke YYYY-MM-DD agar muncul di input date
+    if (data.tanggal_investigasi) {
+        const d = new Date(data.tanggal_investigasi);
+        const formattedDate = d.toISOString().split('T')[0];
+        document.getElementById('f_tanggal').value = formattedDate;
     }
-  }
-  const data = Object.fromEntries(formData);
-  try {
-    const response = await fetch('/laporan/<%= data.id %>/hasil-on-desk', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-    });
-    if (response.ok) {
-      alert('Data on desk investigation berhasil disimpan');
-      closeModalOnDesk();
-      loadOnDeskList();
-    } else {
-      alert('Gagal menyimpan data');
+    
+    document.getElementById('f_nama_petugas').value = data.nama_petugas;
+    document.getElementById('f_no_kontak').value = data.no_kontak || '';
+    document.getElementById('f_hasil').value = data.hasil_investigasi;
+    document.getElementById('f_analisa').value = data.analisa;
+    
+    document.getElementById('modalOnDesk').classList.remove('hidden');
+}
+
+function closeModalOnDesk() {
+    document.getElementById('modalOnDesk').classList.add('hidden');
+}
+
+function deleteInvestigasi(id) {
+    if(confirm('Hapus data ini secara permanen?')) {
+        // Kirim ID investigasi dan ID laporan induk untuk redirect
+        window.location.href = `/laporan/ondesk/delete/${id}/<%= data.id %>`;
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Terjadi kesalahan');
-  }
 }
 
 // ===== HASIL ON DESK INVESTIGATION + PENELPONAN =====
@@ -869,6 +925,36 @@ function calculateDeswaSLA() {
     slaDisplay.value = '';
   }
 }
+
+// --- FUNGSI UNTUK MODAL DESWA ---
+function openModalDeswa() {
+    // Pastikan ID modal sesuai dengan yang ada di HTML Anda
+    const modal = document.getElementById('modalDeswa');
+    if(modal) {
+        modal.classList.remove('hidden');
+    } else {
+        console.error("Modal Deswa dengan ID 'modalDeswa' tidak ditemukan");
+    }
+}
+
+function closeModalDeswa() {
+    document.getElementById('modalDeswa').classList.add('hidden');
+}
+
+// --- FUNGSI UNTUK MODAL BRI ---
+function openModalBri() {
+    const modal = document.getElementById('modalBri');
+    if(modal) {
+        modal.classList.remove('hidden');
+    } else {
+        console.error("Modal BRI dengan ID 'modalBri' tidak ditemukan");
+    }
+}
+
+function closeModalBri() {
+    document.getElementById('modalBri').classList.add('hidden');
+}
+
 
 async function submitDeswa(event) {
   event.preventDefault();

@@ -515,26 +515,16 @@ router.get('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
 
 // API untuk Input Hasil On-Desk (Hasil Konfirmasi)
 router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
-    try {
+  try {
+        const { tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity } = req.body;
         const laporanId = req.params.id;
-        const { 
-            nama_faskes, 
-            alamat_faskes, 
-            tanggal_investigasi, 
-            nama_petugas, 
-            no_kontak, 
-            hasil_investigasi, 
-            analisa 
-        } = req.body;
 
-        // Gunakan INSERT INTO sesuai struktur tabel hasil_on_desk
         await db.query(
             `INSERT INTO hasil_on_desk 
-            (laporan_id, nama_faskes, alamat_faskes, tanggal_investigasi, nama_petugas, no_kontak, hasil_investigasi, analisa) 
+            (laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [laporanId, nama_faskes, alamat_faskes, tanggal_investigasi, nama_petugas, no_kontak, hasil_investigasi, analisa]
+            [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity]
         );
-
         res.redirect('/laporan/' + laporanId);
     } catch (err) {
         console.error(err);
@@ -543,6 +533,37 @@ router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
             return res.status(400).send("Data investigasi ini sudah ada (Duplikat).");
         }
         res.status(500).send("Gagal menyimpan hasil investigasi: " + err.message);
+    }
+});
+
+// UPDATE HASIL ONDESK
+router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
+    try {
+        const { tanggal_investigasi, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
+        
+        await db.query(
+            `UPDATE hasil_on_desk SET 
+                tanggal_investigasi=?, nama_petugas=?, nama_faskes=?, 
+                hasil_investigasi=?, analisa=?, activity=? 
+             WHERE id=?`,
+            [tanggal_investigasi, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity, req.params.id]
+        );
+        
+        // Redirect ke halaman detail laporan (Gunakan laporan_id dari hidden input)
+        res.redirect('/laporan/' + laporan_id);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Gagal update: " + err.message);
+    }
+});
+
+// DELETE HASIL ONDESK
+router.get('/laporan/ondesk/delete/:id/:laporan_id', auth, async (req, res) => {
+    try {
+        await db.query('DELETE FROM hasil_on_desk WHERE id=?', [req.params.id]);
+        res.redirect('/laporan/' + req.params.laporan_id);
+    } catch (err) {
+        res.status(500).send("Gagal menghapus: " + err.message);
     }
 });
 
@@ -951,40 +972,28 @@ router.get('/laporan/:id/deswa', auth, async (req, res) => {
   }
 });
 
+// Perbaikan untuk Vendor Deswa (Poin 4)
 router.post('/laporan/:id/deswa', auth, async (req, res) => {
-  try {
-    const {
-      pic_investigator,
-      tanggal_mulai,
-      tanggal_selesai
-    } = req.body;
+    try {
+        const { pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses } = req.body;
+        const laporan_id = req.params.id;
 
-    // Auto-calculate SLA (hari) = tanggal_selesai - tanggal_mulai
-    const start = new Date(tanggal_mulai);
-    const end = new Date(tanggal_selesai);
-    const sla_proses = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-    await db.query(`
-      INSERT INTO deswa (
-        laporan_id,
-        pic_investigator,
-        tanggal_mulai,
-        tanggal_selesai,
-        sla_proses
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.params.id,
-      pic_investigator,
-      tanggal_mulai,
-      tanggal_selesai,
-      sla_proses
-    ]);
-
-    res.json({ success: true });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Database error' });
-  }
+        // Gunakan ON DUPLICATE KEY UPDATE agar jika data sudah ada, dia mengupdate, bukan error duplicate
+        await db.query(
+            `INSERT INTO deswa (laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses) 
+             VALUES (?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE 
+             pic_investigator=?, tanggal_mulai=?, tanggal_selesai=?, sla_proses=?`,
+            [
+                laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses,
+                pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses
+            ]
+        );
+        res.json({ success: true });
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 router.delete('/laporan/:laporan_id/deswa/:id', auth, async (req, res) => {
