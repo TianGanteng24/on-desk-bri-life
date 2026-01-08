@@ -105,10 +105,12 @@ router.post('/users/create', async (req, res) => {
     try {
         const { username, password, role } = req.body;
         
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
         // Logika simpan ke database (password sebaiknya di-hash dengan bcrypt)
         await db.query(
             'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-            [username, password, role]
+            [username, hashedPassword, role]
         );
 
         res.redirect('/users'); // Kembali ke daftar user setelah berhasil
@@ -125,8 +127,9 @@ router.post('/users/update', async (req, res) => {
     let params = [username, role, id];
 
     if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
         query = "UPDATE users SET username=?, role=?, password=? WHERE id=?";
-        params = [username, role, password, id]; // Gunakan hash bcrypt di sini jika perlu
+        params = [username, role, hashedPassword, id]; // Gunakan hash bcrypt di sini jika perlu
     }
 
     await db.query(query, params);
