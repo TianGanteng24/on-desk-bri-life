@@ -379,6 +379,8 @@ module.exports = async (req, res) => {
       { t: "ANALISA INVESTIGATOR INDEPENDENT", v: resumeInv?.hasil },
       { t: "ANALISA PIC INVESTIGATOR", v: lap?.analisa_pic_investigator },
       { t: "ANALISA MA", v: lap?.analisa_ma },
+      { t: "ANALISAN DAN PUTUSAN DEPARTEMENT HEAD", v: lap?.putusan_klaim },
+      { t: "ANALISAN DAN KEPUTUSAN TEAM LEADER", v: lap?.analisa_putusan },
     ];
 
     finalAnl.forEach((s) => {
@@ -392,17 +394,77 @@ module.exports = async (req, res) => {
       y += h;
     });
 
-    // 8. PUTUSAN KLAIM
-    y = checkPage(doc, y, 100);
-    y += 15;
-    sectionTitle(doc, x, y, W, "PUTUSAN KLAIM");
-    y += 18;
-    cell(doc, x, y, 150, 20, "STATUS", { bold: true });
-    cell(doc, x + 150, y, W - 150, 20, lap?.putusan_klaim || "-");
-    y += 20;
-    const hPut = autoRowHeight(doc, lap?.analisa_putusan, W - 150, 40);
-    cell(doc, x, y, 150, hPut, "ANALISA PUTUSAN", { bold: true });
-    cell(doc, x + 150, y, W - 150, hPut, lap?.analisa_putusan);
+    /* =======================
+   PERSETUJUAN HASIL INVESTIGASI
+======================= */
+
+y += 25;
+y = checkPage(doc, y, 220);
+
+// Judul Section
+doc.rect(x, y, W, 20).fill("#E7E6E6").stroke("#000");
+doc
+  .font("Helvetica-Bold")
+  .fontSize(9)
+  .fillColor("#000")
+  .text("PERSETUJUAN HASIL INVESTIGASI", x, y + 6, {
+    width: W,
+    align: "center",
+  });
+
+y += 20;
+
+// Lebar kolom (total 545)
+const colDeptHead = 180;
+const colTeamLeader = 180;
+const colMA = 185;
+const headerHeight = 18;
+const signHeight = 120;
+
+// Header kolom
+headerCell(doc, x, y, colDeptHead, headerHeight, "Departement Head");
+headerCell(
+  doc,
+  x + colDeptHead,
+  y,
+  colTeamLeader,
+  headerHeight,
+  "Team Leader"
+);
+headerCell(
+  doc,
+  x + colDeptHead + colTeamLeader,
+  y,
+  colMA,
+  headerHeight,
+  "MA"
+);
+
+y += headerHeight;
+
+// Area tanda tangan (kosong)
+cell(doc, x, y, colDeptHead, signHeight, "", { align: "center" });
+cell(
+  doc,
+  x + colDeptHead,
+  y,
+  colTeamLeader,
+  signHeight,
+  "",
+  { align: "center" }
+);
+cell(
+  doc,
+  x + colDeptHead + colTeamLeader,
+  y,
+  colMA,
+  signHeight,
+  "",
+  { align: "center" }
+);
+
+y += signHeight;
+
 
     doc.end();
   } catch (err) {

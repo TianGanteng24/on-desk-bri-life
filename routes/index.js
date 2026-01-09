@@ -3,7 +3,6 @@ const db = require('../config/db');
 const generatePdf = require('../pdf/laporanPdf');
 const crypto = require('crypto');
 
-
 const router = express.Router();
 
 async function auth(req, res, next) {
@@ -527,14 +526,14 @@ router.get('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
 // API untuk Input Hasil On-Desk (Hasil Konfirmasi)
 router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
   try {
-        const { tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity } = req.body;
+        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, hasil_investigasi, analisa, activity } = req.body;
         const laporanId = req.params.id;
 
         await db.query(
             `INSERT INTO hasil_on_desk 
-            (laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity]
+            (laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, hasil_investigasi, analisa, activity) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, hasil_investigasi, analisa, activity]
         );
         res.redirect('/laporan/' + laporanId);
     } catch (err) {
@@ -550,14 +549,14 @@ router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
 // UPDATE HASIL ONDESK
 router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
     try {
-        const { tanggal_investigasi, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
+        const { tanggal_investigasi, nama_petugas, no_kontak, nama_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
         
         await db.query(
             `UPDATE hasil_on_desk SET 
-                tanggal_investigasi=?, nama_petugas=?, nama_faskes=?, 
-                hasil_investigasi=?, analisa=?, activity=? 
+                tanggal_investigasi=?, nama_petugas=?, no_kontak=?, nama_faskes=?, 
+                hasil_investigasi=?, analisa=?, activity=?
              WHERE id=?`,
-            [tanggal_investigasi, nama_petugas, nama_faskes, hasil_investigasi, analisa, activity, req.params.id]
+            [tanggal_investigasi, nama_petugas, no_kontak, nama_faskes, hasil_investigasi, analisa, activity, req.params.id]
         );
         
         // Redirect ke halaman detail laporan (Gunakan laporan_id dari hidden input)
