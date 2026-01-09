@@ -85,6 +85,14 @@
       <p class="text-base font-medium"><%= data.usia_polis || '-' %></p>
     </div>
     <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Klaim</p>
+      <p class="text-base font-medium"><%= data.date_claim ? new Date(data.date_claim).toLocaleDateString('id-ID') : '-' %></p>
+    </div>
+    <div>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Lama dirawat</p>
+      <p class="text-base font-medium"><%= data.lama_dirawat || '-' %> Hari</p>
+    </div>
+    <div>
       <p class="text-sm text-gray-600 dark:text-gray-400">Jenis Klaim</p>
       <p class="text-base font-medium"><%= data.jenis_klaim || '-' %></p>
     </div>
@@ -329,107 +337,265 @@ async function submitPenelponan(e){
 <section class="mb-8 mt-3">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📝 Resume Hasil Interview Ahli Waris</h3>
-    <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Resume</button>
+    <% if (user.role === 'deswa' || user.role === 'admin') { %>
+      <div id="btnContainerInterview">
+        <button onclick="openModalResumeInterview()" class="px-3 py-1 bg-indigo-600 text-white rounded text-sm">➕ Tambah Resume</button>
+      </div>
+    <% } %>
   </div>
   
   <div id="resumeInterviewDisplay" class="space-y-6">
-    <!-- Resume display akan dimuat di sini -->
-  </div>
-
+    </div>
 </section>
 
-<!-- MODAL RESUME INTERVIEW (Hasil + Redaksional) -->
 <div id="modalResumeInterview" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
   <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
-    <h3 class="text-lg font-semibold mb-4">📝 Edit Resume Interview</h3>
+    <h3 id="modalInterviewTitle" class="text-lg font-semibold mb-4">📝 Form Resume Interview</h3>
     <form id="formResumeInterview" onsubmit="submitResumeInterview(event)" class="grid gap-3">
+      <input type="hidden" name="id" id="interview_id">
+      
       <div>
         <label class="block text-sm font-medium mb-2">Hasil Interview</label>
-        <textarea name="hasil_interview" placeholder="Hasil Interview" class="w-full border p-2 rounded h-24 dark:bg-slate-700 dark:border-slate-600"></textarea>
+        <textarea name="hasil_interview" id="interview_hasil" placeholder="Hasil Interview" 
+          class="w-full border p-2 rounded h-40 dark:bg-slate-700 dark:border-slate-600"></textarea>
       </div>
       <div class="flex justify-end gap-2">
-        <button type="button" onclick="closeModalResumeInterview()" class="px-4 py-2 border rounded dark:bg-slate-700 dark:text-gray-400">Batal</button>
+        <button type="button" onclick="closeModalResumeInterview()" class="px-4 py-2 border rounded dark:bg-slate-700">Batal</button>
         <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Simpan</button>
       </div>
     </form>
   </div>
 </div>
 
-
 <script>
-// ===== RESUME INTERVIEW FUNCTIONS =====
-function openModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.remove('hidden'); }
-function closeModalResumeInterview(){ document.getElementById('modalResumeInterview').classList.add('hidden'); document.getElementById('formResumeInterview').reset(); }
-function openModalResumePhone(){ document.getElementById('modalResumePhone').classList.remove('hidden'); }
-function closeModalResumePhone(){ document.getElementById('modalResumePhone').classList.add('hidden'); document.getElementById('formResumePhone').reset(); }
-
-async function submitResumeInterview(e){
-  e.preventDefault();
-  const formData = Object.fromEntries(new FormData(document.getElementById('formResumeInterview')));
-  try{
-    const res = await fetch('/laporan/<%= data.id %>/resume-interview', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData)});
-    if(res.ok){ closeModalResumeInterview(); loadResumeInterviewList(); } else { alert('Gagal menyimpan resume'); }
-  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+/**
+ * SECTION: RESUME INTERVIEW
+ */
+function openModalResumeInterview() { 
+  document.getElementById('modalResumeInterview').classList.remove('hidden'); 
 }
 
-async function submitResumePhone(e){
-  e.preventDefault();
-  const formData = Object.fromEntries(new FormData(document.getElementById('formResumePhone')));
-  try{
-    const res = await fetch('/laporan/<%= data.id %>/resume-interview/phone', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(formData)});
-    if(res.ok){ closeModalResumePhone(); loadResumeInterviewList(); } else { alert('Gagal menyimpan data telepon'); }
-  }catch(err){ console.error(err); alert('Terjadi kesalahan'); }
+function closeModalResumeInterview() { 
+  document.getElementById('modalResumeInterview').classList.add('hidden'); 
+  document.getElementById('formResumeInterview').reset(); 
+  document.getElementById('interview_id').value = ''; 
+  const title = document.getElementById('modalInterviewTitle');
+  if(title) title.innerText = '📝 Resume Interview';
 }
 
-async function loadResumeInterviewList(){
-  try{
+function editResumeInterview(id, text) {
+  document.getElementById('interview_id').value = id;
+  document.getElementById('interview_hasil').value = text;
+  document.getElementById('modalInterviewTitle').innerText = '📝 Edit Resume Interview';
+  openModalResumeInterview();
+}
+
+async function submitResumeInterview(e) {
+  e.preventDefault();
+  
+  // Pastikan ID elemen form benar
+  const form = document.getElementById('formResumeInterview');
+  const formData = new FormData(form);
+  const dataObj = Object.fromEntries(formData.entries());
+  
+  const isEdit = dataObj.id && dataObj.id !== "";
+  const method = isEdit ? 'PUT' : 'POST';
+  const url = isEdit 
+    ? `/laporan/<%= data.id %>/resume-interview/${dataObj.id}` 
+    : `/laporan/<%= data.id %>/resume-interview`;
+
+  console.log("Interview Submit:", { url, method, dataObj }); // Cek di Console F12
+
+  try {
+    const res = await fetch(url, { 
+      method: method, 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify(dataObj)
+    });
+    
+    if (res.ok) { 
+      alert('Resume Interview berhasil disimpan');
+      closeModalResumeInterview(); 
+      if (typeof loadResumeInterviewList === "function") loadResumeInterviewList(); 
+    } else { 
+      alert('Gagal simpan: Server merespon dengan error'); 
+    }
+  } catch (err) { 
+    console.error('Fetch Interview Error:', err);
+    alert('Terjadi kesalahan koneksi ke server'); 
+  }
+}
+
+async function loadResumeInterviewList() {
+  try {
     const res = await fetch('/laporan/<%= data.id %>/resume-interview');
     const resume = await res.json();
     const container = document.getElementById('resumeInterviewDisplay');
+    const userRole = '<%= user.role %>'; 
     
-    if (!resume.id) {
+    if (!resume || !resume.id) {
       container.innerHTML = '<p class="text-gray-500 text-center py-4">Belum ada resume interview</p>';
       return;
     }
     
-    let html = '';
-    
-    // Display resume data
-    html += '<div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 mb-4">';
-    html += '<h4 class="font-semibold text-lg mb-3 text-blue-600">📋 Data Resume:</h4>';
-    if (resume.hasil_interview) {
-      html += '<div class="mb-3">';
-      html += '<p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Hasil Interview</p>';
-      html += '<p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-2 rounded text-sm">' + (resume.hasil_interview || '-') + '</p>';
-      html += '</div>';
-    }
+    const btnAdd = document.getElementById('btnContainerInterview');
+    if(btnAdd) btnAdd.style.display = 'none';
 
-    container.innerHTML = html;
-  }catch(err){
-    console.error('Load Resume Interview error', err);
-  }
+    container.innerHTML = `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 mb-4">
+        <div class="flex justify-between items-center mb-3 border-b pb-2 dark:border-slate-700">
+          <h4 class="font-semibold text-blue-600 uppercase text-xs">Hasil Interview Ahli Waris</h4>
+          ${userRole === 'deswa' || userRole === 'admin' ? `
+            <button onclick="editResumeInterview('${resume.id}', \`${resume.hasil_interview}\`)" 
+              class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-2 py-1 rounded">✏️ Edit</button>
+          ` : ''}
+        </div>
+        <p class="whitespace-pre-wrap text-sm">${resume.hasil_interview || '-'}</p>
+      </div>`;
+  } catch(err) { console.error('Load Interview Error:', err); }
 }
-</script>
 
+document.addEventListener('DOMContentLoaded', loadResumeInterviewList);
+</script>
 
 <!-- RESUME INVESTIGASI -->
 <section class="mb-8">
   <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
     <h3 class="text-lg font-semibold">📋 Resume Investigasi</h3>
-    <button onclick="openModalResumeInvestigasi()" class="px-3 py-1 bg-green-600 text-white rounded text-sm">➕ Tambah</button>
+    <% if (user.role === 'deswa' || user.role === 'admin') { %>
+      <button onclick="openModalResumeInvestigasi()" class="px-3 py-1 bg-green-600 text-white rounded text-sm">➕ Tambah</button>
+    <% } %>
   </div>
   
-  <div id="resumeInvestigasiList" class="space-y-4">
-    <!-- Data akan dimuat di sini -->
-  </div>
-  
-  <% if(data.resume_hasil_investigasi) { %>
-  <div class="mt-4 p-4 bg-blue-50 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 rounded">
-    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Resume dari laporan utama:</p>
-    <p class="text-base whitespace-pre-wrap"><%= data.resume_hasil_investigasi %></p>
-  </div>
-  <% } %>
+  <div id="resumeInvestigasiList" class="space-y-4"></div>
 </section>
+
+<div id="modalResumeInvestigasi" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4">
+    <h3 id="modalInvestigasiTitle" class="text-2xl font-bold mb-6">📋 Resume Investigasi</h3>
+   <form id="formResumeInvestigasi" onsubmit="submitResumeInvestigasi(event)" class="space-y-4">
+  <input type="hidden" name="id" id="investigasi_id">
+  
+  <div>
+    <label class="block text-sm font-medium mb-2">Hasil Resume *</label>
+    <textarea name="hasil" id="investigasi_text" required 
+      placeholder="Masukkan hasil/kesimpulan dari investigasi"
+      class="w-full border rounded-lg px-4 py-2 h-32 dark:bg-slate-700 dark:border-slate-600"></textarea>
+  </div>
+  <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
+    <button type="button" onclick="closeModalResumeInvestigasi()" class="px-6 py-2 border rounded-lg">
+      Batal
+    </button>
+    <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+      💾 Simpan Perubahan
+    </button>
+  </div>
+</form>
+  </div>
+</div>
+
+<script>
+/**
+ * SECTION: RESUME INVESTIGASI
+ */
+function openModalResumeInvestigasi() { 
+  document.getElementById('modalResumeInvestigasi').classList.remove('hidden'); 
+}
+
+function closeModalResumeInvestigasi() { 
+  document.getElementById('modalResumeInvestigasi').classList.add('hidden'); 
+  document.getElementById('formResumeInvestigasi').reset();
+  document.getElementById('investigasi_id').value = ''; 
+  const title = document.getElementById('modalInvestigasiTitle');
+  if(title) title.innerText = '📋 Resume Investigasi';
+}
+
+function editResumeInvestigasi(id, text) {
+  document.getElementById('investigasi_id').value = id;
+  document.getElementById('investigasi_text').value = text;
+  document.getElementById('modalInvestigasiTitle').innerText = '📝 Edit Resume Investigasi';
+  openModalResumeInvestigasi();
+}
+
+async function submitResumeInvestigasi(e) {
+  e.preventDefault();
+  
+  const form = document.getElementById('formResumeInvestigasi');
+  const formData = new FormData(form);
+  const dataObj = Object.fromEntries(formData.entries());
+  
+  const isEdit = dataObj.id && dataObj.id !== "";
+  const method = isEdit ? 'PUT' : 'POST';
+  const url = isEdit 
+    ? `/laporan/<%= data.id %>/resume-investigasi/${dataObj.id}` 
+    : `/laporan/<%= data.id %>/resume-investigasi`;
+
+  console.log("Investigasi Submit:", { url, method, dataObj }); // Cek di Console F12
+
+  try {
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dataObj)
+    });
+
+    if (res.ok) {
+      alert('Resume Investigasi berhasil disimpan');
+      closeModalResumeInvestigasi();
+      if (typeof loadResumeInvestigasiList === "function") loadResumeInvestigasiList();
+    } else {
+      alert('Gagal memproses data investigasi');
+    }
+  } catch(err) {
+    console.error('Fetch Investigasi Error:', err);
+    alert('Kesalahan koneksi ke server');
+  }
+}
+
+async function loadResumeInvestigasiList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/resume-investigasi');
+    const rows = await res.json();
+    const container = document.getElementById('resumeInvestigasiList');
+    const userRole = '<%= user.role %>';
+    
+    if (!rows || !rows.length) {
+      container.innerHTML = '<p class="text-gray-500 text-center py-8">Belum ada resume investigasi</p>';
+      return;
+    }
+    
+    container.innerHTML = rows.map((r, idx) => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-start gap-4">
+          <div class="flex-1">
+            <h4 class="font-semibold text-lg mb-2">Resume #${idx + 1}</h4>
+            <p class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">${r.hasil || '-'}</p>
+          </div>
+          ${userRole === 'deswa' || userRole === 'admin' ? `
+            <div class="flex flex-col gap-2">
+              <button onclick="editResumeInvestigasi('${r.id}', \`${r.hasil}\`)" 
+                class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">✏️ Edit</button>
+              <button onclick="deleteResumeInvestigasi(${r.id})" 
+                class="px-3 py-1 bg-red-500 text-white text-xs rounded">🗑️ Hapus</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch(err) { console.error('Load Investigasi Error:', err); }
+}
+
+async function deleteResumeInvestigasi(id) {
+  if (!confirm('Yakin hapus data ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/resume-investigasi/${id}`, { method: 'DELETE' });
+    if (res.ok) loadResumeInvestigasiList();
+  } catch(err) { console.error(err); }
+}
+
+document.addEventListener('DOMContentLoaded', loadResumeInvestigasiList);
+</script>
+
 <section class="mt-12">
   <div class="flex justify-between items-center border-b-2 pb-3 mb-6 dark:border-slate-700">
     <h3 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -561,27 +727,6 @@ async function loadResumeInterviewList(){
   }
 </script>
 
-<!-- MODAL RESUME INVESTIGASI -->
-<div id="modalResumeInvestigasi" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4">
-    <h3 class="text-2xl font-bold mb-6">📋 Resume Investigasi</h3>
-    <form id="formResumeInvestigasi" onsubmit="submitResumeInvestigasi(event)" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium mb-2">Hasil Resume *</label>
-        <textarea name="hasil" required placeholder="Masukkan hasil/kesimpulan dari investigasi"
-          class="w-full border rounded-lg px-4 py-2 h-32 dark:bg-slate-700 dark:border-slate-600"></textarea>
-      </div>
-      <div class="flex justify-end gap-3 pt-4 border-t dark:border-slate-700">
-        <button type="button" onclick="closeModalResumeInvestigasi()" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-          Batal
-        </button>
-        <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
-          💾 Simpan
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <!-- BUTTONS -->
 <div class="flex justify-between border-t pt-4 text-sm text-gray-500">
@@ -602,7 +747,7 @@ async function loadResumeInterviewList(){
     </a>
 <% } %>
 
-    <% if (user.role === 'deswa') { %>
+    <% if (user.role === 'deswa' || user.role === 'admin') { %>
 <button onclick="openModalDeswa()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
   Update Data Deswa
 </button>
@@ -1082,74 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<script>
-// ===== RESUME INVESTIGASI =====
-function openModalResumeInvestigasi() { document.getElementById('modalResumeInvestigasi').classList.remove('hidden'); }
-function closeModalResumeInvestigasi() { document.getElementById('modalResumeInvestigasi').classList.add('hidden'); document.getElementById('formResumeInvestigasi').reset(); }
 
-async function submitResumeInvestigasi(event) {
-  event.preventDefault();
-  const data = Object.fromEntries(new FormData(document.getElementById('formResumeInvestigasi')));
-  try {
-    const res = await fetch('/laporan/<%= data.id %>/resume-investigasi', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
-    });
-    if (res.ok) {
-      alert('Resume investigasi berhasil disimpan');
-      closeModalResumeInvestigasi();
-      loadResumeInvestigasiList();
-    } else {
-      alert('Gagal menyimpan resume investigasi');
-    }
-  } catch(err) {
-    console.error(err);
-    alert('Terjadi kesalahan');
-  }
-}
-
-async function loadResumeInvestigasiList() {
-  try {
-    const res = await fetch('/laporan/<%= data.id %>/resume-investigasi');
-    const rows = await res.json();
-    const container = document.getElementById('resumeInvestigasiList');
-    
-    if (!rows.length) {
-      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada resume investigasi</p>';
-      return;
-    }
-    
-    container.innerHTML = rows.map((r, idx) => `
-      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
-        <div class="flex justify-between items-start gap-4">
-          <div class="flex-1">
-            <h4 class="font-semibold text-lg mb-2">Resume #${idx + 1}</h4>
-            <p class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">${r.hasil || '-'}</p>
-          </div>
-          <button onclick="deleteResumeInvestigasi(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded whitespace-nowrap">
-            🗑️ Hapus
-          </button>
-        </div>
-      </div>
-    `).join('');
-  } catch(err) {
-    console.error('Load Resume Investigasi error', err);
-  }
-}
-
-async function deleteResumeInvestigasi(id) {
-  if (!confirm('Yakin hapus resume investigasi ini?')) return;
-  try {
-    const res = await fetch(`/laporan/<%= data.id %>/resume-investigasi/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('Resume investigasi dihapus');
-      loadResumeInvestigasiList();
-    }
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-</script>
 
 <script>
 // BRI Modal & Functions

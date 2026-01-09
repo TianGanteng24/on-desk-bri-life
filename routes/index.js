@@ -325,6 +325,8 @@ router.post('/laporan/store', auth, async (req, res) => {
       d.uang_pertanggungan,        // 6
       d.tanggal_lahir || null,     // 7
       d.tanggal_meninggal || null,  // 8
+      d.date_claim || null,  // 8
+      d.lama_dirawat || null,  // 8
       status_fix,                  // 9
       d.kronologis,                // 10
       d.kelengkapan_dokumen,       // 11
@@ -342,11 +344,11 @@ router.post('/laporan/store', auth, async (req, res) => {
     const sql = `
       INSERT INTO laporan_investigasi (
         nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
-        alamat, uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
+        alamat, uang_pertanggungan, tanggal_lahir, tanggal_meninggal, date_claim, lama_dirawat,
         status_asuransi, kronologis, kelengkapan_dokumen, pengisi_form_kronologis,
         tgl_mulai_asuransi, tgl_akhir_asuransi, usia_polis, jenis_klaim,
         jenis_produk, no_identitas, rekomendasi, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await db.query(sql, values);
@@ -413,6 +415,8 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       uang_pertanggungan,
       tanggal_lahir,
       tanggal_meninggal,
+      date_claim,
+      lama_dirawat,
       status_asuransi,
       kronologis,
       kelengkapan_dokumen,
@@ -436,6 +440,8 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
         uang_pertanggungan = ?,
         tanggal_lahir = ?,
         tanggal_meninggal = ?,
+        date_claim = ?,
+        lama_dirawat = ?,
         status_asuransi = ?,
         kronologis = ?,
         kelengkapan_dokumen = ?,
@@ -457,6 +463,8 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       uang_pertanggungan,
       tanggal_lahir,
       tanggal_meninggal,
+      date_claim,
+      lama_dirawat,
       status_asuransi,
       kronologis,
       kelengkapan_dokumen,
@@ -689,185 +697,134 @@ router.delete('/laporan/:id/penelponan/:penelponan_id', auth, async (req, res) =
   }
 });
 
-/* =========================
-   RESUME INVESTIGASI
-========================= */
 
-/* GET RESUME INVESTIGASI */
-router.get('/laporan/:id/resume-investigasi', auth, async (req, res) => {
-  try {
-    const [rows] = await db.query(
-      'SELECT * FROM resume_investigasi WHERE laporan_id=? ORDER BY id DESC',
-      [req.params.id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
 
-/* POST RESUME INVESTIGASI */
-router.post('/laporan/:id/resume-investigasi', auth, async (req, res) => {
-  try {
-    const { hasil } = req.body;
-    const laporanId = req.params.id;
+/* ===============================
+   RESUME INTERVIEW (SATU DATA)
+================================ */
 
-    // Cek apakah resume sudah ada untuk laporan ini
-    const [existing] = await db.query('SELECT * FROM resume_investigasi WHERE laporan_id = ?', [laporanId]);
-
-    if (existing.length > 0) {
-      // Jika sudah ada, Update data yang lama
-      await db.query(
-        'UPDATE resume_investigasi SET hasil = ? WHERE laporan_id = ?',
-        [hasil, laporanId]
-      );
-    } else {
-      // Jika belum ada, Insert data baru
-      await db.query(
-        'INSERT INTO resume_investigasi (laporan_id, hasil) VALUES (?, ?)',
-        [laporanId, hasil]
-      );
-    }
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Database error' });
-  }
-  res.json({ success: true });
-});
-
-/* DELETE RESUME INVESTIGASI */
-router.delete('/laporan/:id/resume-investigasi/:resume_id', auth, async (req, res) => {
-  try {
-    await db.query(
-      'DELETE FROM resume_investigasi WHERE id=? AND laporan_id=?',
-      [req.params.resume_id, req.params.id]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
-/* GET RESUME INTERVIEW */
+/* GET */
 router.get('/laporan/:id/resume-interview', auth, async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT * FROM resume_hasil_interview WHERE laporan_id=? LIMIT 1',
+      'SELECT * FROM resume_hasil_interview WHERE laporan_id = ? LIMIT 1',
       [req.params.id]
     );
     res.json(rows.length ? rows[0] : {});
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ error: 'Database error' });
   }
 });
 
-/* POST RESUME INTERVIEW - Initial create or update */
+/* POST */
 router.post('/laporan/:id/resume-interview', auth, async (req, res) => {
   try {
-    const { hasil_interview, redaksional } = req.body;
-    console.log('POST /resume-interview', { id: req.params.id, hasil_interview, redaksional });
-    
-    // Check if exists
-    const [existing] = await db.query(
-      'SELECT id FROM resume_hasil_interview WHERE laporan_id=?',
-      [req.params.id]
+    const { hasil_interview } = req.body;
+
+    await db.query(
+      `INSERT INTO resume_hasil_interview (laporan_id, hasil_interview)
+       VALUES (?, ?)`,
+      [req.params.id, hasil_interview]
     );
-    
-    if (existing.length) {
-      // Update existing
-      await db.query(
-        'UPDATE resume_hasil_interview SET hasil_interview=?, redaksional=? WHERE laporan_id=?',
-        [hasil_interview, redaksional, req.params.id]
-      );
-      console.log('Updated existing resume record');
-      res.json({ id: existing[0].id });
-    } else {
-      // Create new
-      const [result] = await db.query(
-        'INSERT INTO resume_hasil_interview (laporan_id, hasil_interview, redaksional) VALUES (?, ?, ?)',
-        [req.params.id, hasil_interview, redaksional]
-      );
-      console.log('Created new resume record with id:', result.insertId);
-      res.json({ id: result.insertId });
-    }
+
+    res.json({ message: 'Resume interview berhasil disimpan' });
   } catch (err) {
-    console.log('POST /resume-interview ERROR:', err);
-    res.status(500).json({ error: 'Database error: ' + err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Gagal menyimpan data' });
   }
 });
 
-/* POST PHONE CALL DATA - Update based on telepon_ke (1/2/3) */
-router.post('/laporan/:id/resume-interview/phone', auth, async (req, res) => {
+/* PUT */
+router.put('/laporan/:id/resume-interview/:resumeId', auth, async (req, res) => {
   try {
-    const { telepon_ke, tanggal_telepon, jam_telepon } = req.body;
-    console.log('POST /resume-interview/phone', { id: req.params.id, telepon_ke, tanggal_telepon, jam_telepon });
-    
-    // Validate telepon_ke is 1, 2, or 3
-    if (![1, 2, 3].includes(parseInt(telepon_ke))) {
-      return res.status(400).json({ error: 'Telepon ke harus 1, 2, atau 3' });
-    }
+    const { hasil_interview } = req.body;
 
-    // Check if resume_hasil_interview exists for this laporan
-    const [existing] = await db.query(
-      'SELECT id FROM resume_hasil_interview WHERE laporan_id=?',
-      [req.params.id]
+    await db.query(
+      `UPDATE resume_hasil_interview
+       SET hasil_interview = ?
+       WHERE id = ?`,
+      [hasil_interview, req.params.resumeId]
     );
 
-    if (!existing.length) {
-      // Create default record if doesn't exist
-      console.log('Creating default resume record');
-      await db.query(
-        'INSERT INTO resume_hasil_interview (laporan_id, hasil_interview, redaksional) VALUES (?, ?, ?)',
-        [req.params.id, '', '']
-      );
-    }
-
-    // Update phone columns based on telepon_ke
-    const dateCol = `tgl_telpon_${telepon_ke}`;
-    const timeCol = `jam_telpon_${telepon_ke}`;
-    const query = `UPDATE resume_hasil_interview SET ${dateCol}=?, ${timeCol}=? WHERE laporan_id=?`;
-    console.log('Executing query:', query, [tanggal_telepon, jam_telepon, req.params.id]);
-    await db.query(query, [tanggal_telepon, jam_telepon, req.params.id]);
-    
-    console.log('Phone data saved successfully');
-    res.json({ success: true });
+    res.json({ message: 'Resume interview berhasil diperbarui' });
   } catch (err) {
-    console.log('POST /resume-interview/phone ERROR:', err);
-    res.status(500).json({ error: 'Database error: ' + err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Gagal update data' });
   }
 });
 
-/* RESUME INTERVIEW - Legacy */
-router.post('/laporan/:id/resume', auth, async (req, res) => {
-  // Redirect to new endpoint
+/* ===============================
+   RESUME INVESTIGASI (LIST)
+================================ */
+
+/* GET */
+router.get('/laporan/:id/resume-investigasi', auth, async (req, res) => {
   try {
-    const { hasil_interview, redaksional } = req.body;
-    const [existing] = await db.query(
-      'SELECT id FROM resume_hasil_interview WHERE laporan_id=?',
+    const [rows] = await db.query(
+      'SELECT * FROM resume_investigasi WHERE laporan_id = ? ORDER BY id ASC',
       [req.params.id]
     );
-    
-    if (existing.length) {
-      await db.query(
-        'UPDATE resume_hasil_interview SET hasil_interview=?, redaksional=? WHERE laporan_id=?',
-        [hasil_interview, redaksional, req.params.id]
-      );
-      res.json({ id: existing[0].id });
-    } else {
-      const [result] = await db.query(
-        'INSERT INTO resume_hasil_interview (laporan_id, hasil_interview, redaksional) VALUES (?, ?, ?)',
-        [req.params.id, hasil_interview, redaksional]
-      );
-      res.json({ id: result.insertId });
-    }
+    res.json(rows);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ error: 'Database error' });
   }
 });
+
+/* POST */
+router.post('/laporan/:id/resume-investigasi', auth, async (req, res) => {
+  try {
+    const { hasil } = req.body;
+
+    await db.query(
+      `INSERT INTO resume_investigasi (laporan_id, hasil)
+       VALUES (?, ?)`,
+      [req.params.id, hasil]
+    );
+
+    res.json({ message: 'Resume investigasi berhasil ditambahkan' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal simpan data' });
+  }
+});
+
+/* PUT */
+router.put('/laporan/:id/resume-investigasi/:investigasiId', auth, async (req, res) => {
+  try {
+    const { hasil } = req.body;
+
+    await db.query(
+      `UPDATE resume_investigasi
+       SET hasil = ?
+       WHERE id = ?`,
+      [hasil, req.params.investigasiId]
+    );
+
+    res.json({ message: 'Resume investigasi berhasil diperbarui' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal update data' });
+  }
+});
+
+/* DELETE */
+router.delete('/laporan/:id/resume-investigasi/:investigasiId', auth, async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM resume_investigasi WHERE id = ?',
+      [req.params.investigasiId]
+    );
+
+    res.json({ message: 'Resume investigasi berhasil dihapus' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal hapus data' });
+  }
+});
+
+module.exports = router;
 
 
 router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {

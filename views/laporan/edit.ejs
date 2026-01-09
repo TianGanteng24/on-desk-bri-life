@@ -85,8 +85,18 @@
         class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
     </div>
     <div>
+      <label class="text-sm font-medium">Date Claim</label>
+      <input name="date_claim" type="date" value="<%= data.date_claim ? data.date_claim.toISOString().split('T')[0] : '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
+      <label class="text-sm font-medium">Lama di rawat</label>
+      <input name="lama_dirawat" type="number" value="<%= data.lama_dirawat || '' %>"
+        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+    </div>
+    <div>
       <label class="text-sm font-medium">Usia Polis (hari)</label>
-      <input name="usia_polis" type="number" value="<%= data.usia_polis || '' %>"
+      <input name="usia_polis" type="text" value="<%= data.usia_polis || '' %>"
         class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
     </div>
     <div>
