@@ -311,6 +311,19 @@ router.post('/laporan/store', auth, async (req, res) => {
   try {
     const d = req.body;
 
+    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
+    if (d.tanggal_meninggal && d.tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(d.tanggal_meninggal);
+      const tglMulai = new Date(d.tgl_mulai_asuransi);
+
+      if (tglMeninggal < tglMulai) {
+        return res.status(400).json({
+          error: true,
+          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
+        });
+      }
+    }
+
     // Proteksi: Jika status_asuransi terkirim dua kali (array), ambil satu saja.
     const status_fix = Array.isArray(d.status_asuransi) ? d.status_asuransi[0] : d.status_asuransi;
 
@@ -428,6 +441,19 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       no_identitas,
       rekomendasi
     } = req.body;
+
+    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
+    if (tanggal_meninggal && tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(tanggal_meninggal);
+      const tglMulai = new Date(tgl_mulai_asuransi);
+
+      if (tglMeninggal < tglMulai) {
+        return res.status(400).json({
+          error: true,
+          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
+        });
+      }
+    }
 
     await db.query(`
       UPDATE laporan_investigasi SET

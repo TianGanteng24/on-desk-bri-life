@@ -98,6 +98,67 @@
       this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     });
   }
+
+  // Validasi Tanggal Meninggal vs Tanggal Mulai Asuransi
+  function validateDates() {
+    const tglMeninggal = document.querySelector('input[name="tanggal_meninggal"]');
+    const tglMulai = document.querySelector('input[name="tgl_mulai_asuransi"]');
+    const form = document.querySelector('form');
+
+    if (tglMeninggal && tglMulai) {
+      const checkDates = () => {
+        const meninggal = new Date(tglMeninggal.value);
+        const mulai = new Date(tglMulai.value);
+
+        // Jika kedua field terisi
+        if (tglMeninggal.value && tglMulai.value) {
+          if (meninggal < mulai) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Validasi Tanggal Gagal',
+              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
+              confirmButtonColor: '#ef4444'
+            });
+            // Kosongkan kedua field
+            tglMeninggal.value = '';
+            tglMulai.value = '';
+            return false;
+          }
+        }
+        return true;
+      };
+
+      tglMeninggal.addEventListener('change', checkDates);
+      tglMulai.addEventListener('change', checkDates);
+
+      // Validasi saat form di-submit
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          if (!checkDates()) {
+            e.preventDefault();
+            return false;
+          }
+
+          // Validasi server-side akan dihandle di bawah
+          const meninggal = new Date(tglMeninggal.value);
+          const mulai = new Date(tglMulai.value);
+
+          if (tglMeninggal.value && tglMulai.value && meninggal < mulai) {
+            e.preventDefault();
+            Swal.fire({
+              icon: 'error',
+              title: 'Data Tidak Valid',
+              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
+              confirmButtonColor: '#ef4444'
+            });
+            return false;
+          }
+        });
+      }
+    }
+  }
+
+  validateDates();
 </script>
 
 <%- include('../layout/footer') %>
