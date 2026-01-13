@@ -2,7 +2,7 @@ const PDFDocument = require("pdfkit");
 const db = require("../config/db");
 
 /* =======================
-   HELPER DASAR (RESPONSIVE)
+   HELPER DASAR
 ======================= */
 
 function formatDateIndo(dateString) {
@@ -10,7 +10,7 @@ function formatDateIndo(dateString) {
   const d = new Date(dateString);
   if (isNaN(d)) return dateString;
 
-  const bulanIndo = [
+  const bulan = [
     "Januari",
     "Februari",
     "Maret",
@@ -25,7 +25,7 @@ function formatDateIndo(dateString) {
     "Desember",
   ];
 
-  return `${d.getDate()} ${bulanIndo[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function formatDate(dateString) {
@@ -39,28 +39,27 @@ function formatDate(dateString) {
 
 function cleanText(text) {
   if (text === null || text === undefined) return "-";
-  let cleaned = text.toString();
-  cleaned = cleaned
+  let t = text.toString();
+  t = t
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2013\u2014]/g, "-")
-    .replace(/\u00A0/g, " ");
-  cleaned = cleaned.replace(/[^\x20-\x7E\n\r\t]/g, "");
-  return cleaned.trim() || "-";
+    .replace(/\u00A0/g, " ")
+    .replace(/[^\x20-\x7E\n\r\t]/g, "");
+  return t.trim() || "-";
 }
 
 function autoRowHeight(doc, text, width, min = 18) {
-  const content = cleanText(text);
-  if (content === "-") return min;
-  const textHeight = doc.heightOfString(content, {
+  const c = cleanText(text);
+  const h = doc.heightOfString(c, {
     width: width - 10,
     lineBreak: true,
     lineGap: 2,
   });
-  return Math.max(min, textHeight + 12);
+  return Math.max(min, h + 12);
 }
 
-function checkPage(doc, y, need = 50) {
+function checkPage(doc, y, need = 40) {
   if (y + need > 750) {
     doc.addPage();
     return 40;
@@ -69,97 +68,127 @@ function checkPage(doc, y, need = 50) {
 }
 
 /* =======================
-   CELL STYLING
+   CELL & HEADER
 ======================= */
+
 function cell(doc, x, y, w, h, text, opt = {}) {
-  const content = cleanText(text);
-  doc.lineWidth(0.6).strokeColor("#000");
-  doc.rect(x, y, w, h).stroke();
+  doc.lineWidth(0.6).strokeColor("#000").rect(x, y, w, h).stroke();
+
   doc
+    .fillColor("#000") // WAJIB HITAM
     .font(opt.bold ? "Helvetica-Bold" : "Helvetica")
     .fontSize(8)
-    .fillColor("#000");
-  doc.text(content, x + 5, y + 6, {
-    width: w - 10,
-    align: opt.align || "left",
-    lineBreak: true,
-    lineGap: 2,
-  });
+    .text(cleanText(text), x + 5, y + 6, {
+      width: w - 10,
+      align: opt.align || "left",
+      lineBreak: true,
+      lineGap: 2,
+    });
 }
 
 function headerCell(doc, x, y, w, h, text) {
-  doc.rect(x, y, w, h).fill("#E7E6E6").stroke("#000");
-  doc.font("Helvetica-Bold").fontSize(8).fillColor("#000");
-  doc.text(text, x, y + (h - 8) / 2, { width: w, align: "center" });
+  doc.fillColor("#E7E6E6").rect(x, y, w, h).fill().stroke("#000");
+
+  doc
+    .fillColor("#000") // RESET HITAM
+    .font("Helvetica-Bold")
+    .fontSize(8)
+    .text(text, x, y + (h - 8) / 2, {
+      width: w,
+      align: "center",
+    });
 }
 
 function sectionTitle(doc, x, y, w, text) {
-  doc.rect(x, y, w, 18).fill("#92D050").stroke("#000");
+  doc.fillColor("#92D050").rect(x, y, w, 18).fill().stroke("#000");
+
   doc
+    .fillColor("#000") // RESET HITAM
     .font("Helvetica-Bold")
     .fontSize(9)
-    .fillColor("#000")
-    .text(text, x, y + 5, { width: w, align: "center" });
+    .text(text, x, y + 5, {
+      width: w,
+      align: "center",
+    });
+}
+
+/* =======================
+   ROW DINAMIS
+======================= */
+
+function dynamicRow(doc, y, cols) {
+  const heights = cols.map((c) => autoRowHeight(doc, c.text, c.w, c.min || 20));
+  const hRow = Math.max(...heights);
+
+  y = checkPage(doc, y, hRow);
+
+  let curX = cols[0].x;
+  cols.forEach((c) => {
+    cell(doc, curX, y, c.w, hRow, c.text, c.opt || {});
+    curX += c.w;
+  });
+
+  return y + hRow;
 }
 
 /* =======================
    CONTROLLER
 ======================= */
+
 module.exports = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // 1. QUERY DATA
     const [[lap]] = await db.query(
-      `SELECT * FROM laporan_investigasi WHERE id=?`,
+      "SELECT * FROM laporan_investigasi WHERE id=?",
       [id]
     );
-    if (!lap) return res.status(404).send("Laporan tidak ditemukan");
-
-    // Persiapkan Dokumen (Hanya pipe jika data ditemukan)
-    const doc = new PDFDocument({ size: "A4", margin: 25, bufferPages: true });
-    res.setHeader("Content-Type", "application/pdf");
-    doc.pipe(res);
+    if (!lap) return res.status(404).send("Data tidak ditemukan");
 
     const [[deswa]] = await db.query(
-      `SELECT * FROM deswa WHERE laporan_id=? LIMIT 1`,
+      "SELECT * FROM deswa WHERE laporan_id=? LIMIT 1",
       [id]
     );
     const [[bri]] = await db.query(
-      `SELECT * FROM bri WHERE laporan_id=? LIMIT 1`,
+      "SELECT * FROM bri WHERE laporan_id=? LIMIT 1",
       [id]
     );
     const [desk] = await db.query(
-      `SELECT * FROM hasil_on_desk WHERE laporan_id=? ORDER BY tanggal_investigasi ASC`,
+      "SELECT * FROM hasil_on_desk WHERE laporan_id=? ORDER BY tanggal_investigasi",
       [id]
     );
     const [[resumeInv]] = await db.query(
-      `SELECT * FROM resume_investigasi WHERE laporan_id=? LIMIT 1`,
+      "SELECT * FROM resume_investigasi WHERE laporan_id=? LIMIT 1",
       [id]
     );
     const [resumeInterview] = await db.query(
-      `SELECT hasil_interview FROM resume_hasil_interview WHERE laporan_id = ? ORDER BY id ASC`,
+      "SELECT hasil_interview FROM resume_hasil_interview WHERE laporan_id=?",
       [id]
     );
+
+    const doc = new PDFDocument({ size: "A4", margin: 25 });
+    res.setHeader("Content-Type", "application/pdf");
+    doc.pipe(res);
 
     const x = 25;
     const W = 545;
     let y = 30;
 
-    // 1. HEADER
-    doc.rect(x, y, W, 25).fill("#E7E6E6").stroke("#000");
+    /* ===== HEADER ===== */
+    doc.fillColor("#E7E6E6").rect(x, y, W, 25).fill().stroke("#000");
+
     doc
+      .fillColor("#000")
       .font("Helvetica-Bold")
       .fontSize(12)
-      .fillColor("#000")
       .text("FORMULIR INVESTIGASI BRI LIFE", x, y + 7, {
         width: W,
         align: "center",
       });
-    y += 50;
 
-    // 2. DATA INVESTIGATOR
-    y = checkPage(doc, y, 100);
+    y += 45;
+
+    /* ===== INVESTIGATOR ===== */
     headerCell(doc, x, y, 252, 18, "INTERNAL BRI LIFE");
     headerCell(doc, x + 252, y, 293, 18, "VENDOR (DESWA)");
     y += 18;
@@ -193,26 +222,22 @@ module.exports = async (req, res) => {
     ];
 
     infoRows.forEach((r) => {
-      const hRow = Math.max(
-        autoRowHeight(doc, r[2], 92),
-        autoRowHeight(doc, r[5], 123),
-        20
-      );
-      y = checkPage(doc, y, hRow);
-      cell(doc, x, y, 20, hRow, r[0], { align: "center" });
-      cell(doc, x + 20, y, 140, hRow, r[1]);
-      cell(doc, x + 160, y, 92, hRow, r[2]);
-      cell(doc, x + 252, y, 20, hRow, r[3], { align: "center" });
-      cell(doc, x + 272, y, 150, hRow, r[4]);
-      cell(doc, x + 422, y, 123, hRow, r[5]);
-      y += hRow;
+      y = dynamicRow(doc, y, [
+        { x, w: 20, text: r[0], opt: { align: "center" } },
+        { x, w: 140, text: r[1] },
+        { x, w: 92, text: r[2] },
+        { x, w: 20, text: r[3], opt: { align: "center" } },
+        { x, w: 150, text: r[4] },
+        { x, w: 123, text: r[5] },
+      ]);
     });
 
-    // 3. INFORMASI DATA POLIS
+    /* ===== DATA POLIS ===== */
     y += 15;
     sectionTitle(doc, x, y, W, "INFORMASI DATA POLIS");
     y += 18;
-    const polisMap = [
+
+    const polis = [
       [
         "1",
         "Pemegang Polis",
@@ -242,7 +267,7 @@ module.exports = async (req, res) => {
         "Mulai Asuransi",
         formatDate(lap?.tgl_mulai_asuransi),
         "10",
-        "No KTP/Pasport",
+        "No KTP",
         lap?.no_identitas,
       ],
       [
@@ -263,216 +288,125 @@ module.exports = async (req, res) => {
       ],
     ];
 
-    polisMap.forEach((r) => {
-      const hRow = Math.max(
-        autoRowHeight(doc, r[2], 92),
-        autoRowHeight(doc, r[5], 123),
-        20
-      );
-      y = checkPage(doc, y, hRow);
-      cell(doc, x, y, 20, hRow, r[0], { align: "center" });
-      cell(doc, x + 20, y, 140, hRow, r[1]);
-      cell(doc, x + 160, y, 92, hRow, r[2]);
-      cell(doc, x + 252, y, 20, hRow, r[3], { align: "center" });
-      cell(doc, x + 272, y, 150, hRow, r[4]);
-      cell(doc, x + 422, y, 123, hRow, r[5]);
-      y += hRow;
+    polis.forEach((r) => {
+      y = dynamicRow(doc, y, [
+        { x, w: 20, text: r[0], opt: { align: "center" } },
+        { x, w: 140, text: r[1] },
+        { x, w: 92, text: r[2] },
+        { x, w: 20, text: r[3], opt: { align: "center" } },
+        { x, w: 150, text: r[4] },
+        { x, w: 123, text: r[5] },
+      ]);
     });
 
-    const hAdr = autoRowHeight(doc, lap?.alamat, W - 160, 20);
-    y = checkPage(doc, y, hAdr);
-    cell(doc, x, y, 160, hAdr, "Detail Alamat", { bold: true });
-    cell(doc, x + 160, y, W - 160, hAdr, lap?.alamat);
-    y += hAdr + 15;
+    /* ===== ALAMAT ===== */
+    y = dynamicRow(doc, y, [
+      { x, w: 160, text: "Detail Alamat", opt: { bold: true } },
+      { x, w: W - 160, text: lap?.alamat },
+    ]);
 
-    // 4. KRONOLOGIS
-    y = checkPage(doc, y, 100);
+    /* ===== KRONOLOGIS ===== */
+    y += 15;
     sectionTitle(doc, x, y, W, "CATATAN INFORMASI DATA POLIS");
     y += 18;
     headerCell(doc, x, y, W, 18, "Diagnosa / Kronologis Kematian");
     y += 18;
-    const hKron = autoRowHeight(doc, lap?.kronologis, W, 40);
-    cell(doc, x, y, W, hKron, lap?.kronologis);
-    y += hKron + 15;
+    y = dynamicRow(doc, y, [{ x, w: W, text: lap?.kronologis, min: 40 }]);
 
-    // 5. HASIL KONFIRMASI / INVESTIGASI (7 Kolom)
-    y = checkPage(doc, y, 100);
+    /* ===== HASIL INVESTIGASI ===== */
+    y += 15;
     sectionTitle(doc, x, y, W, "HASIL KONFIRMASI / INVESTIGASI");
     y += 18;
 
-    // Lebar Kolom (Total 545): Tgl(90), Act(45), Petugas(65), NoKontak(65), Faskes(75), Hasil(110), Analisa(95)
     const wT = [90, 45, 65, 65, 75, 110, 95];
-    const headers = [
+    [
       "Tanggal / Jam",
       "Activity",
       "Petugas",
       "No Kontak",
       "Faskes",
-      "Hasil Investigasi",
+      "Hasil",
       "Analisa",
-    ];
-
-    let headerX = x;
-    headers.forEach((h, i) => {
-      headerCell(doc, headerX, y, wT[i], 18, h);
-      headerX += wT[i];
+    ].forEach((h, i) => {
+      headerCell(
+        doc,
+        x + wT.slice(0, i).reduce((a, b) => a + b, 0),
+        y,
+        wT[i],
+        18,
+        h
+      );
     });
     y += 18;
 
     desk.forEach((d) => {
-      const txtTglJam = `${formatDateIndo(d.tanggal_investigasi)}\nJam ${
-        d.jam_telepon || "--:--"
-      }`;
-      const txtHasil = cleanText(d.hasil_investigasi);
-      const txtAnalisa = cleanText(d.analisa);
-      const txtPetugas = cleanText(d.nama_petugas);
-      const txtNoKontak = cleanText(d.no_kontak);
-      const txtFaskes = cleanText(d.nama_faskes);
-
-      const hRow =
-        Math.max(
-          doc.heightOfString(txtTglJam, { width: wT[0] - 10 }),
-          doc.heightOfString(txtHasil, { width: wT[5] - 10 }),
-          doc.heightOfString(txtAnalisa, { width: wT[6] - 10 }),
-          doc.heightOfString(txtPetugas, { width: wT[2] - 10 }),
-          doc.heightOfString(txtNoKontak, { width: wT[3] - 10 }),
-          25
-        ) + 12;
-
-      y = checkPage(doc, y, hRow);
-      let curX = x;
-
-      cell(doc, curX, y, wT[0], hRow, txtTglJam, { align: "center" });
-      curX += wT[0];
-      cell(doc, curX, y, wT[1], hRow, d.activity);
-      curX += wT[1];
-      cell(doc, curX, y, wT[2], hRow, txtPetugas);
-      curX += wT[2];
-      cell(doc, curX, y, wT[3], hRow, txtNoKontak);
-      curX += wT[3];
-      cell(doc, curX, y, wT[4], hRow, txtFaskes);
-      curX += wT[4];
-      cell(doc, curX, y, wT[5], hRow, txtHasil);
-      curX += wT[5];
-      cell(doc, curX, y, wT[6], hRow, txtAnalisa);
-
-      y += hRow;
+      y = dynamicRow(doc, y, [
+        {
+          x,
+          w: wT[0],
+          text: `${formatDateIndo(d.tanggal_investigasi)}\nJam ${
+            d.jam_telepon || "--:--"
+          }`,
+          opt: { align: "center" },
+        },
+        { x, w: wT[1], text: d.activity },
+        { x, w: wT[2], text: d.nama_petugas },
+        { x, w: wT[3], text: d.no_kontak },
+        { x, w: wT[4], text: d.nama_faskes },
+        { x, w: wT[5], text: d.hasil_investigasi },
+        { x, w: wT[6], text: d.analisa },
+      ]);
     });
 
-    // 6. RESUME HASIL INTERVIEW
-    if (resumeInterview.length > 0) {
+    /* ===== RESUME ===== */
+    if (resumeInterview.length) {
       y += 15;
-      y = checkPage(doc, y, 60);
       sectionTitle(doc, x, y, W, "RESUME HASIL WAWANCARA AHLI WARIS");
       y += 18;
-      resumeInterview.forEach((ri) => {
-        const content = cleanText(ri.hasil_interview);
-        const hContent = autoRowHeight(doc, content, W, 30);
-        y = checkPage(doc, y, hContent);
-        cell(doc, x, y, W, hContent, content);
-        y += hContent;
+      resumeInterview.forEach((r) => {
+        y = dynamicRow(doc, y, [{ x, w: W, text: r.hasil_interview, min: 30 }]);
       });
     }
 
-    // 7. ANALISA AKHIR
-    const finalAnl = [
-      { t: "ANALISA INVESTIGATOR INDEPENDENT", v: resumeInv?.hasil },
-      { t: "ANALISA PIC INVESTIGATOR", v: lap?.analisa_pic_investigator },
-      { t: "ANALISA MA", v: lap?.analisa_ma },
-      { t: "ANALISAN DAN PUTUSAN DEPARTEMENT HEAD", v: lap?.putusan_klaim },
-      { t: "ANALISAN DAN KEPUTUSAN TEAM LEADER", v: lap?.analisa_putusan },
-    ];
-
-    finalAnl.forEach((s) => {
-      const val = cleanText(s.v);
-      const h = autoRowHeight(doc, val, W, 40);
-      y = checkPage(doc, y, h + 40);
+    /* ===== ANALISA AKHIR ===== */
+    [
+      ["ANALISA INVESTIGATOR INDEPENDENT", resumeInv?.hasil],
+      ["ANALISA PIC INVESTIGATOR", lap?.analisa_pic_investigator],
+      ["ANALISA MA", lap?.analisa_ma],
+      ["PUTUSAN DEPARTEMENT HEAD", lap?.putusan_klaim],
+      ["KEPUTUSAN TEAM LEADER", lap?.analisa_putusan],
+    ].forEach((s) => {
       y += 15;
-      sectionTitle(doc, x, y, W, s.t);
+      sectionTitle(doc, x, y, W, s[0]);
       y += 18;
-      cell(doc, x, y, W, h, val);
-      y += h;
+      y = dynamicRow(doc, y, [{ x, w: W, text: s[1], min: 40 }]);
     });
 
-    /* =======================
-   PERSETUJUAN HASIL INVESTIGASI
-======================= */
+    /* ===== PERSETUJUAN ===== */
+    y += 20;
+    headerCell(doc, x, y, W, 18, "PERSETUJUAN HASIL INVESTIGASI");
+    y += 18;
 
-y += 25;
-y = checkPage(doc, y, 220);
+    y = dynamicRow(doc, y, [
+      {
+        x,
+        w: 180,
+        text: "Departement Head",
+        opt: { align: "center", bold: true },
+      },
+      { x, w: 180, text: "Team Leader", opt: { align: "center", bold: true } },
+      { x, w: 185, text: "MA", opt: { align: "center", bold: true } },
+    ]);
 
-// Judul Section
-doc.rect(x, y, W, 20).fill("#E7E6E6").stroke("#000");
-doc
-  .font("Helvetica-Bold")
-  .fontSize(9)
-  .fillColor("#000")
-  .text("PERSETUJUAN HASIL INVESTIGASI", x, y + 6, {
-    width: W,
-    align: "center",
-  });
-
-y += 20;
-
-// Lebar kolom (total 545)
-const colDeptHead = 180;
-const colTeamLeader = 180;
-const colMA = 185;
-const headerHeight = 18;
-const signHeight = 120;
-
-// Header kolom
-headerCell(doc, x, y, colDeptHead, headerHeight, "Departement Head");
-headerCell(
-  doc,
-  x + colDeptHead,
-  y,
-  colTeamLeader,
-  headerHeight,
-  "Team Leader"
-);
-headerCell(
-  doc,
-  x + colDeptHead + colTeamLeader,
-  y,
-  colMA,
-  headerHeight,
-  "MA"
-);
-
-y += headerHeight;
-
-// Area tanda tangan (kosong)
-cell(doc, x, y, colDeptHead, signHeight, "", { align: "center" });
-cell(
-  doc,
-  x + colDeptHead,
-  y,
-  colTeamLeader,
-  signHeight,
-  "",
-  { align: "center" }
-);
-cell(
-  doc,
-  x + colDeptHead + colTeamLeader,
-  y,
-  colMA,
-  signHeight,
-  "",
-  { align: "center" }
-);
-
-y += signHeight;
-
+    y = dynamicRow(doc, y, [
+      { x, w: 180, text: "", min: 80 },
+      { x, w: 180, text: "", min: 80 },
+      { x, w: 185, text: "", min: 80 },
+    ]);
 
     doc.end();
   } catch (err) {
-    console.error("PDF Error: ", err);
-    if (!res.headersSent) {
-      res
-        .status(500)
-        .send("Terjadi kesalahan saat membuat PDF: " + err.message);
-    }
+    console.error(err);
+    res.status(500).send("Gagal generate PDF");
   }
 };
