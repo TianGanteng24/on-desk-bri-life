@@ -54,20 +54,35 @@
           <input name="lama_dirawat" type="text" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
         </div>
 
-        <input name="usia_polis" type="text" placeholder="Usia Polis" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        
-        <select name="jenis_klaim" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-          <option value="">-- Pilih Jenis Klaim --</option>
-          <option value="Klaim Meninggal">Klaim Meninggal</option>
-          <option value="Penyakit Kritis">Penyakit Kritis</option>
-          <option value="Perawatan">Perawatan</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-500 mb-1">Usia Polis</label>
+          <input name="usia_polis" type="text" placeholder="Usia Polis" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        </div>
 
-        <input name="jenis_produk" placeholder="Jenis Produk" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-        <input name="no_identitas" placeholder="Nomor KTP/Passport" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-500 mb-1">Jenis Klaim</label>
+          <select name="jenis_klaim" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+            <option value="">-- Pilih Jenis Klaim --</option>
+            <option value="Klaim Meninggal">Klaim Meninggal</option>
+            <option value="Penyakit Kritis">Penyakit Kritis</option>
+            <option value="Perawatan">Perawatan</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-500 mb-1">Jenis Produk</label>
+          <input name="jenis_produk" placeholder="Jenis Produk" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        </div>
+
+        <div class="flex flex-col">
+          <label class="text-xs text-gray-500 mb-1">Nomor KTP/Passport</label>
+          <input name="no_identitas" placeholder="Nomor KTP/Passport" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+        </div>
       </div>
-      <textarea name="rekomendasi" placeholder="Rekomendasi" class="w-full mt-4 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+      <div class="flex flex-col mt-4">
+        <label class="text-xs text-gray-500 mb-1">Rekomendasi</label>
+        <textarea name="rekomendasi" placeholder="Rekomendasi" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
     </fieldset>
 
     <fieldset class="border rounded-lg p-4 dark:border-slate-700">
