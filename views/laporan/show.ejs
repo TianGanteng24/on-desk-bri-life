@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', loadResumeInvestigasiList);
     Update: <%= new Date(data.updated_at).toLocaleString('id-ID') %>
   </div>
   <a href="/laporan/pdf/<%= data.id %>" target="_blank"
-     class="bg-orange-600 text-white px-5 py-2 rounded">📥 PDF</a>
+     class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2 rounded transition font-medium">📋 Lihat PDF</a>
 </div>
 <br>
 <% if (isOwner) { %>
@@ -872,6 +872,10 @@ document.addEventListener('DOMContentLoaded', loadResumeInvestigasiList);
                     </div>
                 </div>
                 <div class="mb-5">
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Alamat Faskes</label>
+                    <textarea name="alamat_faskes" id="f_alamat_faskes" rows="3" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white" placeholder="Contoh: Jl xxxx no xxxx"></textarea>
+                </div>
+                <div class="mb-5">
                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Hasil Investigasi (Temuan)</label>
                     <textarea name="hasil_investigasi" id="f_hasil" rows="3" required class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white" placeholder="Contoh: Petugas RS menyatakan pasien memiliki riwayat..."></textarea>
                 </div>
@@ -911,6 +915,7 @@ function editInvestigasi(data) {
     // Isi data ke dalam form
     document.getElementById('ondesk_id').value = data.id;
     document.getElementById('f_nama_faskes').value = data.nama_faskes;
+    document.getElementById('f_alamat_faskes').value = data.alamat_faskes || '';
     document.getElementById('f_activity').value = data.activity;
     
     // Format tanggal ke YYYY-MM-DD agar muncul di input date
@@ -1371,8 +1376,6 @@ async function deleteBri(id) {
   } catch(err) { console.error(err); }
 }
 </script>
-
-</div>
 
 </div>
 

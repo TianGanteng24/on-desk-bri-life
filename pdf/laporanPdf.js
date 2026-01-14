@@ -166,9 +166,14 @@ module.exports = async (req, res) => {
       [id]
     );
 
+    const fileName = `${cleanText(lap?.nama_tertanggung)
+  .replace(/[\/\\?%*:|"<>]/g, "")
+  .replace(/\s+/g, " ")
+  .trim()} - ${id}.pdf`;
+
     const doc = new PDFDocument({ size: "A4", margin: 25 });
-    res.setHeader("Content-Type", "application/pdf");
-    doc.pipe(res);
+      res.setHeader("Content-Type", "application/pdf");
+      doc.pipe(res);
 
     const x = 25;
     const W = 545;
@@ -318,15 +323,15 @@ module.exports = async (req, res) => {
     sectionTitle(doc, x, y, W, "HASIL KONFIRMASI / INVESTIGASI");
     y += 18;
 
-    const wT = [90, 45, 65, 65, 75, 110, 95];
+    const wT = [90, 45, 65, 65, 75, 95, 95];
     [
       "Tanggal / Jam",
       "Activity",
       "Petugas",
       "No Kontak",
       "Faskes",
+      "Alamat Faskes",
       "Hasil",
-      "Analisa",
     ].forEach((h, i) => {
       headerCell(
         doc,
@@ -353,8 +358,8 @@ module.exports = async (req, res) => {
         { x, w: wT[2], text: d.nama_petugas },
         { x, w: wT[3], text: d.no_kontak },
         { x, w: wT[4], text: d.nama_faskes },
-        { x, w: wT[5], text: d.hasil_investigasi },
-        { x, w: wT[6], text: d.analisa },
+        { x, w: wT[5], text: d.alamat_faskes },
+        { x, w: wT[6], text: d.hasil_investigasi },
       ]);
     });
 
