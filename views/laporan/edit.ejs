@@ -81,7 +81,7 @@
     </div>
     <div>
       <label class="text-sm font-medium">Date Claim</label>
-      <input name="date_claim" type="date" value="<%= data.date_claim ? data.date_claim.toISOString().split('T')[0] : '' %>"
+      <input name="date_claim" type="date" value="<%= data.date_claim ? (typeof data.date_claim === 'string' ? data.date_claim.split('T')[0] : new Date(data.date_claim).toISOString().split('T')[0]) : '' %>"
         class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
     </div>
     <div>
