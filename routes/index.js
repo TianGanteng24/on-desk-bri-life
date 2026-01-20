@@ -287,6 +287,11 @@ router.get('/laporan/:id', auth, async (req, res) => {
       [laporanId]
     );
 
+    const [hasilOndeskLanjutan] = await db.query(
+  'SELECT * FROM hasil_ondesk_lanjutan WHERE laporan_id=? ORDER BY created_at DESC',
+  [req.params.id]
+);
+
     // ===============================
     // 3. RENDER
     // ===============================
@@ -295,6 +300,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
       data: dataLaporan,
       penelponan: penelponanRows || [],
       resume_interview: resumeRows || [],
+      hasilOndeskLanjutan,
       user: user, // Kirim variabel user yang benar
       desk: desk,
       created_by: dataLaporan.created_by
@@ -632,6 +638,123 @@ router.post('/laporan/:id/analisa-internal', auth, async (req, res) => {
     }
 });
 
+// ==========================================
+// HASIL ONDESK LANJUTAN (FULL BACKEND)
+// ==========================================
+
+// GET: Ambil data untuk ditampilkan (AJAX/API)
+router.get('/laporan/:id/hasil-ondesk-lanjutan', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM hasil_ondesk_lanjutan WHERE laporan_id=? ORDER BY created_at DESC',
+      [req.params.id]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// POST: Simpan Data Baru
+router.post('/laporan/:id/hasil-ondesk-lanjutan', auth, async (req, res) => {
+  try {
+    const {
+      nama_faskes,
+      activity,
+      tanggal_investigasi,
+      jam_telepon,
+      nama_petugas,
+      no_kontak,
+      hasil_investigasi,
+      analisa
+    } = req.body;
+
+    await db.query(
+      `INSERT INTO hasil_ondesk_lanjutan
+       (laporan_id, nama_faskes, activity, tanggal_investigasi, jam_telepon,
+        nama_petugas, no_kontak, hasil_investigasi, analisa, created_by)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [
+        req.params.id,
+        nama_faskes,
+        activity,
+        tanggal_investigasi,
+        jam_telepon,
+        nama_petugas,
+        no_kontak,
+        hasil_investigasi,
+        analisa,
+        req.session.user.id // Memperbaiki error req.user.id
+      ]
+    );
+
+    res.json({ success: true, message: 'Data berhasil disimpan' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal menyimpan data: ' + err.message });
+  }
+});
+
+// PUT: Update Data
+router.put('/laporan/:laporanId/hasil-ondesk-lanjutan/:id', auth, async (req, res) => {
+  try {
+    const {
+      nama_faskes,
+      activity,
+      tanggal_investigasi,
+      jam_telepon,
+      nama_petugas,
+      no_kontak,
+      hasil_investigasi,
+      analisa
+    } = req.body;
+
+    await db.query(
+      `UPDATE hasil_ondesk_lanjutan SET
+        nama_faskes=?,
+        activity=?,
+        tanggal_investigasi=?,
+        jam_telepon=?,
+        nama_petugas=?,
+        no_kontak=?,
+        hasil_investigasi=?,
+        analisa=?
+       WHERE id=?`,
+      [
+        nama_faskes,
+        activity,
+        tanggal_investigasi,
+        jam_telepon,
+        nama_petugas,
+        no_kontak,
+        hasil_investigasi,
+        analisa,
+        req.params.id
+      ]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal update data' });
+  }
+});
+
+// DELETE: Hapus Data
+router.delete('/laporan/:laporanId/hasil-ondesk-lanjutan/:id', auth, async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM hasil_ondesk_lanjutan WHERE id=?',
+      [req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal menghapus data' });
+  }
+});
+
 router.post('/hasil-on-desk/:onDeskId/penelponan', auth, async (req, res) => {
   try {
     const { tanggal_telepon, jam_telepon, hasil_telepon } = req.body;
@@ -854,42 +977,48 @@ module.exports = router;
 
 router.post('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
   try {
-    const {
-      nama_faskes,
-      no_kontak,
-      alamat_faskes,
-      tanggal_investigasi,
-      nama_petugas,
-      hasil_investigasi
-    } = req.body;
+    const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity } = req.body;
+    const laporan_id = req.params.id;
 
-    const [result] = await db.query(`
-      INSERT INTO hasil_on_desk (
-        laporan_id,
-        nama_faskes,
-        no_kontak,
-        alamat_faskes,
-        tanggal_investigasi,
-        nama_petugas,
-        hasil_investigasi
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      req.params.id,
-      nama_faskes,
-      no_kontak,
-      alamat_faskes,
-      tanggal_investigasi,
-      nama_petugas,
-      hasil_investigasi
-    ]);
+    // Gunakan ON DUPLICATE KEY UPDATE (hanya update, tidak insert baru)
+    // Karena hanya 1 data per laporan untuk hasil_on_desk
+    await db.query(
+      `INSERT INTO hasil_on_desk (
+        laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, 
+        nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE 
+       tanggal_investigasi=?, jam_telepon=?, nama_petugas=?, no_kontak=?, 
+       nama_faskes=?, alamat_faskes=?, hasil_investigasi=?, analisa=?, activity=?`,
+      [
+        laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak,
+        nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity,
+        tanggal_investigasi, jam_telepon, nama_petugas, no_kontak,
+        nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity
+      ]
+    );
 
-    res.json({ success: true, id: result.insertId });
+    res.json({ success: true });
   } catch (err) {
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({
-        error: 'Data hasil on desk sudah ada'
-      });
-    }
+    console.log(err);
+    res.status(500).json({ error: 'Database error: ' + err.message });
+  }
+});
+
+/* PUT HASIL ON DESK (UPDATE VIA AJAX) */
+router.put('/laporan/hasil-on-desk/:id', auth, async (req, res) => {
+  try {
+    const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity } = req.body;
+    
+    await db.query(
+      `UPDATE hasil_on_desk SET 
+        tanggal_investigasi=?, jam_telepon=?, nama_petugas=?, no_kontak=?, nama_faskes=?, alamat_faskes=?,
+        hasil_investigasi=?, analisa=?, activity=?
+       WHERE id=?`,
+      [tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
     console.log(err);
     res.status(500).json({ error: 'Database error' });
   }
@@ -957,24 +1086,84 @@ router.get('/laporan/:id/deswa', auth, async (req, res) => {
   }
 });
 
-// Perbaikan untuk Vendor Deswa (Poin 4)
+// Perbaikan untuk Vendor Deswa (Poin 4) - UPDATE ONLY (tidak insert baru)
 router.post('/laporan/:id/deswa', auth, async (req, res) => {
     try {
-        const { pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses } = req.body;
+        const { pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses, tanggal_mulai_ondesk_lanjutan, tanggal_selesai_ondesk_lanjutan, sla_ondesk_lanjutan, tanggal_kirim_laporan_lanjutan, tanggal_terima_konfirmasi_lanjutan_bri, sla_konfirmasi_lanjutan } = req.body;
         const laporan_id = req.params.id;
 
-        // Gunakan ON DUPLICATE KEY UPDATE agar jika data sudah ada, dia mengupdate, bukan error duplicate
-        await db.query(
-            `INSERT INTO deswa (laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses) 
-             VALUES (?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE 
-             pic_investigator=?, tanggal_mulai=?, tanggal_selesai=?, sla_proses=?`,
-            [
-                laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses,
-                pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses
-            ]
+        // Cek apakah data sudah ada
+        const [existing] = await db.query(
+            `SELECT id FROM deswa WHERE laporan_id = ?`,
+            [laporan_id]
         );
+
+        if (existing.length > 0) {
+            // Jika sudah ada, UPDATE saja
+            // UPDATE hanya field yang dikirim, jangan paksa field awal jadi NULL
+            const updateFields = [];
+            const updateValues = [];
+
+            // Daftar field yang mungkin diupdate
+            const allowedFields = [
+                'pic_investigator', 'tanggal_mulai', 'tanggal_selesai', 'sla_proses',
+                'tanggal_kirim_laporan', 'tanggal_terima_konfirmasi_bri', 'sla_konfirmasi',
+                'tanggal_mulai_ondesk_lanjutan', 'tanggal_selesai_ondesk_lanjutan', 'sla_ondesk_lanjutan',
+                'tanggal_kirim_laporan_lanjutan', 'tanggal_terima_konfirmasi_lanjutan_bri', 'sla_konfirmasi_lanjutan'
+            ];
+
+            // Hanya tambah ke query jika field tersebut ada di req.body dan tidak kosong
+            allowedFields.forEach(field => {
+                if (req.body.hasOwnProperty(field) && req.body[field] !== undefined && req.body[field] !== null && req.body[field] !== '') {
+                    updateFields.push(`${field} = ?`);
+                    updateValues.push(req.body[field]);
+                }
+            });
+
+            // Hanya execute jika ada field yang akan diupdate
+            if (updateFields.length > 0) {
+                updateValues.push(laporan_id);
+                const updateQuery = `UPDATE deswa SET ${updateFields.join(', ')} WHERE laporan_id = ?`;
+                await db.query(updateQuery, updateValues);
+            }
+        } else {
+            // Jika belum ada, INSERT baru dengan nilai awal (untuk investigasi awal)
+            // Untuk lanjutan, data harus sudah ada terlebih dahulu
+            await db.query(
+                `INSERT INTO deswa (laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses) 
+                 VALUES (?, ?, ?, ?, ?)`,
+                [laporan_id, pic_investigator || '', tanggal_mulai || null, tanggal_selesai || null, sla_proses || null]
+            );
+        }
         res.json({ success: true });
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: err.message }); 
+    }
+});
+
+// Endpoint untuk membuat deswa awal jika belum ada
+router.post('/laporan/:id/deswa/init', auth, async (req, res) => {
+    try {
+        const laporan_id = req.params.id;
+
+        // Cek apakah data sudah ada
+        const [existing] = await db.query(
+            `SELECT id FROM deswa WHERE laporan_id = ?`,
+            [laporan_id]
+        );
+
+        if (existing.length === 0) {
+            // Jika belum ada, CREATE dengan nilai default
+            await db.query(
+                `INSERT INTO deswa (laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses) 
+                 VALUES (?, '', NULL, NULL, NULL)`,
+                [laporan_id]
+            );
+            res.json({ success: true, message: 'Deswa data initialized' });
+        } else {
+            res.json({ success: true, message: 'Deswa data already exists' });
+        }
     } catch (err) { 
         console.error(err);
         res.status(500).json({ error: err.message }); 

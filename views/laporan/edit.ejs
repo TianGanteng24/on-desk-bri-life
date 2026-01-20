@@ -64,8 +64,9 @@
       <label class="text-sm font-medium">Status Asuransi</label>
       <select name="status_asuransi" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
         <option value="">-- Pilih Status --</option>
-        <option value="done" <%= data.status_asuransi === 'done' ? 'selected' : '' %>>Done</option>
+        <option value="done" <%= data.status_asuransi === 're open' ? 'selected' : '' %>>Re Open</option>
         <option value="ongoing" <%= data.status_asuransi === 'ongoing' ? 'selected' : '' %>>On Going</option>
+        <option value="review" <%= data.status_asuransi === 'review' ? 'selected' : '' %>>Review</option>
         <option value="case-closed" <%= data.status_asuransi === 'case-closed' ? 'selected' : '' %>>Case-Closed</option>
       </select>
     </div>

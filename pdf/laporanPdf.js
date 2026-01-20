@@ -157,6 +157,10 @@ module.exports = async (req, res) => {
       "SELECT * FROM hasil_on_desk WHERE laporan_id=? ORDER BY tanggal_investigasi",
       [id]
     );
+    const [deskLanjutan] = await db.query(
+      "SELECT * FROM hasil_ondesk_lanjutan WHERE laporan_id=? ORDER BY tanggal_investigasi",
+      [id]
+    );
     const [[resumeInv]] = await db.query(
       "SELECT * FROM resume_investigasi WHERE laporan_id=? LIMIT 1",
       [id]
@@ -323,7 +327,7 @@ module.exports = async (req, res) => {
     sectionTitle(doc, x, y, W, "HASIL KONFIRMASI / INVESTIGASI");
     y += 18;
 
-    const wT = [90, 45, 65, 65, 75, 95, 95];
+    const wT = [95, 45, 65, 65, 75, 100, 100];
     [
       "Tanggal / Jam",
       "Activity",
@@ -363,6 +367,53 @@ module.exports = async (req, res) => {
       ]);
     });
 
+    /* ===== HASIL INVESTIGASI LANJUTAN (HANYA JIKA ADA DATA) ===== */
+    if (deskLanjutan && deskLanjutan.length > 0) {
+      y += 15;
+      sectionTitle(doc, x, y, W, "HASIL INVESTIGASI LANJUTAN");
+      y += 18;
+
+      const wTL = [95, 45, 65, 65, 75, 100, 100];
+      [
+        "Tanggal / Jam",
+        "Activity",
+        "Petugas",
+        "No Kontak",
+        "Faskes",
+        "Alamat Faskes",
+        "Hasil",
+      ].forEach((h, i) => {
+        headerCell(
+          doc,
+          x + wTL.slice(0, i).reduce((a, b) => a + b, 0),
+          y,
+          wTL[i],
+          18,
+          h
+        );
+      });
+      y += 18;
+
+      deskLanjutan.forEach((d) => {
+        y = dynamicRow(doc, y, [
+          {
+            x,
+            w: wTL[0],
+            text: `${formatDateIndo(d.tanggal_investigasi)}\nJam ${
+              d.jam_telepon || "--:--"
+            }`,
+            opt: { align: "center" },
+          },
+          { x, w: wTL[1], text: d.activity || "-" },
+          { x, w: wTL[2], text: d.nama_petugas },
+          { x, w: wTL[3], text: d.no_kontak || "-" },
+          { x, w: wTL[4], text: d.nama_faskes },
+          { x, w: wTL[5], text: d.alamat_faskes || "-" },
+          { x, w: wTL[6], text: d.hasil_investigasi },
+        ]);
+      });
+    }
+
     /* ===== RESUME ===== */
     if (resumeInterview.length) {
       y += 15;
@@ -386,6 +437,86 @@ module.exports = async (req, res) => {
       y += 18;
       y = dynamicRow(doc, y, [{ x, w: W, text: s[1], min: 40 }]);
     });
+
+    /* ===== DESWA METADATA - INVESTIGASI AWAL ===== */
+    if (deswa) {
+      y += 15;
+      sectionTitle(doc, x, y, W, "DATA DESWA - INVESTIGASI AWAL");
+      y += 18;
+
+      const deswaInfo = [
+        ["Tgl Mulai Ondesk", formatDate(deswa?.tanggal_mulai), "Tgl Selesai Ondesk", formatDate(deswa?.tanggal_selesai)],
+        ["SLA Ondesk (hari)", deswa?.sla_proses || "-", "PIC Investigator", deswa?.pic_investigator || "-"],
+      ];
+
+      if (deswa?.tanggal_kirim_laporan || deswa?.tanggal_terima_konfirmasi_bri) {
+        deswaInfo.push([
+          "Tgl Kirim Laporan",
+          formatDate(deswa?.tanggal_kirim_laporan),
+          "Tgl Terima Konfirmasi BRI",
+          formatDate(deswa?.tanggal_terima_konfirmasi_bri),
+        ]);
+        deswaInfo.push([
+          "SLA Konfirmasi (hari)",
+          deswa?.sla_konfirmasi || "-",
+          "",
+          "",
+        ]);
+      }
+
+      deswaInfo.forEach((r) => {
+        y = dynamicRow(doc, y, [
+          { x, w: W / 2, text: r[0] },
+          { x, w: W / 2, text: r[1] },
+        ]);
+        if (r[2]) {
+          y = dynamicRow(doc, y, [
+            { x, w: W / 2, text: r[2] },
+            { x, w: W / 2, text: r[3] },
+          ]);
+        }
+      });
+    }
+
+    /* ===== DESWA METADATA - INVESTIGASI LANJUTAN (HANYA JIKA ADA) ===== */
+    if (deswa && (deswa?.tanggal_mulai_ondesk_lanjutan || deswa?.tanggal_selesai_ondesk_lanjutan)) {
+      y += 15;
+      sectionTitle(doc, x, y, W, "DATA DESWA - INVESTIGASI LANJUTAN");
+      y += 18;
+
+      const deswaLanjutanInfo = [
+        ["Tgl Mulai Ondesk Lanjutan", formatDate(deswa?.tanggal_mulai_ondesk_lanjutan), "Tgl Selesai Ondesk Lanjutan", formatDate(deswa?.tanggal_selesai_ondesk_lanjutan)],
+        ["SLA Ondesk Lanjutan (hari)", deswa?.sla_ondesk_lanjutan || "-", "", ""],
+      ];
+
+      if (deswa?.tanggal_kirim_laporan_lanjutan || deswa?.tanggal_terima_konfirmasi_lanjutan_bri) {
+        deswaLanjutanInfo.push([
+          "Tgl Kirim Laporan Lanjutan",
+          formatDate(deswa?.tanggal_kirim_laporan_lanjutan),
+          "Tgl Terima Konfirmasi Lanjutan",
+          formatDate(deswa?.tanggal_terima_konfirmasi_lanjutan_bri),
+        ]);
+        deswaLanjutanInfo.push([
+          "SLA Konfirmasi Lanjutan (hari)",
+          deswa?.sla_konfirmasi_lanjutan || "-",
+          "",
+          "",
+        ]);
+      }
+
+      deswaLanjutanInfo.forEach((r) => {
+        y = dynamicRow(doc, y, [
+          { x, w: W / 2, text: r[0] },
+          { x, w: W / 2, text: r[1] },
+        ]);
+        if (r[2]) {
+          y = dynamicRow(doc, y, [
+            { x, w: W / 2, text: r[2] },
+            { x, w: W / 2, text: r[3] },
+          ]);
+        }
+      });
+    }
 
     /* ===== PERSETUJUAN ===== */
     y += 20;
