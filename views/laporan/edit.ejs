@@ -1,276 +1,213 @@
-<%- include('../layout/header', { user }) %>
+<%- include('../layout/header', { user }) %> 
 
 <div class="max-w-6xl mx-auto px-6 py-8">
+<form action="/laporan/update/<%= data.id %>" method="POST" class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8"> 
 
-<form action="/laporan/update/<%= data.id %>" method="POST"
-  class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8">
+<h2 class="text-3xl font-bold border-b pb-4 dark:border-slate-700">✏️ Edit Laporan Investigasi</h2> 
 
-<h2 class="text-3xl font-bold border-b pb-4 dark:border-slate-700">
-  ✏️ Edit Laporan Investigasi
-</h2>
-
-<!-- DATA PEMEGANG POLIS -->
 <fieldset class="border rounded-lg p-4 dark:border-slate-700">
   <legend class="text-lg font-semibold px-2">Data Pemegang Polis</legend>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
     <div>
       <label class="text-sm font-medium">Nama Pemegang Polis *</label>
-      <input name="nama_pemegang_polis" value="<%= data.nama_pemegang_polis || '' %>" required
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="nama_pemegang_polis" value="<%= data.nama_pemegang_polis || '' %>" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">No Peserta *</label>
-      <input name="no_peserta" value="<%= data.no_peserta || '' %>" required
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="no_peserta" value="<%= data.no_peserta || '' %>" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Nama Tertanggung *</label>
-      <input name="nama_tertanggung" value="<%= data.nama_tertanggung || '' %>" required
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="nama_tertanggung" value="<%= data.nama_tertanggung || '' %>" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">No Telepon</label>
-      <input name="no_telepon" value="<%= data.no_telepon || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="no_telepon" value="<%= data.no_telepon || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
   </div>
   <div class="mt-4">
     <label class="text-sm font-medium">Alamat</label>
-    <textarea name="alamat"
-      class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.alamat || '' %></textarea>
+    <textarea name="alamat" class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.alamat || '' %></textarea> 
   </div>
 </fieldset>
 
-<!-- DATA ASURANSI -->
 <fieldset class="border rounded-lg p-4 dark:border-slate-700">
   <legend class="text-lg font-semibold px-2">Data Asuransi</legend>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
     <div>
       <label class="text-sm font-medium">Uang Pertanggungan</label>
-      <input id="uang_pertanggungan" name="uang_pertanggungan" value="<%= data.uang_pertanggungan || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input id="uang_pertanggungan" name="uang_pertanggungan" value="<%= data.uang_pertanggungan || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Tanggal Lahir</label>
-      <input name="tanggal_lahir" type="date" value="<%= data.tanggal_lahir ? data.tanggal_lahir.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tanggal_lahir" type="date" value="<%= data.tanggal_lahir ? data.tanggal_lahir.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
-    <div>
+    <div id="div_tgl_meninggal">
       <label class="text-sm font-medium">Tanggal Meninggal</label>
-      <input name="tanggal_meninggal" type="date" value="<%= data.tanggal_meninggal ? data.tanggal_meninggal.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tanggal_meninggal" type="date" value="<%= data.tanggal_meninggal ? data.tanggal_meninggal.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Status Asuransi</label>
-      <select name="status_asuransi" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
-        <option value="">-- Pilih Status --</option>
-        <option value="done" <%= data.status_asuransi === 're open' ? 'selected' : '' %>>Re Open</option>
-        <option value="ongoing" <%= data.status_asuransi === 'ongoing' ? 'selected' : '' %>>On Going</option>
-        <option value="review" <%= data.status_asuransi === 'review' ? 'selected' : '' %>>Review</option>
-        <option value="case-closed" <%= data.status_asuransi === 'case-closed' ? 'selected' : '' %>>Case-Closed</option>
+      <select name="status_asuransi" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
+        <option value="done" <%= data.status_asuransi === 're open' ? 'selected' : '' %>>Re Open</option> 
+        <option value="ongoing" <%= data.status_asuransi === 'ongoing' ? 'selected' : '' %>>On Going</option> 
+        <option value="review" <%= data.status_asuransi === 'review' ? 'selected' : '' %>>Review</option> 
+        <option value="case-closed" <%= data.status_asuransi === 'case-closed' ? 'selected' : '' %>>Case-Closed</option> 
       </select>
     </div>
     <div>
       <label class="text-sm font-medium">Tanggal Mulai Asuransi</label>
-      <input name="tgl_mulai_asuransi" type="date" value="<%= data.tgl_mulai_asuransi ? data.tgl_mulai_asuransi.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tgl_mulai_asuransi" type="date" value="<%= data.tgl_mulai_asuransi ? data.tgl_mulai_asuransi.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Tanggal Akhir Asuransi</label>
-      <input name="tgl_akhir_asuransi" type="date" value="<%= data.tgl_akhir_asuransi ? data.tgl_akhir_asuransi.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tgl_akhir_asuransi" type="date" value="<%= data.tgl_akhir_asuransi ? data.tgl_akhir_asuransi.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Date Claim</label>
-      <input name="date_claim" type="date" value="<%= data.date_claim ? (typeof data.date_claim === 'string' ? data.date_claim.split('T')[0] : new Date(data.date_claim).toISOString().split('T')[0]) : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="date_claim" type="date" value="<%= data.date_claim ? (typeof data.date_claim === 'string' ? data.date_claim.split('T')[0] : new Date(data.date_claim).toISOString().split('T')[0]) : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Lama di rawat</label>
-      <input name="lama_dirawat" type="number" value="<%= data.lama_dirawat || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="lama_dirawat" type="text" value="<%= data.lama_dirawat || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Usia Polis (hari)</label>
-      <input name="usia_polis" type="text" value="<%= data.usia_polis || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="usia_polis" type="text" value="<%= data.usia_polis || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Jenis Klaim</label>
-      <select name="jenis_klaim" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <select name="jenis_klaim" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
         <option value="">-- Pilih Jenis Klaim --</option>
-        <option value="Klaim Meninggal" <%= data.jenis_klaim === 'Klaim Meninggal' ? 'selected' : '' %>>Klaim Meninggal</option>
-        <option value="Penyakit Kritis" <%= data.jenis_klaim === 'Penyakit Kritis' ? 'selected' : '' %>>Penyakit Kritis</option>
-        <option value="Perawatan" <%= data.jenis_klaim === 'Perawatan' ? 'selected' : '' %>>Perawatan</option>
-        <option value="Lainnya" <%= data.jenis_klaim === 'Lainnya' ? 'selected' : '' %>>Lainnya</option>
+        <option value="Klaim Meninggal" <%= data.jenis_klaim === 'Klaim Meninggal' ? 'selected' : '' %>>Klaim Meninggal</option> 
+        <option value="Penyakit Kritis" <%= data.jenis_klaim === 'Penyakit Kritis' ? 'selected' : '' %>>Penyakit Kritis</option> 
+        <option value="Rawat Inap" <%= data.jenis_klaim === 'Rawat Inap' ? 'selected' : '' %>>Rawat Inap</option> 
+        <option value="Lainnya" <%= data.jenis_klaim === 'Lainnya' ? 'selected' : '' %>>Lainnya</option> 
       </select>
     </div>
     <div>
       <label class="text-sm font-medium">Jenis Produk</label>
-      <input name="jenis_produk" value="<%= data.jenis_produk || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="jenis_produk" value="<%= data.jenis_produk || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Nomor KTP/Passport</label>
-      <input name="no_identitas" value="<%= data.no_identitas || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="no_identitas" value="<%= data.no_identitas || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
   </div>
   <div class="mt-4">
     <label class="text-sm font-medium">Rekomendasi</label>
-    <textarea name="rekomendasi"
-      class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.rekomendasi || '' %></textarea>
+    <textarea name="rekomendasi" class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.rekomendasi || '' %></textarea> 
   </div>
 </fieldset>
 
-<!-- KRONOLOGIS & DOKUMEN -->
 <fieldset class="border rounded-lg p-4 dark:border-slate-700">
-  <legend class="text-lg font-semibold px-2">Kronologis & Dokumen</legend>
+  <legend class="text-lg font-semibold px-2">Kronologis & Dokumen</legend> 
   <div class="space-y-4 mt-4">
     <div>
       <label class="text-sm font-medium">Kronologis</label>
-      <textarea name="kronologis"
-        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kronologis || '' %></textarea>
+      <textarea name="kronologis" class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kronologis || '' %></textarea> 
     </div>
     <div>
       <label class="text-sm font-medium">Kelengkapan Dokumen</label>
-      <textarea name="kelengkapan_dokumen"
-        class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kelengkapan_dokumen || '' %></textarea>
+      <textarea name="kelengkapan_dokumen" class="w-full mt-1 border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600"><%= data.kelengkapan_dokumen || '' %></textarea> 
     </div>
-
-    <!-- ➕ Tambahan baru -->
     <div>
       <label class="text-sm font-medium">Pengisi Form Kronologis *</label>
-      <input name="pengisi_form_kronologis" value="<%= data.pengisi_form_kronologis || '' %>" required
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="pengisi_form_kronologis" value="<%= data.pengisi_form_kronologis || '' %>" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
   </div>
 </fieldset>
 
-<!-- BRIEF LIFE -->
 <fieldset class="border rounded-lg p-4 dark:border-slate-700">
-  <legend class="text-lg font-semibold px-2">BRI Life</legend>
+  <legend class="text-lg font-semibold px-2">BRI Life</legend> 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
     <div>
       <label class="text-sm font-medium">PIC BRI Life</label>
-      <input name="pic_brilife" value="<%= data.pic_brilife || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="pic_brilife" value="<%= data.pic_brilife || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Tgl Submit PIC</label>
-      <input name="tanggal_submit_pic" type="date" value="<%= data.tanggal_submit_pic ? data.tanggal_submit_pic.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tanggal_submit_pic" type="date" value="<%= data.tanggal_submit_pic ? data.tanggal_submit_pic.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">Tgl Submit Investigator</label>
-      <input name="tanggal_submit_investigator" type="date" value="<%= data.tanggal_submit_investigator ? data.tanggal_submit_investigator.toISOString().split('T')[0] : '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="tanggal_submit_investigator" type="date" value="<%= data.tanggal_submit_investigator ? data.tanggal_submit_investigator.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
     <div>
       <label class="text-sm font-medium">SLA BRI Life (hari)</label>
-      <input name="sla_brilife" type="number" value="<%= data.sla_brilife || '' %>"
-        class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+      <input name="sla_brilife" type="number" value="<%= data.sla_brilife || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
     </div>
   </div>
 </fieldset>
 
-<!-- BUTTONS -->
 <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
-  <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">
-    Batal
-  </a>
-  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">
-    💾 Update
-  </button>
+  <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">Batal</a>
+  <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">💾 Update</button>
 </div>
 
 </form>
 </div>
 
 <script>
-  // Format Uang Pertanggungan dengan separator
-  const uangInput = document.getElementById('uang_pertanggungan');
-  
+  // Format Uang 
+  const uangInput = document.getElementById('uang_pertanggungan'); 
   if (uangInput) {
-    uangInput.addEventListener('input', function(e) {
-      let value = this.value.replace(/\D/g, ''); // Hapus semua karakter bukan digit
-      
-      // Format dengan separator titik setiap 3 digit
-      let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-      
-      this.value = formatted;
-    });
-    
-    // Handle paste event
-    uangInput.addEventListener('paste', function(e) {
-      setTimeout(() => {
-        let value = this.value.replace(/\D/g, '');
-        let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        this.value = formatted;
-      }, 10);
+    uangInput.addEventListener('input', function() {
+      let value = this.value.replace(/\D/g, ''); 
+      this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
     });
   }
 
-  // Validasi Tanggal Meninggal vs Tanggal Mulai Asuransi
-  function validateDates() {
+  // Logika Hide/Show Tanggal Meninggal & Validasi
+  function initClaimLogic() {
+    const jenisKlaim = document.querySelector('select[name="jenis_klaim"]');
     const tglMeninggal = document.querySelector('input[name="tanggal_meninggal"]');
+    const divMeninggal = document.getElementById('div_tgl_meninggal');
     const tglMulai = document.querySelector('input[name="tgl_mulai_asuransi"]');
     const form = document.querySelector('form');
 
-    if (tglMeninggal && tglMulai) {
-      const checkDates = () => {
-        const meninggal = new Date(tglMeninggal.value);
-        const mulai = new Date(tglMulai.value);
-
-        // Jika kedua field terisi
-        if (tglMeninggal.value && tglMulai.value) {
-          if (meninggal < mulai) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Validasi Tanggal Gagal',
-              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
-              confirmButtonColor: '#ef4444'
-            });
-            // Kosongkan kedua field
-            tglMeninggal.value = '';
-            tglMulai.value = '';
-            return false;
-          }
-        }
-        return true;
-      };
-
-      tglMeninggal.addEventListener('change', checkDates);
-      tglMulai.addEventListener('change', checkDates);
-
-      // Validasi saat form di-submit
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          if (!checkDates()) {
-            e.preventDefault();
-            return false;
-          }
-
-          // Validasi server-side akan dihandle di bawah
-          const meninggal = new Date(tglMeninggal.value);
-          const mulai = new Date(tglMulai.value);
-
-          if (tglMeninggal.value && tglMulai.value && meninggal < mulai) {
-            e.preventDefault();
-            Swal.fire({
-              icon: 'error',
-              title: 'Data Tidak Valid',
-              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
-              confirmButtonColor: '#ef4444'
-            });
-            return false;
-          }
-        });
+    function checkVisibility() {
+      if (jenisKlaim.value !== 'Klaim Meninggal') {
+        divMeninggal.style.display = 'none';
+        tglMeninggal.value = ''; // Mengosongkan value agar tidak error "unknown value" di database
+      } else {
+        divMeninggal.style.display = 'block';
       }
     }
+
+    function runValidation() {
+      // Validasi hanya jika Jenis Klaim adalah Meninggal
+      if (jenisKlaim.value === 'Klaim Meninggal' && tglMeninggal.value && tglMulai.value) {
+        const dMeninggal = new Date(tglMeninggal.value);
+        const dMulai = new Date(tglMulai.value);
+        if (dMeninggal < dMulai) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Validasi Tanggal Gagal',
+            text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai!',
+            confirmButtonColor: '#ef4444'
+          });
+          tglMeninggal.value = '';
+          return false;
+        }
+      }
+      return true;
+    }
+
+    jenisKlaim.addEventListener('change', checkVisibility);
+    tglMeninggal.addEventListener('change', runValidation);
+    tglMulai.addEventListener('change', runValidation);
+
+    form.addEventListener('submit', function(e) {
+      if (!runValidation()) {
+        e.preventDefault();
+      }
+    });
+
+    checkVisibility(); // Run on page load
   }
 
-  validateDates();
+  initClaimLogic();
 </script>
 
 <%- include('../layout/footer') %>

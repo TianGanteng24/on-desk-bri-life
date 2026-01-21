@@ -313,71 +313,109 @@ router.get('/laporan/:id', auth, async (req, res) => {
 });
 
 /* STORE LAPORAN */
+// --- 1. PROSES SIMPAN LAPORAN BARU ---
 router.post('/laporan/store', auth, async (req, res) => {
-  try {
-    const d = req.body;
+    try {
+        const {
+            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
+            uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
+            status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
+            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
+            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
+            pengisi_form_kronologis
+        } = req.body;
 
-    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
-    if (d.tanggal_meninggal && d.tgl_mulai_asuransi) {
-      const tglMeninggal = new Date(d.tanggal_meninggal);
-      const tglMulai = new Date(d.tgl_mulai_asuransi);
+        // LOGIKA PERBAIKAN: Ubah string kosong menjadi null
+        // Jika jenis klaim bukan meninggal, atau input tanggal kosong, set ke null
+        const fixTanggalMeninggal = (jenis_klaim === 'Klaim Meninggal' && tanggal_meninggal !== '') 
+            ? tanggal_meninggal 
+            : null;
 
-      if (tglMeninggal < tglMulai) {
-        return res.status(400).json({
-          error: true,
-          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
-        });
-      }
+        // Pastikan field tanggal lainnya juga dihandle jika kosong
+        const fixTanggalLahir = tanggal_lahir !== '' ? tanggal_lahir : null;
+        const fixTglMulai = tgl_mulai_asuransi !== '' ? tgl_mulai_asuransi : null;
+        const fixTglAkhir = tgl_akhir_asuransi !== '' ? tgl_akhir_asuransi : null;
+        const fixDateClaim = date_claim !== '' ? date_claim : null;
+
+        const query = `
+            INSERT INTO laporan_investigasi (
+                nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
+                uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
+                status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
+                lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
+                no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
+                pengisi_form_kronologis, user_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
+            uang_pertanggungan, fixTanggalLahir, fixTanggalMeninggal,
+            status_asuransi, fixTglMulai, fixTglAkhir, fixDateClaim,
+            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
+            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
+            pengisi_form_kronologis, req.session.user.id
+        ];
+
+        await db.query(query, values);
+        res.redirect('/laporan');
+    } catch (err) {
+        console.error("Error Store:", err.message);
+        res.status(500).send("Gagal menyimpan laporan: " + err.message);
     }
-
-    // Proteksi: Jika status_asuransi terkirim dua kali (array), ambil satu saja.
-    const status_fix = Array.isArray(d.status_asuransi) ? d.status_asuransi[0] : d.status_asuransi;
-
-    // Susun array values secara manual agar urutan masuk ke database tepat
-    const values = [
-      d.nama_pemegang_polis,       // 1
-      d.no_peserta,                // 2
-      d.nama_tertanggung,          // 3
-      d.no_telepon,                // 4
-      d.alamat,                    // 5
-      d.uang_pertanggungan,        // 6
-      d.tanggal_lahir || null,     // 7
-      d.tanggal_meninggal || null,  // 8
-      d.date_claim || null,  // 8
-      d.lama_dirawat || null,  // 8
-      status_fix,                  // 9
-      d.kronologis,                // 10
-      d.kelengkapan_dokumen,       // 11
-      d.pengisi_form_kronologis,   // 12
-      d.tgl_mulai_asuransi || null,// 13
-      d.tgl_akhir_asuransi || null, // 14
-      d.usia_polis,                // 15
-      d.jenis_klaim,               // 16
-      d.jenis_produk,              // 17
-      d.no_identitas,              // 18
-      d.rekomendasi,               // 19
-      req.session.user.id          // 20
-    ];
-
-    const sql = `
-      INSERT INTO laporan_investigasi (
-        nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
-        alamat, uang_pertanggungan, tanggal_lahir, tanggal_meninggal, date_claim, lama_dirawat,
-        status_asuransi, kronologis, kelengkapan_dokumen, pengisi_form_kronologis,
-        tgl_mulai_asuransi, tgl_akhir_asuransi, usia_polis, jenis_klaim,
-        jenis_produk, no_identitas, rekomendasi, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    await db.query(sql, values);
-
-    res.redirect('/laporan');
-  } catch (err) {
-    console.error("SQL Error Detail:", err);
-    res.status(500).send('Gagal menyimpan laporan: ' + err.message);
-  }
 });
 
+// --- 2. PROSES UPDATE LAPORAN ---
+router.post('/laporan/update/:id', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
+            uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
+            status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
+            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
+            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
+            pengisi_form_kronologis
+        } = req.body;
+
+        // LOGIKA PERBAIKAN: Paksa NULL jika bukan Klaim Meninggal atau string kosong
+        const fixTanggalMeninggal = (jenis_klaim === 'Klaim Meninggal' && tanggal_meninggal !== '') 
+            ? tanggal_meninggal 
+            : null;
+
+        // Bersihkan tanggal lainnya
+        const fixTanggalLahir = tanggal_lahir !== '' ? tanggal_lahir : null;
+        const fixTglMulai = tgl_mulai_asuransi !== '' ? tgl_mulai_asuransi : null;
+        const fixTglAkhir = tgl_akhir_asuransi !== '' ? tgl_akhir_asuransi : null;
+        const fixDateClaim = date_claim !== '' ? date_claim : null;
+
+        const query = `
+            UPDATE laporan_investigasi SET 
+                nama_pemegang_polis = ?, no_peserta = ?, nama_tertanggung = ?, 
+                no_telepon = ?, alamat = ?, uang_pertanggungan = ?, 
+                tanggal_lahir = ?, tanggal_meninggal = ?, status_asuransi = ?, 
+                tgl_mulai_asuransi = ?, tgl_akhir_asuransi = ?, date_claim = ?, 
+                lama_dirawat = ?, usia_polis = ?, jenis_klaim = ?, 
+                jenis_produk = ?, no_identitas = ?, rekomendasi = ?, 
+                kronologis = ?, kelengkapan_dokumen = ?, pengisi_form_kronologis = ?
+            WHERE id = ?
+        `;
+
+        const values = [
+            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
+            uang_pertanggungan, fixTanggalLahir, fixTanggalMeninggal, status_asuransi,
+            fixTglMulai, fixTglAkhir, fixDateClaim, lama_dirawat, usia_polis,
+            jenis_klaim, jenis_produk, no_identitas, rekomendasi, kronologis,
+            kelengkapan_dokumen, pengisi_form_kronologis, id
+        ];
+
+        await db.query(query, values);
+        res.redirect('/laporan');
+    } catch (err) {
+        console.error("Error Update:", err.message);
+        res.status(500).send("Gagal mengupdate laporan: " + err.message);
+    }
+});
 // Route untuk menyimpan data Analisa (PIC, MA, dan Putusan)
 router.post('/laporan/:id/analisa-store', auth, async (req, res) => {
     try {
@@ -420,103 +458,6 @@ router.get('/laporan/edit/:id', auth, async (req, res) => {
     res.status(500).send('Database error');
   }
 });
-
-/* UPDATE */
-router.post('/laporan/update/:id', auth, async (req, res) => {
-  try {
-    const {
-      nama_pemegang_polis,
-      no_peserta,
-      nama_tertanggung,
-      no_telepon,
-      alamat,
-      uang_pertanggungan,
-      tanggal_lahir,
-      tanggal_meninggal,
-      date_claim,
-      lama_dirawat,
-      status_asuransi,
-      kronologis,
-      kelengkapan_dokumen,
-      pengisi_form_kronologis,
-      tgl_mulai_asuransi,
-      tgl_akhir_asuransi,
-      usia_polis,
-      jenis_klaim,
-      jenis_produk,
-      no_identitas,
-      rekomendasi
-    } = req.body;
-
-    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
-    if (tanggal_meninggal && tgl_mulai_asuransi) {
-      const tglMeninggal = new Date(tanggal_meninggal);
-      const tglMulai = new Date(tgl_mulai_asuransi);
-
-      if (tglMeninggal < tglMulai) {
-        return res.status(400).json({
-          error: true,
-          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
-        });
-      }
-    }
-
-    await db.query(`
-      UPDATE laporan_investigasi SET
-        nama_pemegang_polis = ?,
-        no_peserta = ?,
-        nama_tertanggung = ?,
-        no_telepon = ?,
-        alamat = ?,
-        uang_pertanggungan = ?,
-        tanggal_lahir = ?,
-        tanggal_meninggal = ?,
-        date_claim = ?,
-        lama_dirawat = ?,
-        status_asuransi = ?,
-        kronologis = ?,
-        kelengkapan_dokumen = ?,
-        pengisi_form_kronologis = ?,
-        tgl_mulai_asuransi = ?,
-        tgl_akhir_asuransi = ?,
-        usia_polis = ?,
-        jenis_klaim = ?,
-        jenis_produk = ?,
-        no_identitas = ?,
-        rekomendasi = ?
-      WHERE id = ?
-    `, [
-      nama_pemegang_polis,
-      no_peserta,
-      nama_tertanggung,
-      no_telepon,
-      alamat,
-      uang_pertanggungan,
-      tanggal_lahir,
-      tanggal_meninggal,
-      date_claim,
-      lama_dirawat,
-      status_asuransi,
-      kronologis,
-      kelengkapan_dokumen,
-      pengisi_form_kronologis,
-      tgl_mulai_asuransi,
-      tgl_akhir_asuransi,
-      usia_polis,
-      jenis_klaim,
-      jenis_produk,
-      no_identitas,
-      rekomendasi,
-      req.params.id
-    ]);
-
-    res.redirect('/laporan/' + req.params.id);
-  } catch (err) {
-    console.error("UPDATE ERROR:", err);
-    res.status(500).send('Gagal mengupdate laporan: ' + err.message);
-  }
-});
-
 
 /* DELETE */
 router.get('/laporan/delete/:id', auth, async (req, res) => {

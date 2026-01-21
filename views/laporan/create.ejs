@@ -1,10 +1,10 @@
-<%- include('../layout/header', { user }) %>
+<%- include('../layout/header', { user }) %> 
 
 <div class="max-w-6xl mx-auto px-6 py-8">
-  <form method="POST" action="/laporan/store" class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8">
+  <form method="POST" action="/laporan/store" class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 space-y-8"> 
     <h2 class="text-3xl font-bold border-b pb-4 dark:border-slate-700 text-slate-800 dark:text-white">
       📝 Input Laporan Investigasi
-    </h2>
+    </h2> 
 
     <fieldset class="border rounded-lg p-4 dark:border-slate-700">
       <legend class="text-lg font-semibold px-2 text-slate-700 dark:text-slate-200">Data Pemegang Polis</legend>
@@ -19,161 +19,153 @@
 
     <fieldset class="border rounded-lg p-4 dark:border-slate-700">
       <legend class="text-lg font-semibold px-2 text-slate-700 dark:text-slate-200">Data Asuransi</legend>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <input id="uang_pertanggungan" name="uang_pertanggungan" placeholder="Uang Pertanggungan" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"> 
+        <input id="uang_pertanggungan" name="uang_pertanggungan" placeholder="Uang Pertanggungan" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Tanggal Lahir</label>
-          <input name="tanggal_lahir" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="tanggal_lahir" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
-        <div class="flex flex-col">
+        <div class="flex flex-col" id="div_tgl_meninggal">
           <label class="text-xs text-gray-500 mb-1">Tanggal Meninggal</label>
-          <input name="tanggal_meninggal" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="tanggal_meninggal" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
-        <input type="hidden" name="status_asuransi" value="ongoing" />
+        <input type="hidden" name="status_asuransi" value="ongoing" /> 
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Tanggal Mulai Asuransi</label>
-          <input name="tgl_mulai_asuransi" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="tgl_mulai_asuransi" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Tanggal Akhir Asuransi</label>
-          <input name="tgl_akhir_asuransi" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="tgl_akhir_asuransi" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Date Claim</label>
-          <input name="date_claim" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="date_claim" type="date" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Lama di rawat</label>
-          <input name="lama_dirawat" type="text" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="lama_dirawat" type="text" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Usia Polis</label>
-          <input name="usia_polis" type="text" placeholder="Usia Polis" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="usia_polis" type="text" placeholder="Usia Polis" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Jenis Klaim</label>
-          <select name="jenis_klaim" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <select name="jenis_klaim" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
             <option value="">-- Pilih Jenis Klaim --</option>
-            <option value="Klaim Meninggal">Klaim Meninggal</option>
-            <option value="Penyakit Kritis">Penyakit Kritis</option>
-            <option value="Perawatan">Perawatan</option>
-            <option value="Lainnya">Lainnya</option>
+            <option value="Klaim Meninggal">Klaim Meninggal</option> 
+            <option value="Penyakit Kritis">Penyakit Kritis</option> 
+            <option value="Rawat Inap">Rawat Inap</option> 
+            <option value="Lainnya">Lainnya</option> 
           </select>
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Jenis Produk</label>
-          <input name="jenis_produk" placeholder="Jenis Produk" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="jenis_produk" placeholder="Jenis Produk" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
 
         <div class="flex flex-col">
           <label class="text-xs text-gray-500 mb-1">Nomor KTP/Passport</label>
-          <input name="no_identitas" placeholder="Nomor KTP/Passport" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <input name="no_identitas" placeholder="Nomor KTP/Passport" class="border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
       </div>
       <div class="flex flex-col mt-4">
         <label class="text-xs text-gray-500 mb-1">Rekomendasi</label>
-        <textarea name="rekomendasi" placeholder="Rekomendasi" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+        <textarea name="rekomendasi" placeholder="Rekomendasi" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea> 
+      </div>
     </fieldset>
 
     <fieldset class="border rounded-lg p-4 dark:border-slate-700">
-      <legend class="text-lg font-semibold px-2 text-slate-700 dark:text-slate-200">Kronologis & Dokumen</legend>
+      <legend class="text-lg font-semibold px-2 text-slate-700 dark:text-slate-200">Kronologis & Dokumen</legend> 
       <div class="space-y-4 mt-4">
-        <textarea name="kronologis" placeholder="Kronologis" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
-        <textarea name="kelengkapan_dokumen" placeholder="Kelengkapan Dokumen" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea>
+        <textarea name="kronologis" placeholder="Kronologis" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea> 
+        <textarea name="kelengkapan_dokumen" placeholder="Kelengkapan Dokumen" class="w-full border rounded-lg px-4 py-2 h-20 dark:bg-slate-700 dark:border-slate-600 dark:text-white"></textarea> 
         <div>
-          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Pengisi Form Kronologis *</label>
-          <input name="pengisi_form_kronologis" placeholder="Nama Pengisi Form Kronologis" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Pengisi Form Kronologis *</label> 
+          <input name="pengisi_form_kronologis" placeholder="Nama Pengisi Form Kronologis" required class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 dark:text-white"> 
         </div>
       </div>
     </fieldset>
 
     <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
-      <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white">Batal</a>
-      <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">💾 Simpan</button>
+      <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-white">Batal</a> 
+      <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium">💾 Simpan</button> 
     </div>
   </form>
 </div>
 
 <script>
-  // Script formatting uang tetap sama
-  const uangInput = document.getElementById('uang_pertanggungan');
+  // Script formatting uang 
+  const uangInput = document.getElementById('uang_pertanggungan'); 
   if (uangInput) {
     uangInput.addEventListener('input', function(e) {
-      let value = this.value.replace(/\D/g, '');
-      this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      let value = this.value.replace(/\D/g, ''); 
+      this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); 
     });
-  }
+  } 
 
-  // Validasi Tanggal Meninggal vs Tanggal Mulai Asuransi
-  function validateDates() {
+  // Logika Filter Jenis Klaim & Validasi Tanggal
+  function setupClaimLogic() {
+    const jenisKlaim = document.querySelector('select[name="jenis_klaim"]');
     const tglMeninggal = document.querySelector('input[name="tanggal_meninggal"]');
+    const divMeninggal = document.getElementById('div_tgl_meninggal');
     const tglMulai = document.querySelector('input[name="tgl_mulai_asuransi"]');
     const form = document.querySelector('form');
 
-    if (tglMeninggal && tglMulai) {
-      const checkDates = () => {
-        const meninggal = new Date(tglMeninggal.value);
-        const mulai = new Date(tglMulai.value);
-
-        // Jika kedua field terisi
-        if (tglMeninggal.value && tglMulai.value) {
-          if (meninggal < mulai) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Validasi Tanggal Gagal',
-              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
-              confirmButtonColor: '#ef4444'
-            });
-            // Kosongkan kedua field
-            tglMeninggal.value = '';
-            tglMulai.value = '';
-            return false;
-          }
-        }
-        return true;
-      };
-
-      tglMeninggal.addEventListener('change', checkDates);
-      tglMulai.addEventListener('change', checkDates);
-
-      // Validasi saat form di-submit
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          if (!checkDates()) {
-            e.preventDefault();
-            return false;
-          }
-
-          // Validasi server-side akan dihandle di bawah
-          const meninggal = new Date(tglMeninggal.value);
-          const mulai = new Date(tglMulai.value);
-
-          if (tglMeninggal.value && tglMulai.value && meninggal < mulai) {
-            e.preventDefault();
-            Swal.fire({
-              icon: 'error',
-              title: 'Data Tidak Valid',
-              text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!',
-              confirmButtonColor: '#ef4444'
-            });
-            return false;
-          }
-        });
+    function updateVisibility() {
+      if (jenisKlaim.value !== 'Klaim Meninggal') {
+        divMeninggal.style.display = 'none';
+        tglMeninggal.value = '';
+      } else {
+        divMeninggal.style.display = 'flex';
       }
     }
+
+    function validate() {
+      // Hanya validasi jika jenis klaim adalah meninggal dan kedua tanggal ada
+      if (jenisKlaim.value === 'Klaim Meninggal' && tglMeninggal.value && tglMulai.value) { 
+        const dMeninggal = new Date(tglMeninggal.value); 
+        const dMulai = new Date(tglMulai.value); 
+
+        if (dMeninggal < dMulai) { 
+          Swal.fire({
+            icon: 'error',
+            title: 'Validasi Tanggal Gagal',
+            text: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!', 
+            confirmButtonColor: '#ef4444'
+          });
+          tglMeninggal.value = ''; 
+          return false;
+        }
+      }
+      return true;
+    }
+
+    jenisKlaim.addEventListener('change', updateVisibility);
+    tglMeninggal.addEventListener('change', validate);
+    tglMulai.addEventListener('change', validate);
+
+    form.addEventListener('submit', function(e) {
+      if (!validate()) { 
+        e.preventDefault();
+      }
+    });
+
+    updateVisibility();
   }
 
-  validateDates();
+  setupClaimLogic();
 </script>
 
 <%- include('../layout/footer') %>
