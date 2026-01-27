@@ -10,6 +10,33 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Toastr CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <!-- jQuery (required for Toastr) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Toastr JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+  <script>
+    // Toastr Configuration
+    toastr.options = {
+      "closeButton": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "timeOut": "3000"
+    };
+
+    // Handle Flash Messages
+    $(document).ready(function() {
+      <% if (success && success.length > 0) { %>
+        toastr.success('<%= success %>');
+      <% } %>
+      <% if (error && error.length > 0) { %>
+        toastr.error('<%= error %>');
+      <% } %>
+    });
+  </script>
 
 </head>
 
@@ -90,4 +117,20 @@
       if (btn) btn.addEventListener('click', toggleDark);
     });
   </script>
+
+  <% if (success && success.length > 0) { %>
+    <script>
+      $(document).ready(function() {
+        toastr.success("<%= success %>");
+      });
+    </script>
+  <% } %>
+
+  <% if (error && error.length > 0) { %>
+    <script>
+      $(document).ready(function() {
+        toastr.error("<%= error %>");
+      });
+    </script>
+  <% } %>
 

@@ -351,11 +351,11 @@ async function submitPenelponan(e){
       loadOnDeskList(); 
     } else { 
       const error = await res.json();
-      alert('Gagal: ' + error.error); 
+      toastr.error('Gagal: ' + error.error); 
     }
   }catch(err){ 
     console.error(err); 
-    alert('Terjadi kesalahan'); 
+    toastr.error('Terjadi kesalahan'); 
   }
 }
 </script>
@@ -442,15 +442,15 @@ async function submitResumeInterview(e) {
     });
     
     if (res.ok) { 
-      alert('Resume Interview berhasil disimpan');
+      toastr.success('Resume Interview berhasil disimpan');
       closeModalResumeInterview(); 
       if (typeof loadResumeInterviewList === "function") loadResumeInterviewList(); 
     } else { 
-      alert('Gagal simpan: Server merespon dengan error'); 
+      toastr.error('Gagal simpan: Server merespon dengan error'); 
     }
   } catch (err) { 
     console.error('Fetch Interview Error:', err);
-    alert('Terjadi kesalahan koneksi ke server'); 
+    toastr.error('Terjadi kesalahan koneksi ke server'); 
   }
 }
 
@@ -568,15 +568,15 @@ async function submitResumeInvestigasi(e) {
     });
 
     if (res.ok) {
-      alert('Resume Investigasi berhasil disimpan');
+      toastr.success('Resume Investigasi berhasil disimpan');
       closeModalResumeInvestigasi();
       if (typeof loadResumeInvestigasiList === "function") loadResumeInvestigasiList();
     } else {
-      alert('Gagal memproses data investigasi');
+      toastr.error('Gagal memproses data investigasi');
     }
   } catch(err) {
     console.error('Fetch Investigasi Error:', err);
-    alert('Kesalahan koneksi ke server');
+    toastr.error('Kesalahan koneksi ke server');
   }
 }
 
@@ -980,10 +980,11 @@ form.addEventListener('submit', async e => {
   });
 
   if(res.ok) {
-    location.reload();
+    toastr.success('Data On-Desk Lanjutan berhasil disimpan');
+    setTimeout(() => location.reload(), 1000);
   } else {
     const err = await res.json();
-    alert('Error: ' + err.error);
+    toastr.error('Error: ' + err.error);
   }
 });
 </script>
@@ -1376,7 +1377,7 @@ async function deleteOnDesk(id) {
   try {
     const response = await fetch(`/laporan/<%= data.id %>/hasil-on-desk/${id}`, { method: 'DELETE' });
     if (response.ok) {
-      alert('Data berhasil dihapus');
+      toastr.success('Data berhasil dihapus');
       loadOnDeskList();
     }
   } catch (error) {
@@ -1389,7 +1390,7 @@ async function deletePenelponan(id) {
   try {
     const response = await fetch(`/laporan/<%= data.id %>/penelponan/${id}`, { method: 'DELETE' });
     if (response.ok) {
-      alert('Penelponan berhasil dihapus');
+      toastr.success('Penelponan berhasil dihapus');
       loadOnDeskList();
     }
   } catch (error) {
@@ -1631,8 +1632,18 @@ function editInvestigasiLanjutan(data) {
 function deleteInvestigasiLanjutan(id) {
     if(confirm('Hapus data ini secara permanen?')) {
         fetch(`/laporan/<%= data.id %>/hasil-on-desk/${id}`, { method: 'DELETE' })
-            .then(() => { loadOnDeskLanjutanList(); alert('Data terhapus'); })
-            .catch(err => console.error(err));
+            .then(res => {
+                if(res.ok) {
+                    loadOnDeskLanjutanList();
+                    toastr.success('Data terhapus');
+                } else {
+                    toastr.error('Gagal menghapus data');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toastr.error('Terjadi kesalahan koneksi');
+            });
     }
 }
 
@@ -1645,15 +1656,15 @@ async function submitDeswaAwal(event) {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
     });
     if (res.ok) {
-      alert('Deswa Investigasi Awal berhasil disimpan');
+      toastr.success('Deswa Investigasi Awal berhasil disimpan');
       closeModalDeswaAwal();
       loadDeswaMetadataList();
     } else {
-      alert('Gagal menyimpan Deswa');
+      toastr.error('Gagal menyimpan Deswa');
     }
   } catch(err) {
     console.error(err);
-    alert('Terjadi kesalahan');
+    toastr.error('Terjadi kesalahan');
   }
 }
 
@@ -1666,15 +1677,15 @@ async function submitDeswaLanjutan(event) {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
     });
     if (res.ok) {
-      alert('Deswa Investigasi Lanjutan berhasil disimpan');
+      toastr.success('Deswa Investigasi Lanjutan berhasil disimpan');
       closeModalDeswaLanjutan();
       loadDeswaMetadataList();
     } else {
-      alert('Gagal menyimpan Deswa');
+      toastr.error('Gagal menyimpan Deswa');
     }
   } catch(err) {
     console.error(err);
-    alert('Terjadi kesalahan');
+    toastr.error('Terjadi kesalahan');
   }
 }
 
@@ -1701,16 +1712,16 @@ async function submitOnDeskLanjutan(event) {
     });
     
     if (res.ok) {
-      alert('Investigasi Lanjutan berhasil disimpan');
+      toastr.success('Investigasi Lanjutan berhasil disimpan');
       closeModalOnDeskLanjutan();
       loadOnDeskLanjutanList();
     } else {
       const error = await res.text();
-      alert('Gagal menyimpan: ' + error);
+      toastr.error('Gagal menyimpan: ' + error);
     }
   } catch(err) {
     console.error(err);
-    alert('Terjadi kesalahan: ' + err.message);
+    toastr.error('Terjadi kesalahan: ' + err.message);
   }
 }
 
@@ -1802,11 +1813,12 @@ async function deleteDeswa(id) {
   try {
     const res = await fetch(`/laporan/<%= data.id %>/deswa/${id}`, { method: 'DELETE' });
     if (res.ok) {
-      alert('Deswa dihapus');
+      toastr.success('Deswa dihapus');
       loadDeswaMetadataList();
     }
   } catch(err) {
     console.error(err);
+    toastr.error('Gagal menghapus Deswa');
   }
 }
 
@@ -1973,82 +1985,22 @@ function calculateBriSLA() {
 
 async function submitBri(event) {
   event.preventDefault();
-  const formData = Object.fromEntries(new FormData(document.getElementById('formBri')));
-  try {
-    const res = await fetch('/laporan/<%= data.id %>/bri', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(formData)
-    });
-    if (res.ok) {
-      alert('BRI submission berhasil disimpan');
-      closeModalBri();
-      loadBriList();
-    } else {
-      alert('Gagal menyimpan BRI');
-    }
-  } catch(err) {
-    console.error(err);
-    alert('Terjadi kesalahan');
-  }
-}
-
-async function loadBriList() {
-  try {
-    const res = await fetch('/laporan/<%= data.id %>/bri');
-    const rows = await res.json();
-    const container = document.getElementById('briList');
-    
-    if (!rows.length) {
-      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada BRI data</p>';
-      return;
-    }
-    
-    container.innerHTML = rows.map(r => `
-      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
-        <div class="flex justify-between items-start mb-3">
-          <div>
-            <h4 class="font-semibold text-lg">${r.pic_investigator}</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              ${new Date(r.tanggal_submit_pic_analis).toLocaleDateString('id-ID')} - ${new Date(r.tanggal_submit_pic_investigator).toLocaleDateString('id-ID')}
-            </p>
-          </div>
-          <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
-            🗑️ Hapus
-          </button>
-        </div>
-        <div class="text-sm">
-          <p class="text-gray-600 dark:text-gray-400">SLA Proses</p>
-          <p class="font-medium">${r.sla } hari</p>
-        </div>
-      </div>
-    `).join('');
-  } catch(err) {
-    console.error('Load BRI error', err);
-  }
-}
-
-async function deleteBri(id) {
-  if (!confirm('Yakin hapus BRI data ini?')) return;
-  try {
-    const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('BRI data dihapus');
-      loadBriList();
-    }
-  } catch(err) {
-    console.error(err);
-  }
-}
-</script>
-<script>
-async function submitBri(event) {
-  event.preventDefault();
   const data = Object.fromEntries(new FormData(document.getElementById('formBri')));
   try {
     const res = await fetch('/laporan/<%= data.id %>/bri', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
     });
-    if (res.ok) { alert('BRI data tersimpan'); closeModalBri(); loadBriList(); } else alert('Gagal menyimpan BRI');
-  } catch(err) { console.error(err); alert('Terjadi kesalahan'); }
+    if (res.ok) { 
+      toastr.success('BRI data tersimpan'); 
+      closeModalBri(); 
+      loadBriList(); 
+    } else {
+      toastr.error('Gagal menyimpan BRI');
+    }
+  } catch(err) { 
+    console.error(err); 
+    toastr.error('Terjadi kesalahan'); 
+  }
 }
 
 async function loadBriList() {
@@ -2056,7 +2008,10 @@ async function loadBriList() {
     const res = await fetch('/laporan/<%= data.id %>/bri');
     const rows = await res.json();
     const container = document.getElementById('briList');
-    if (!rows.length) { container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data BRI</p>'; return; }
+    if (!rows.length) { 
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data BRI</p>'; 
+      return; 
+    }
     container.innerHTML = rows.map(r => `
       <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
         <div class="flex justify-between items-start mb-3">
@@ -2066,7 +2021,7 @@ async function loadBriList() {
               ${new Date(r.tanggal_submit_pic_analis).toLocaleDateString('id-ID')} - ${new Date(r.tanggal_submit_pic_investigator).toLocaleDateString('id-ID')}
             </p>
           </div>
-          <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+          <button onclick="deleteBri(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
             🗑️ Hapus
           </button>
         </div>
@@ -2076,15 +2031,22 @@ async function loadBriList() {
         </div>
       </div>
     `).join('');
-  } catch(err) { console.error('Load BRI error', err); }
+  } catch(err) { 
+    console.error('Load BRI error', err); 
+  }
 }
 
 async function deleteBri(id) {
   if (!confirm('Yakin hapus data BRI ini?')) return;
   try {
     const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
-    if (res.ok) { alert('BRI dihapus'); loadBriList(); }
-  } catch(err) { console.error(err); }
+    if (res.ok) { 
+      toastr.success('BRI dihapus'); 
+      loadBriList(); 
+    }
+  } catch(err) { 
+    console.error(err); 
+  }
 }
 </script>
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const flash = require('connect-flash');
 const path = require('path');
 const db = require('./config/db');
 
@@ -22,6 +23,15 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
+
+app.use(flash());
+
+/* GLOBAL LOCALS */
+app.use((req, res, next) => {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+});
 
 /* REQUEST LOGGING */
 app.use((req, res, next) => {

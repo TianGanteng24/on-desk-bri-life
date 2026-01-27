@@ -39,13 +39,15 @@ router.post('/login', async (req, res) => {
       [username]
     );
     if (!rows.length) {
-      return res.render('auth/login', { error: 'User tidak ditemukan' });
+      req.flash('error', 'User tidak ditemukan');
+      return res.redirect('/login');
     }
 
     const user = rows[0];
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
-      return res.render('auth/login', { error: 'Password salah' });
+      req.flash('error', 'Password salah');
+      return res.redirect('/login');
     }
 
     // ✅ Set session user (no database update needed)
@@ -56,10 +58,12 @@ router.post('/login', async (req, res) => {
     };
 
     console.log(`✅ User ${user.id} (${user.username}) logged in`);
+    req.flash('success', 'Selamat datang, ' + user.username);
     res.redirect('/laporan');
   } catch (error) {
     console.log(error);
-    res.status(500).send('Database error');
+    req.flash('error', 'Terjadi kesalahan pada server');
+    res.redirect('/login');
   }
 });
 
@@ -90,7 +94,8 @@ router.get('/users', async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Server Error');
+        req.flash('error', 'Terjadi kesalahan pada server');
+        res.redirect('/laporan');
     }
 });
 
@@ -112,33 +117,49 @@ router.post('/users/create', async (req, res) => {
             [username, hashedPassword, role]
         );
 
+        req.flash('success', 'User berhasil ditambahkan');
         res.redirect('/users'); // Kembali ke daftar user setelah berhasil
     } catch (error) {
-      console.log(error);
-        res.status(500).send('Gagal menambah user');
+        console.log(error);
+        req.flash('error', 'Gagal menambah user: ' + error.message);
+        res.redirect('/users/create');
     }
 });
 
 // Route Update (POST)
 router.post('/users/update', async (req, res) => {
-    const { id, username, password, role } = req.body;
-    let query = "UPDATE users SET username=?, role=? WHERE id=?";
-    let params = [username, role, id];
+    try {
+        const { id, username, password, role } = req.body;
+        let query = "UPDATE users SET username=?, role=? WHERE id=?";
+        let params = [username, role, id];
 
-    if (password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        query = "UPDATE users SET username=?, role=?, password=? WHERE id=?";
-        params = [username, role, hashedPassword, id]; // Gunakan hash bcrypt di sini jika perlu
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            query = "UPDATE users SET username=?, role=?, password=? WHERE id=?";
+            params = [username, role, hashedPassword, id]; 
+        }
+
+        await db.query(query, params);
+        req.flash('success', 'User berhasil diperbarui');
+        res.redirect('/users');
+    } catch (error) {
+        console.error(error);
+        req.flash('error', 'Gagal memperbarui user');
+        res.redirect('/users');
     }
-
-    await db.query(query, params);
-    res.redirect('/users');
 });
 
 // Route Delete (GET)
 router.get('/users/delete/:id', async (req, res) => {
-    await db.query("DELETE FROM users WHERE id = ?", [req.params.id]);
-    res.redirect('/users');
+    try {
+        await db.query("DELETE FROM users WHERE id = ?", [req.params.id]);
+        req.flash('success', 'User berhasil dihapus');
+        res.redirect('/users');
+    } catch (error) {
+        console.error(error);
+        req.flash('error', 'Gagal menghapus user');
+        res.redirect('/users');
+    }
 });
 
 router.post('/auto-logout', async (req, res) => {
@@ -216,7 +237,9 @@ router.get('/laporan', auth, async (req, res) => {
     const [rows] = await db.query(query, params);
     res.render('laporan/index', { data: rows, user });
   } catch (err) {
-    res.status(500).send(err.message);
+    console.error(err);
+    req.flash('error', 'Gagal memuat daftar laporan');
+    res.redirect('/login');
   }
 });
 
@@ -257,7 +280,8 @@ router.get('/laporan/:id', auth, async (req, res) => {
     `, [laporanId]);
 
     if (!laporanRows.length) {
-      return res.status(404).send('Laporan tidak ditemukan');
+      req.flash('error', 'Laporan tidak ditemukan');
+      return res.redirect('/laporan');
     }
 
     const dataLaporan = laporanRows[0];
@@ -268,7 +292,8 @@ router.get('/laporan/:id', auth, async (req, res) => {
     // Gunakan dataLaporan.created_by (bukan laporan.created_by)
     // Gunakan user.role (sesuai definisi di atas)
     if (user.role !== 'admin' && user.role !== 'bri' && dataLaporan.created_by !== user.id) {
-      return res.status(403).send("Anda tidak memiliki akses ke laporan ini.");
+      req.flash('error', 'Anda tidak memiliki akses ke laporan ini');
+      return res.redirect('/laporan');
     }
 
     // ===============================
@@ -308,114 +333,79 @@ router.get('/laporan/:id', auth, async (req, res) => {
 
   } catch (err) {
     console.error('DETAIL LAPORAN ERROR:', err);
-    res.status(500).send(err.message);
+    req.flash('error', 'Terjadi kesalahan saat memuat detail laporan');
+    res.redirect('/laporan');
   }
 });
 
 /* STORE LAPORAN */
-// --- 1. PROSES SIMPAN LAPORAN BARU ---
 router.post('/laporan/store', auth, async (req, res) => {
-    try {
-        const {
-            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
-            uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
-            status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
-            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
-            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
-            pengisi_form_kronologis
-        } = req.body;
+  try {
+    const d = req.body;
 
-        // LOGIKA PERBAIKAN: Ubah string kosong menjadi null
-        // Jika jenis klaim bukan meninggal, atau input tanggal kosong, set ke null
-        const fixTanggalMeninggal = (jenis_klaim === 'Klaim Meninggal' && tanggal_meninggal !== '') 
-            ? tanggal_meninggal 
-            : null;
+    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
+    if (d.tanggal_meninggal && d.tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(d.tanggal_meninggal);
+      const tglMulai = new Date(d.tgl_mulai_asuransi);
 
-        // Pastikan field tanggal lainnya juga dihandle jika kosong
-        const fixTanggalLahir = tanggal_lahir !== '' ? tanggal_lahir : null;
-        const fixTglMulai = tgl_mulai_asuransi !== '' ? tgl_mulai_asuransi : null;
-        const fixTglAkhir = tgl_akhir_asuransi !== '' ? tgl_akhir_asuransi : null;
-        const fixDateClaim = date_claim !== '' ? date_claim : null;
-
-        const query = `
-            INSERT INTO laporan_investigasi (
-                nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
-                uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
-                status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
-                lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
-                no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
-                pengisi_form_kronologis, user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
-            uang_pertanggungan, fixTanggalLahir, fixTanggalMeninggal,
-            status_asuransi, fixTglMulai, fixTglAkhir, fixDateClaim,
-            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
-            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
-            pengisi_form_kronologis, req.session.user.id
-        ];
-
-        await db.query(query, values);
-        res.redirect('/laporan');
-    } catch (err) {
-        console.error("Error Store:", err.message);
-        res.status(500).send("Gagal menyimpan laporan: " + err.message);
+      if (tglMeninggal < tglMulai) {
+        return res.status(400).json({
+          error: true,
+          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
+        });
+      }
     }
+
+    // Proteksi: Jika status_asuransi terkirim dua kali (array), ambil satu saja.
+    const status_fix = Array.isArray(d.status_asuransi) ? d.status_asuransi[0] : d.status_asuransi;
+
+    // Susun array values secara manual agar urutan masuk ke database tepat
+    const values = [
+      d.nama_pemegang_polis,       // 1
+      d.no_peserta,                // 2
+      d.nama_tertanggung,          // 3
+      d.no_telepon,                // 4
+      d.alamat,                    // 5
+      d.uang_pertanggungan,        // 6
+      d.tanggal_lahir || null,     // 7
+      d.tanggal_meninggal || null,  // 8
+      d.date_claim || null,  // 8
+      d.lama_dirawat || null,  // 8
+      status_fix,                  // 9
+      d.kronologis,                // 10
+      d.kelengkapan_dokumen,       // 11
+      d.pengisi_form_kronologis,   // 12
+      d.tgl_mulai_asuransi || null,// 13
+      d.tgl_akhir_asuransi || null, // 14
+      d.usia_polis,                // 15
+      d.jenis_klaim,               // 16
+      d.jenis_produk,              // 17
+      d.no_identitas,              // 18
+      d.rekomendasi,               // 19
+      req.session.user.id          // 20
+    ];
+
+    const sql = `
+      INSERT INTO laporan_investigasi (
+        nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon,
+        alamat, uang_pertanggungan, tanggal_lahir, tanggal_meninggal, date_claim, lama_dirawat,
+        status_asuransi, kronologis, kelengkapan_dokumen, pengisi_form_kronologis,
+        tgl_mulai_asuransi, tgl_akhir_asuransi, usia_polis, jenis_klaim,
+        jenis_produk, no_identitas, rekomendasi, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    await db.query(sql, values);
+
+    req.flash('success', 'Laporan berhasil disimpan');
+    res.redirect('/laporan');
+  } catch (err) {
+    console.error("SQL Error Detail:", err);
+    req.flash('error', 'Gagal menyimpan laporan: ' + err.message);
+    res.redirect('/laporan/create');
+  }
 });
 
-// --- 2. PROSES UPDATE LAPORAN ---
-router.post('/laporan/update/:id', auth, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const {
-            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
-            uang_pertanggungan, tanggal_lahir, tanggal_meninggal,
-            status_asuransi, tgl_mulai_asuransi, tgl_akhir_asuransi, date_claim,
-            lama_dirawat, usia_polis, jenis_klaim, jenis_produk,
-            no_identitas, rekomendasi, kronologis, kelengkapan_dokumen,
-            pengisi_form_kronologis
-        } = req.body;
-
-        // LOGIKA PERBAIKAN: Paksa NULL jika bukan Klaim Meninggal atau string kosong
-        const fixTanggalMeninggal = (jenis_klaim === 'Klaim Meninggal' && tanggal_meninggal !== '') 
-            ? tanggal_meninggal 
-            : null;
-
-        // Bersihkan tanggal lainnya
-        const fixTanggalLahir = tanggal_lahir !== '' ? tanggal_lahir : null;
-        const fixTglMulai = tgl_mulai_asuransi !== '' ? tgl_mulai_asuransi : null;
-        const fixTglAkhir = tgl_akhir_asuransi !== '' ? tgl_akhir_asuransi : null;
-        const fixDateClaim = date_claim !== '' ? date_claim : null;
-
-        const query = `
-            UPDATE laporan_investigasi SET 
-                nama_pemegang_polis = ?, no_peserta = ?, nama_tertanggung = ?, 
-                no_telepon = ?, alamat = ?, uang_pertanggungan = ?, 
-                tanggal_lahir = ?, tanggal_meninggal = ?, status_asuransi = ?, 
-                tgl_mulai_asuransi = ?, tgl_akhir_asuransi = ?, date_claim = ?, 
-                lama_dirawat = ?, usia_polis = ?, jenis_klaim = ?, 
-                jenis_produk = ?, no_identitas = ?, rekomendasi = ?, 
-                kronologis = ?, kelengkapan_dokumen = ?, pengisi_form_kronologis = ?
-            WHERE id = ?
-        `;
-
-        const values = [
-            nama_pemegang_polis, no_peserta, nama_tertanggung, no_telepon, alamat,
-            uang_pertanggungan, fixTanggalLahir, fixTanggalMeninggal, status_asuransi,
-            fixTglMulai, fixTglAkhir, fixDateClaim, lama_dirawat, usia_polis,
-            jenis_klaim, jenis_produk, no_identitas, rekomendasi, kronologis,
-            kelengkapan_dokumen, pengisi_form_kronologis, id
-        ];
-
-        await db.query(query, values);
-        res.redirect('/laporan');
-    } catch (err) {
-        console.error("Error Update:", err.message);
-        res.status(500).send("Gagal mengupdate laporan: " + err.message);
-    }
-});
 // Route untuk menyimpan data Analisa (PIC, MA, dan Putusan)
 router.post('/laporan/:id/analisa-store', auth, async (req, res) => {
     try {
@@ -438,10 +428,11 @@ router.post('/laporan/:id/analisa-store', auth, async (req, res) => {
             [analisa_pic_investigator, analisa_ma, putusan_klaim, analisa_putusan, id]
         );
 
-        res.redirect(`/laporan/${id}?success=Analisa Berhasil Disimpan`);
+        res.redirect(`/laporan/${id}`);
     } catch (err) {
         console.error(err);
-        res.status(500).send("Gagal menyimpan analisa");
+        req.flash('error', 'Gagal menyimpan analisa');
+        res.redirect(`/laporan/${id}`);
     }
 });
 
@@ -454,8 +445,107 @@ router.get('/laporan/edit/:id', auth, async (req, res) => {
     );
     res.render('laporan/edit', { data: row[0], user: req.session.user });
   } catch (error) {
-    console.log(error);
-    res.status(500).send('Database error');
+    console.error(error);
+    req.flash('error', 'Terjadi kesalahan pada server');
+    res.redirect('/laporan');
+  }
+});
+
+/* UPDATE */
+router.post('/laporan/update/:id', auth, async (req, res) => {
+  try {
+    const {
+      nama_pemegang_polis,
+      no_peserta,
+      nama_tertanggung,
+      no_telepon,
+      alamat,
+      uang_pertanggungan,
+      tanggal_lahir,
+      tanggal_meninggal,
+      date_claim,
+      lama_dirawat,
+      status_asuransi,
+      kronologis,
+      kelengkapan_dokumen,
+      pengisi_form_kronologis,
+      tgl_mulai_asuransi,
+      tgl_akhir_asuransi,
+      usia_polis,
+      jenis_klaim,
+      jenis_produk,
+      no_identitas,
+      rekomendasi
+    } = req.body;
+
+    // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
+    if (tanggal_meninggal && tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(tanggal_meninggal);
+      const tglMulai = new Date(tgl_mulai_asuransi);
+
+      if (tglMeninggal < tglMulai) {
+        return res.status(400).json({
+          error: true,
+          message: 'Tanggal Meninggal tidak boleh lebih awal dari Tanggal Mulai Asuransi!'
+        });
+      }
+    }
+
+    await db.query(`
+      UPDATE laporan_investigasi SET
+        nama_pemegang_polis = ?,
+        no_peserta = ?,
+        nama_tertanggung = ?,
+        no_telepon = ?,
+        alamat = ?,
+        uang_pertanggungan = ?,
+        tanggal_lahir = ?,
+        tanggal_meninggal = ?,
+        date_claim = ?,
+        lama_dirawat = ?,
+        status_asuransi = ?,
+        kronologis = ?,
+        kelengkapan_dokumen = ?,
+        pengisi_form_kronologis = ?,
+        tgl_mulai_asuransi = ?,
+        tgl_akhir_asuransi = ?,
+        usia_polis = ?,
+        jenis_klaim = ?,
+        jenis_produk = ?,
+        no_identitas = ?,
+        rekomendasi = ?
+      WHERE id = ?
+    `, [
+      nama_pemegang_polis,
+      no_peserta,
+      nama_tertanggung,
+      no_telepon,
+      alamat,
+      uang_pertanggungan,
+      tanggal_lahir,
+      tanggal_meninggal,
+      date_claim,
+      lama_dirawat,
+      status_asuransi,
+      kronologis,
+      kelengkapan_dokumen,
+      pengisi_form_kronologis,
+      tgl_mulai_asuransi,
+      tgl_akhir_asuransi,
+      usia_polis,
+      jenis_klaim,
+      jenis_produk,
+      no_identitas,
+      rekomendasi,
+      req.params.id
+    ]);
+
+    req.flash('success', 'Laporan berhasil diperbarui');
+    res.redirect('/laporan/' + req.params.id);
+  } catch (err) {
+    console.error("UPDATE ERROR:", err);
+    req.flash('error', 'Gagal memperbarui laporan: ' + err.message);
+    res.redirect('/laporan/' + req.params.id);
   }
 });
 
@@ -466,10 +556,12 @@ router.get('/laporan/delete/:id', auth, async (req, res) => {
       'DELETE FROM laporan_investigasi WHERE id=?',
       [req.params.id]
     );
+    req.flash('success', 'Laporan berhasil dihapus');
     res.redirect('/laporan');
   } catch (error) {
     console.log(error);
-    res.status(500).send('Database error');
+    req.flash('error', 'Gagal menghapus laporan');
+    res.redirect('/laporan');
   }
 });
 
@@ -508,14 +600,16 @@ router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity]
         );
+        req.flash('success', 'Hasil investigasi berhasil disimpan');
         res.redirect('/laporan/' + laporanId);
     } catch (err) {
         console.error(err);
-        // Handle error Unique Key (Jika data yang sama diinput ulang)
         if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(400).send("Data investigasi ini sudah ada (Duplikat).");
+            req.flash('error', 'Data investigasi ini sudah ada (Duplikat)');
+        } else {
+            req.flash('error', 'Gagal menyimpan hasil investigasi');
         }
-        res.status(500).send("Gagal menyimpan hasil investigasi: " + err.message);
+        res.redirect('/laporan/' + req.params.id);
     }
 });
 
@@ -532,11 +626,12 @@ router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
             [tanggal_investigasi, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, req.params.id]
         );
         
-        // Redirect ke halaman detail laporan (Gunakan laporan_id dari hidden input)
+        req.flash('success', 'Hasil investigasi berhasil diperbarui');
         res.redirect('/laporan/' + laporan_id);
     } catch (err) {
         console.error(err);
-        res.status(500).send("Gagal update: " + err.message);
+        req.flash('error', 'Gagal memperbarui hasil investigasi');
+        res.redirect('back');
     }
 });
 
@@ -544,9 +639,12 @@ router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
 router.get('/laporan/ondesk/delete/:id/:laporan_id', auth, async (req, res) => {
     try {
         await db.query('DELETE FROM hasil_on_desk WHERE id=?', [req.params.id]);
+        req.flash('success', 'Hasil investigasi berhasil dihapus');
         res.redirect('/laporan/' + req.params.laporan_id);
     } catch (err) {
-        res.status(500).send("Gagal menghapus: " + err.message);
+        console.error(err);
+        req.flash('error', 'Gagal menghapus hasil investigasi');
+        res.redirect('/laporan/' + req.params.laporan_id);
     }
 });
 
@@ -561,7 +659,6 @@ router.post('/laporan/:id/analisa-internal', auth, async (req, res) => {
             analisa_putusan 
         } = req.body;
 
-        // Update tabel laporan_investigasi berdasarkan input dari form
         await db.query(
             `UPDATE laporan_investigasi SET 
              analisa_pic_investigator = ?, 
@@ -572,10 +669,12 @@ router.post('/laporan/:id/analisa-internal', auth, async (req, res) => {
             [analisa_pic_investigator, analisa_ma, putusan_klaim, analisa_putusan, id]
         );
 
-        res.redirect(`/laporan/${id}`); // Kembali ke halaman detail
+        req.flash('success', 'Analisa internal berhasil disimpan');
+        res.redirect(`/laporan/${id}`); 
     } catch (err) {
         console.error(err);
-        res.status(500).send("Gagal menyimpan analisa internal: " + err.message);
+        req.flash('error', 'Gagal menyimpan analisa internal');
+        res.redirect(`/laporan/${req.params.id}`);
     }
 });
 
@@ -1048,7 +1147,6 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
             // Daftar field yang mungkin diupdate
             const allowedFields = [
                 'pic_investigator', 'tanggal_mulai', 'tanggal_selesai', 'sla_proses',
-                'tanggal_kirim_laporan', 'tanggal_terima_konfirmasi_bri', 'sla_konfirmasi',
                 'tanggal_mulai_ondesk_lanjutan', 'tanggal_selesai_ondesk_lanjutan', 'sla_ondesk_lanjutan',
                 'tanggal_kirim_laporan_lanjutan', 'tanggal_terima_konfirmasi_lanjutan_bri', 'sla_konfirmasi_lanjutan'
             ];
@@ -1203,14 +1301,22 @@ router.post('/laporan/ondesk/:ondesk_id/telp', auth, async (req, res) => {
         // Cek kuota penelponan ondesk (Max 3)
         const [rows] = await db.query('SELECT COUNT(*) as total FROM penelponan WHERE hasil_on_desk_id = ?', [ondeskId]);
         
-        if (rows[0].total >= 3) return res.status(400).send("Quota On-Desk Penuh");
+        if (rows[0].total >= 3) {
+            req.flash('error', 'Kuota On-Desk Penuh');
+            return res.redirect('back');
+        }
 
         await db.query(
             'INSERT INTO penelponan (hasil_on_desk_id, tanggal_telepon, jam_telepon, hasil_telepon) VALUES (?, ?, ?, ?)',
             [ondeskId, tanggal_telepon, jam_telepon, hasil_telepon]
         );
+        req.flash('success', 'Penelponan berhasil disimpan');
         res.redirect('back');
-    } catch (err) { res.status(500).send(err.message); }
+    } catch (err) { 
+        console.error(err);
+        req.flash('error', 'Terjadi kesalahan pada server');
+        res.redirect('back'); 
+    }
 });
 
 router.post('/laporan/interview/:interview_id/resume', auth, async (req, res) => {
@@ -1221,14 +1327,22 @@ router.post('/laporan/interview/:interview_id/resume', auth, async (req, res) =>
         // Cek kuota interview (Max 3)
         const [rows] = await db.query('SELECT COUNT(*) as total FROM resume_hasil_interview WHERE interview_id = ?', [interviewId]);
         
-        if (rows[0].total >= 3) return res.status(400).send("Quota Interview Penuh");
+        if (rows[0].total >= 3) {
+            req.flash('error', 'Kuota Interview Penuh');
+            return res.redirect('back');
+        }
 
         await db.query(
             'INSERT INTO resume_hasil_interview (interview_id, tanggal_telepon, jam_telepon, hasil_interview) VALUES (?, ?, ?, ?)',
             [interviewId, tanggal_telepon, jam_telepon, hasil_interview]
         );
+        req.flash('success', 'Resume interview berhasil disimpan');
         res.redirect('back');
-    } catch (err) { res.status(500).send(err.message); }
+    } catch (err) { 
+        console.error(err);
+        req.flash('error', 'Terjadi kesalahan pada server');
+        res.redirect('back'); 
+    }
 });
 
 module.exports = router;

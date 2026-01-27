@@ -4,9 +4,31 @@
   <meta charset="UTF-8">
   <title>Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Toastr CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <!-- jQuery (required for Toastr) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <!-- Toastr JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script>
+    toastr.options = {
+      "closeButton": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "timeOut": "3000"
+    };
+  </script>
 </head>
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<% if (typeof error !== 'undefined' && error && error.length > 0) { %>
+  <script>
+    $(document).ready(function() {
+      toastr.error("<%= error %>");
+    });
+  </script>
+<% } %>
 
 <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
   <h2 class="text-2xl font-bold text-center mb-6">Login Sistem</h2>
