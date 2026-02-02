@@ -158,65 +158,37 @@
   </div>
 </section>
 
-<!-- Deswa -->
-<section class="mb-8">
-  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">DESWA</h3>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">PIC DESWA</p>
-      <p class="text-base font-medium"><%= data.pic_investigator_deswa  %></p>
+<!-- BRI SECTION -->
+<section class="mt-8 mb-8">
+  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">📊 BRI Submission Data</h3>
+  <div id="briList" class="space-y-4">
+    <!-- BRI data akan dimuat di sini -->
+  </div>
+</section>
+
+<!-- DESWA SECTION -->
+<section class="mt-8 mb-8">
+  <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
+    <h3 class="text-lg font-semibold">📊 DESWA Process Data (Awal & Lanjutan)</h3>
+    <% if (user.role === 'deswa' || user.role === 'admin') { %>
+    <div class="flex gap-2">
+      <button onclick="openModalDeswaAwal()" 
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+        ➕ Update Investigasi Awal
+      </button>
+      <button onclick="openModalDeswaLanjutan()" 
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+        ➕ Update Investigasi Lanjutan
+      </button>
     </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Mulai PIC</p>
-      <p class="text-base font-medium"><%= data.tanggal_mulai_deswa ? new Date(data.tanggal_mulai_deswa).toLocaleDateString('id-ID') : '-' %></p>
-    </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tanggal Selesai Investigator</p>
-      <p class="text-base font-medium"><%= data.tanggal_selesai_deswa ? new Date(data.tanggal_selesai_deswa).toLocaleDateString('id-ID') : '-' %></p>
-    </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">SLA DESWA (hari)</p>
-      <p class="text-base font-medium"><%= data.sla_deswa  %></p>
-    </div>
-    <div>
-        <% if (user.role === 'deswa' || user.role === 'admin') { %>
-<button onclick="openModalDeswaAwal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
-  Update Data Deswa Awal
-</button>
     <% } %>
-    </div>
+  </div>
+  <div id="deswaMetadataList" class="space-y-4">
+    <!-- DESWA data akan dimuat di sini -->
   </div>
 </section>
 
-<!-- BRIEF LIFE -->
-<section class="mb-8">
-  <h3 class="text-lg font-semibold border-b pb-3 dark:border-slate-700 mb-4">BRI Life</h3>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">PIC BRI Life</p>
-      <p class="text-base font-medium"><%= data.pic_brilife  %></p>
-    </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC Analis</p>
-      <p class="text-base font-medium"><%= data.tanggal_submit_pic ? new Date(data.tanggal_submit_pic).toLocaleDateString('id-ID') : '-' %></p>
-    </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Tgl Submit PIC Investigator</p>
-      <p class="text-base font-medium"><%= data.tanggal_submit_investigator ? new Date(data.tanggal_submit_investigator).toLocaleDateString('id-ID') : '-' %></p>
-    </div>
-    <div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">SLA BRI Life (hari)</p>
-      <p class="text-base font-medium"><%= data.sla_brilife  %></p>
-    </div>
-    <div>
-      <% if (user.role === 'bri') { %>
-<button onclick="openModalBri()" class="bg-green-600 text-white px-4 py-2 rounded-lg">
-  Update Data BRI
-</button>    <% } %>
-    </div>
-  </div>
-</section>
-
+<!-- BRI Life data is now in the dynamic section above -->
 <section class="mt-12">
   <div class="flex justify-between items-center mb-6">
     <h3 class="text-2xl font-bold dark:text-white">🔍 Hasil Konfirmasi / Investigasi</h3>
@@ -351,11 +323,11 @@ async function submitPenelponan(e){
       loadOnDeskList(); 
     } else { 
       const error = await res.json();
-      toastr.error('Gagal: ' + error.error); 
+      alert('Gagal: ' + error.error); 
     }
   }catch(err){ 
     console.error(err); 
-    toastr.error('Terjadi kesalahan'); 
+    alert('Terjadi kesalahan'); 
   }
 }
 </script>
@@ -442,15 +414,15 @@ async function submitResumeInterview(e) {
     });
     
     if (res.ok) { 
-      toastr.success('Resume Interview berhasil disimpan');
+      alert('Resume Interview berhasil disimpan');
       closeModalResumeInterview(); 
       if (typeof loadResumeInterviewList === "function") loadResumeInterviewList(); 
     } else { 
-      toastr.error('Gagal simpan: Server merespon dengan error'); 
+      alert('Gagal simpan: Server merespon dengan error'); 
     }
   } catch (err) { 
     console.error('Fetch Interview Error:', err);
-    toastr.error('Terjadi kesalahan koneksi ke server'); 
+    alert('Terjadi kesalahan koneksi ke server'); 
   }
 }
 
@@ -568,15 +540,15 @@ async function submitResumeInvestigasi(e) {
     });
 
     if (res.ok) {
-      toastr.success('Resume Investigasi berhasil disimpan');
+      alert('Resume Investigasi berhasil disimpan');
       closeModalResumeInvestigasi();
       if (typeof loadResumeInvestigasiList === "function") loadResumeInvestigasiList();
     } else {
-      toastr.error('Gagal memproses data investigasi');
+      alert('Gagal memproses data investigasi');
     }
   } catch(err) {
     console.error('Fetch Investigasi Error:', err);
-    toastr.error('Kesalahan koneksi ke server');
+    alert('Kesalahan koneksi ke server');
   }
 }
 
@@ -980,11 +952,10 @@ form.addEventListener('submit', async e => {
   });
 
   if(res.ok) {
-    toastr.success('Data On-Desk Lanjutan berhasil disimpan');
-    setTimeout(() => location.reload(), 1000);
+    location.reload();
   } else {
     const err = await res.json();
-    toastr.error('Error: ' + err.error);
+    alert('Error: ' + err.error);
   }
 });
 </script>
@@ -1018,24 +989,6 @@ form.addEventListener('submit', async e => {
   </div>
 </section>
 
-<!-- DESWA SECTION WITH METADATA -->
-<section class="mt-8 mb-8">
-  <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-slate-700">
-    <h3 class="text-lg font-semibold">📊 DESWA Process Data - Investigasi Lanjutan</h3>
-    <% if (user.role === 'deswa' || user.role === 'admin') { %>
-    <button onclick="openModalDeswaLanjutan()" 
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-      ➕ Update Data Deswa Lanjutan
-    </button>
-    <% } %>
-  </div>
-  <div id="deswaMetadataList" class="space-y-4">
-    <!-- DESWA lanjutan data akan dimuat di sini -->
-  </div>
-</section>
-
-</div>
-
 <!-- MODAL INPUT DESWA INVESTIGASI AWAL -->
 <div id="modalDeswaAwal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
   <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-xl w-full mx-4 my-8">
@@ -1053,13 +1006,31 @@ form.addEventListener('submit', async e => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Mulai *</label>
-          <input type="date" name="tanggal_mulai" id="deswaStartDate" required onchange="calculateDeswaSLA()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_mulai" id="deswaStartDate" required onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_mulai" id="deswaStartTime" onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Tanggal Selesai *</label>
-          <input type="date" name="tanggal_selesai" id="deswaEndDate" required onchange="calculateDeswaSLA()"
+          <label class="block text-sm font-medium mb-2">Tanggal SLA Awal</label>
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_sla_awal" id="deswaSlaStartDate" onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_sla_awal" id="deswaSlaTime" onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-2">Tanggal Selesai *</label>
+        <div class="flex gap-2">
+          <input type="date" name="tanggal_selesai" id="deswaEndDate" required onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
             class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <input type="time" name="jam_selesai" id="deswaEndTime" onchange="calculateDeswaSLA()" oninput="calculateDeswaSLA()"
+            class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
         </div>
       </div>
 
@@ -1072,13 +1043,21 @@ form.addEventListener('submit', async e => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t dark:border-slate-700">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Kirim Laporan</label>
-          <input type="date" name="tanggal_kirim_laporan" onchange="calculateDeswaSLAKonfirmasi()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_kirim_laporan" id="deswaKirimAwalDate" onchange="calculateDeswaSLAKonfirmasi()" oninput="calculateDeswaSLAKonfirmasi()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_kirim_laporan" id="deswaKirimAwalTime" onchange="calculateDeswaSLAKonfirmasi()" oninput="calculateDeswaSLAKonfirmasi()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Terima Konfirmasi BRI</label>
-          <input type="date" name="tanggal_terima_konfirmasi_bri" onchange="calculateDeswaSLAKonfirmasi()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_terima_konfirmasi_bri" id="deswaTerimaAwalDate" onchange="calculateDeswaSLAKonfirmasi()" oninput="calculateDeswaSLAKonfirmasi()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_terima_konfirmasi_bri" id="deswaTerimaAwalTime" onchange="calculateDeswaSLAKonfirmasi()" oninput="calculateDeswaSLAKonfirmasi()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
       </div>
 
@@ -1101,6 +1080,8 @@ form.addEventListener('submit', async e => {
   </div>
 </div>
 
+
+
 <!-- MODAL INPUT DESWA INVESTIGASI LANJUTAN -->
 <div id="modalDeswaLanjutan" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
   <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 my-8">
@@ -1112,13 +1093,21 @@ form.addEventListener('submit', async e => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Mulai Lanjutan</label>
-          <input type="date" name="tanggal_mulai_ondesk_lanjutan" id="deswaStartLanjuanDate" onchange="calculateDeswaSLAOndesKLanjutan()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_mulai_ondesk_lanjutan" id="deswaStartLanjuanDate" onchange="calculateDeswaSLAOndesKLanjutan()" oninput="calculateDeswaSLAOndesKLanjutan()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_mulai_ondesk_lanjutan" id="deswaStartLanjuanTime" onchange="calculateDeswaSLAOndesKLanjutan()" oninput="calculateDeswaSLAOndesKLanjutan()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Selesai Lanjutan</label>
-          <input type="date" name="tanggal_selesai_ondesk_lanjutan" id="deswaEndLanjuanDate" onchange="calculateDeswaSLAOndesKLanjutan()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_selesai_ondesk_lanjutan" id="deswaEndLanjuanDate" onchange="calculateDeswaSLAOndesKLanjutan()" oninput="calculateDeswaSLAOndesKLanjutan()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_selesai_ondesk_lanjutan" id="deswaEndLanjuanTime" onchange="calculateDeswaSLAOndesKLanjutan()" oninput="calculateDeswaSLAOndesKLanjutan()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
       </div>
 
@@ -1131,13 +1120,21 @@ form.addEventListener('submit', async e => {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t dark:border-slate-700">
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Kirim Laporan Lanjutan</label>
-          <input type="date" name="tanggal_kirim_laporan_lanjutan" onchange="calculateDeswaSLAKonfirmasiLanjutan()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_kirim_laporan_lanjutan" id="deswaKirimLanjutanDate" onchange="calculateDeswaSLAKonfirmasiLanjutan()" oninput="calculateDeswaSLAKonfirmasiLanjutan()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_kirim_laporan_lanjutan" id="deswaKirimLanjutanTime" onchange="calculateDeswaSLAKonfirmasiLanjutan()" oninput="calculateDeswaSLAKonfirmasiLanjutan()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">Tanggal Terima Konfirmasi Lanjutan</label>
-          <input type="date" name="tanggal_terima_konfirmasi_lanjutan_bri" onchange="calculateDeswaSLAKonfirmasiLanjutan()"
-            class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_terima_konfirmasi_lanjutan_bri" id="deswaTerimaLanjutanDate" onchange="calculateDeswaSLAKonfirmasiLanjutan()" oninput="calculateDeswaSLAKonfirmasiLanjutan()"
+              class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600">
+            <input type="time" name="jam_terima_konfirmasi_lanjutan_bri" id="deswaTerimaLanjutanTime" onchange="calculateDeswaSLAKonfirmasiLanjutan()" oninput="calculateDeswaSLAKonfirmasiLanjutan()"
+              class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700 dark:border-slate-600">
+          </div>
         </div>
       </div>
 
@@ -1377,7 +1374,7 @@ async function deleteOnDesk(id) {
   try {
     const response = await fetch(`/laporan/<%= data.id %>/hasil-on-desk/${id}`, { method: 'DELETE' });
     if (response.ok) {
-      toastr.success('Data berhasil dihapus');
+      alert('Data berhasil dihapus');
       loadOnDeskList();
     }
   } catch (error) {
@@ -1390,7 +1387,7 @@ async function deletePenelponan(id) {
   try {
     const response = await fetch(`/laporan/<%= data.id %>/penelponan/${id}`, { method: 'DELETE' });
     if (response.ok) {
-      toastr.success('Penelponan berhasil dihapus');
+      alert('Penelponan berhasil dihapus');
       loadOnDeskList();
     }
   } catch (error) {
@@ -1399,15 +1396,62 @@ async function deletePenelponan(id) {
 }
 
 // ===== DESWA PROCESS METADATA =====
+function calculateBusinessDays(startDate, endDate) {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  start.setHours(0,0,0,0);
+  end.setHours(0,0,0,0);
+  if (end < start) return 0;
+  
+  let count = 0;
+  let curDate = new Date(start);
+  while (curDate <= end) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count > 0 ? count - 1 : 0;
+}
+
 function calculateDeswaSLA() {
   const startDate = document.getElementById('deswaStartDate').value;
+  const jamMulai = document.getElementById('deswaStartTime').value;
+  const slaStartDate = document.getElementById('deswaSlaStartDate').value;
+  const jamSlaAwal = document.getElementById('deswaSlaTime').value;
   const endDate = document.getElementById('deswaEndDate').value;
+  const jamSelesai = document.getElementById('deswaEndTime').value;
   const slaDisplay = document.getElementById('deswaSlaDisplay');
   
-  if (startDate && endDate) {
-    const start = new Date(startDate);
+  // Gunakan Tanggal SLA Awal jika ada, jika tidak gunakan Tanggal Mulai
+  let effectiveStartDate = slaStartDate || startDate;
+  let effectiveStartTime = slaStartDate ? jamSlaAwal : jamMulai;
+  
+  if (effectiveStartDate && endDate) {
+    let start = new Date(effectiveStartDate);
     const end = new Date(endDate);
-    const sla = calculateBusinessDays(start, end);
+    
+    // Logic Jam Mulai: Jika di atas jam 14:00, maka SLA mulai dihitung dari hari kerja berikutnya
+    if (effectiveStartTime) {
+      const [hours, minutes] = effectiveStartTime.split(':').map(Number);
+      if (hours >= 14) {
+        start.setDate(start.getDate() + 1);
+        while (start.getDay() === 0 || start.getDay() === 6) { // Skip weekend
+          start.setDate(start.getDate() + 1);
+        }
+      }
+    }
+    
+    let sla = calculateBusinessDays(start, end);
+    
+    // Logic Jam Selesai: Jika jam selesai melewati 14:00, maka SLA ditambah 1
+    if (jamSelesai) {
+      const [h, m] = jamSelesai.split(':').map(Number);
+      if (h >= 14) {
+        sla += 1;
+      }
+    }
+    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1415,14 +1459,35 @@ function calculateDeswaSLA() {
 }
 
 function calculateDeswaSLAKonfirmasi() {
-  const startDate = document.querySelector('input[name="tanggal_kirim_laporan"]').value;
-  const endDate = document.querySelector('input[name="tanggal_terima_konfirmasi_bri"]').value;
+  const startDate = document.getElementById('deswaKirimAwalDate').value;
+  const jamKirim = document.getElementById('deswaKirimAwalTime').value;
+  const endDate = document.getElementById('deswaTerimaAwalDate').value;
+  const jamTerima = document.getElementById('deswaTerimaAwalTime').value;
   const slaDisplay = document.getElementById('deswaSlaKonfirmasi');
   
   if (startDate && endDate) {
-    const start = new Date(startDate);
+    let start = new Date(startDate);
     const end = new Date(endDate);
-    const sla = calculateBusinessDays(start, end);
+    
+    if (jamKirim) {
+      const [hours, minutes] = jamKirim.split(':').map(Number);
+      if (hours >= 14) {
+        start.setDate(start.getDate() + 1);
+        while (start.getDay() === 0 || start.getDay() === 6) {
+          start.setDate(start.getDate() + 1);
+        }
+      }
+    }
+    
+    let sla = calculateBusinessDays(start, end);
+    
+    if (jamTerima) {
+      const [h, m] = jamTerima.split(':').map(Number);
+      if (h >= 14) {
+        sla += 1;
+      }
+    }
+    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1431,46 +1496,70 @@ function calculateDeswaSLAKonfirmasi() {
 
 function calculateDeswaSLAOndesKLanjutan() {
   const startDate = document.getElementById('deswaStartLanjuanDate').value;
+  const jamMulai = document.getElementById('deswaStartLanjuanTime').value;
   const endDate = document.getElementById('deswaEndLanjuanDate').value;
+  const jamSelesai = document.getElementById('deswaEndLanjuanTime').value;
   const slaDisplay = document.getElementById('deswaSlaOndesKLanjutan');
   
   if (startDate && endDate) {
-    const start = new Date(startDate);
+    let start = new Date(startDate);
     const end = new Date(endDate);
-    const sla = calculateBusinessDays(start, end);
+    
+    if (jamMulai) {
+      const [hours, minutes] = jamMulai.split(':').map(Number);
+      if (hours >= 14) {
+        start.setDate(start.getDate() + 1);
+        while (start.getDay() === 0 || start.getDay() === 6) {
+          start.setDate(start.getDate() + 1);
+        }
+      }
+    }
+    
+    let sla = calculateBusinessDays(start, end);
+    
+    if (jamSelesai) {
+      const [h, m] = jamSelesai.split(':').map(Number);
+      if (h >= 14) {
+        sla += 1;
+      }
+    }
+    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
   }
 }
 
-// Fungsi untuk hitung hari kerja (skip Sabtu & Minggu)
-function calculateBusinessDays(startDate, endDate) {
-  let count = 0;
-  const curDate = new Date(startDate);
-  curDate.setHours(0, 0, 0, 0);
-  
-  while (curDate <= endDate) {
-    const dayOfWeek = curDate.getDay();
-    // 0 = Minggu, 6 = Sabtu - skip kedua hari ini
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      count++;
-    }
-    curDate.setDate(curDate.getDate() + 1);
-  }
-  
-  return count;
-}
-
 function calculateDeswaSLAKonfirmasiLanjutan() {
-  const startDate = document.querySelector('input[name="tanggal_kirim_laporan_lanjutan"]').value;
-  const endDate = document.querySelector('input[name="tanggal_terima_konfirmasi_lanjutan_bri"]').value;
+  const startDate = document.getElementById('deswaKirimLanjutanDate').value;
+  const jamKirim = document.getElementById('deswaKirimLanjutanTime').value;
+  const endDate = document.getElementById('deswaTerimaLanjutanDate').value;
+  const jamTerima = document.getElementById('deswaTerimaLanjutanTime').value;
   const slaDisplay = document.getElementById('deswaSlaKonfirmasiLanjutan');
   
   if (startDate && endDate) {
-    const start = new Date(startDate);
+    let start = new Date(startDate);
     const end = new Date(endDate);
-    const sla = calculateBusinessDays(start, end);
+    
+    if (jamKirim) {
+      const [hours, minutes] = jamKirim.split(':').map(Number);
+      if (hours >= 14) {
+        start.setDate(start.getDate() + 1);
+        while (start.getDay() === 0 || start.getDay() === 6) {
+          start.setDate(start.getDate() + 1);
+        }
+      }
+    }
+    
+    let sla = calculateBusinessDays(start, end);
+    
+    if (jamTerima) {
+      const [h, m] = jamTerima.split(':').map(Number);
+      if (h >= 14) {
+        sla += 1;
+      }
+    }
+    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1491,9 +1580,15 @@ function openModalDeswaAwal(data = null) {
                     const dbData = rows[0];
                     document.querySelector('#formDeswaAwal input[name="pic_investigator"]').value = dbData.pic_investigator || '';
                     document.querySelector('#formDeswaAwal input[name="tanggal_mulai"]').value = dbData.tanggal_mulai ? dbData.tanggal_mulai.split('T')[0] : '';
+                    document.querySelector('#formDeswaAwal input[name="jam_mulai"]').value = dbData.jam_mulai || '';
+                    document.querySelector('#formDeswaAwal input[name="tanggal_sla_awal"]').value = dbData.tanggal_sla_awal ? dbData.tanggal_sla_awal.split('T')[0] : '';
+                    document.querySelector('#formDeswaAwal input[name="jam_sla_awal"]').value = dbData.jam_sla_awal || '';
                     document.querySelector('#formDeswaAwal input[name="tanggal_selesai"]').value = dbData.tanggal_selesai ? dbData.tanggal_selesai.split('T')[0] : '';
+                    document.querySelector('#formDeswaAwal input[name="jam_selesai"]').value = dbData.jam_selesai || '';
                     document.querySelector('#formDeswaAwal input[name="tanggal_kirim_laporan"]').value = dbData.tanggal_kirim_laporan ? dbData.tanggal_kirim_laporan.split('T')[0] : '';
+                    document.querySelector('#formDeswaAwal input[name="jam_kirim_laporan"]').value = dbData.jam_kirim_laporan || '';
                     document.querySelector('#formDeswaAwal input[name="tanggal_terima_konfirmasi_bri"]').value = dbData.tanggal_terima_konfirmasi_bri ? dbData.tanggal_terima_konfirmasi_bri.split('T')[0] : '';
+                    document.querySelector('#formDeswaAwal input[name="jam_terima_konfirmasi_bri"]').value = dbData.jam_terima_konfirmasi_bri || '';
                     
                     // Trigger SLA calculation
                     setTimeout(() => {
@@ -1513,7 +1608,11 @@ function openModalDeswaAwal(data = null) {
         // Mode EDIT dari parameter - populate form dengan data yang ada
         document.querySelector('#formDeswaAwal input[name="pic_investigator"]').value = data.pic_investigator || '';
         document.querySelector('#formDeswaAwal input[name="tanggal_mulai"]').value = data.tanggal_mulai ? data.tanggal_mulai.split('T')[0] : '';
+        document.querySelector('#formDeswaAwal input[name="jam_mulai"]').value = data.jam_mulai || '';
+        document.querySelector('#formDeswaAwal input[name="tanggal_sla_awal"]').value = data.tanggal_sla_awal ? data.tanggal_sla_awal.split('T')[0] : '';
+        document.querySelector('#formDeswaAwal input[name="jam_sla_awal"]').value = data.jam_sla_awal || '';
         document.querySelector('#formDeswaAwal input[name="tanggal_selesai"]').value = data.tanggal_selesai ? data.tanggal_selesai.split('T')[0] : '';
+        document.querySelector('#formDeswaAwal input[name="jam_selesai"]').value = data.jam_selesai || '';
         
         // Trigger SLA calculation
         setTimeout(() => {
@@ -1543,9 +1642,13 @@ function openModalDeswaLanjutan(data = null) {
     if (data) {
         // Mode EDIT - populate form dengan data yang ada
         document.querySelector('#formDeswaLanjutan input[name="tanggal_mulai_ondesk_lanjutan"]').value = data.tanggal_mulai_ondesk_lanjutan ? data.tanggal_mulai_ondesk_lanjutan.split('T')[0] : '';
+        document.querySelector('#formDeswaLanjutan input[name="jam_mulai_ondesk_lanjutan"]').value = data.jam_mulai_ondesk_lanjutan || '';
         document.querySelector('#formDeswaLanjutan input[name="tanggal_selesai_ondesk_lanjutan"]').value = data.tanggal_selesai_ondesk_lanjutan ? data.tanggal_selesai_ondesk_lanjutan.split('T')[0] : '';
+        document.querySelector('#formDeswaLanjutan input[name="jam_selesai_ondesk_lanjutan"]').value = data.jam_selesai_ondesk_lanjutan || '';
         document.querySelector('#formDeswaLanjutan input[name="tanggal_kirim_laporan_lanjutan"]').value = data.tanggal_kirim_laporan_lanjutan ? data.tanggal_kirim_laporan_lanjutan.split('T')[0] : '';
+        document.querySelector('#formDeswaLanjutan input[name="jam_kirim_laporan_lanjutan"]').value = data.jam_kirim_laporan_lanjutan || '';
         document.querySelector('#formDeswaLanjutan input[name="tanggal_terima_konfirmasi_lanjutan_bri"]').value = data.tanggal_terima_konfirmasi_lanjutan_bri ? data.tanggal_terima_konfirmasi_lanjutan_bri.split('T')[0] : '';
+        document.querySelector('#formDeswaLanjutan input[name="jam_terima_konfirmasi_lanjutan_bri"]').value = data.jam_terima_konfirmasi_lanjutan_bri || '';
         
         // Trigger SLA calculations
         setTimeout(() => {
@@ -1632,18 +1735,8 @@ function editInvestigasiLanjutan(data) {
 function deleteInvestigasiLanjutan(id) {
     if(confirm('Hapus data ini secara permanen?')) {
         fetch(`/laporan/<%= data.id %>/hasil-on-desk/${id}`, { method: 'DELETE' })
-            .then(res => {
-                if(res.ok) {
-                    loadOnDeskLanjutanList();
-                    toastr.success('Data terhapus');
-                } else {
-                    toastr.error('Gagal menghapus data');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toastr.error('Terjadi kesalahan koneksi');
-            });
+            .then(() => { loadOnDeskLanjutanList(); alert('Data terhapus'); })
+            .catch(err => console.error(err));
     }
 }
 
@@ -1656,15 +1749,15 @@ async function submitDeswaAwal(event) {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
     });
     if (res.ok) {
-      toastr.success('Deswa Investigasi Awal berhasil disimpan');
+      alert('Deswa Investigasi Awal berhasil disimpan');
       closeModalDeswaAwal();
       loadDeswaMetadataList();
     } else {
-      toastr.error('Gagal menyimpan Deswa');
+      alert('Gagal menyimpan Deswa');
     }
   } catch(err) {
     console.error(err);
-    toastr.error('Terjadi kesalahan');
+    alert('Terjadi kesalahan');
   }
 }
 
@@ -1677,15 +1770,15 @@ async function submitDeswaLanjutan(event) {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
     });
     if (res.ok) {
-      toastr.success('Deswa Investigasi Lanjutan berhasil disimpan');
+      alert('Deswa Investigasi Lanjutan berhasil disimpan');
       closeModalDeswaLanjutan();
       loadDeswaMetadataList();
     } else {
-      toastr.error('Gagal menyimpan Deswa');
+      alert('Gagal menyimpan Deswa');
     }
   } catch(err) {
     console.error(err);
-    toastr.error('Terjadi kesalahan');
+    alert('Terjadi kesalahan');
   }
 }
 
@@ -1712,18 +1805,35 @@ async function submitOnDeskLanjutan(event) {
     });
     
     if (res.ok) {
-      toastr.success('Investigasi Lanjutan berhasil disimpan');
+      alert('Investigasi Lanjutan berhasil disimpan');
       closeModalOnDeskLanjutan();
       loadOnDeskLanjutanList();
     } else {
       const error = await res.text();
-      toastr.error('Gagal menyimpan: ' + error);
+      alert('Gagal menyimpan: ' + error);
     }
   } catch(err) {
     console.error(err);
-    toastr.error('Terjadi kesalahan: ' + err.message);
+    alert('Terjadi kesalahan: ' + err.message);
   }
 }
+
+// Helper to format Date + Time (Format: [tanggal] [bulan] [tahun] [jam] [menit])
+const formatDT = (date, time) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  const dateStr = d.toLocaleDateString('id-ID', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric' 
+  });
+  
+  if (time) {
+    // Memastikan jam dan menit ditampilkan
+    return `${dateStr} ${time} WIB`;
+  }
+  return dateStr;
+};
 
 async function loadDeswaMetadataList() {
   try {
@@ -1732,79 +1842,113 @@ async function loadDeswaMetadataList() {
     const container = document.getElementById('deswaMetadataList');
     
     if (!rows.length) {
-      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada Deswa lanjutan data</p>';
-      return;
-    }
-
-    // Filter: Hanya tampilkan jika ada data lanjutan
-    const rowsWithLanjutan = rows.filter(r => 
-      r.tanggal_mulai_ondesk_lanjutan || r.tanggal_selesai_ondesk_lanjutan || 
-      r.tanggal_kirim_laporan_lanjutan || r.tanggal_terima_konfirmasi_lanjutan_bri || 
-      r.sla_ondesk_lanjutan !== null || r.sla_konfirmasi_lanjutan !== null
-    );
-
-    if (!rowsWithLanjutan.length) {
-      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada Deswa lanjutan data</p>';
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data Deswa</p>';
       return;
     }
     
-    container.innerHTML = rowsWithLanjutan.map(r => `
-      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h4 class="font-semibold text-lg text-emerald-700 dark:text-emerald-400">📊 Investigasi Lanjutan</h4>
+    container.innerHTML = rows.map(r => `
+      <div class="border rounded-lg p-6 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 space-y-6">
+        <!-- Investigasi Awal Section -->
+        <div class="border-b dark:border-slate-700 pb-4">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="font-bold text-lg text-indigo-700 dark:text-indigo-400">📋 Investigasi Awal</h4>
+            <% if (user.role === 'deswa' || user.role === 'admin') { %>
+            <button onclick='openModalDeswaAwal(${JSON.stringify(r).replace(/"/g, "&quot;")})' class="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700">
+              ✏️ Edit Awal
+            </button>
+            <% } %>
           </div>
-          <div class="flex gap-2">
-            <button onclick="editDeswaLanjutan(${JSON.stringify(r).replace(/"/g, '&quot;')})" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
-              ✏️ Edit Lanjutan
-            </button>
-            <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
-              🗑️ Hapus
-            </button>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">PIC Investigator</p>
+              <p class="font-medium">${r.pic_investigator || '-'}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Tanggal Mulai</p>
+              <p class="font-medium">${formatDT(r.tanggal_mulai, r.jam_mulai)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Tanggal SLA Awal</p>
+              <p class="font-medium">${formatDT(r.tanggal_sla_awal, r.jam_sla_awal)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Tanggal Selesai</p>
+              <p class="font-medium">${formatDT(r.tanggal_selesai, r.jam_selesai)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">SLA Proses</p>
+              <p class="font-bold text-blue-600">${r.sla_proses !== null ? r.sla_proses + ' hari' : '-'}</p>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Kirim Laporan</p>
+              <p class="font-medium">${formatDT(r.tanggal_kirim_laporan, r.jam_kirim_laporan)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Terima Konfirmasi</p>
+              <p class="font-medium">${formatDT(r.tanggal_terima_konfirmasi_bri, r.jam_terima_konfirmasi_bri)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">SLA Konfirmasi</p>
+              <p class="font-bold text-green-600">${r.sla_konfirmasi !== null ? r.sla_konfirmasi + ' hari' : '-'}</p>
+            </div>
           </div>
         </div>
 
-        <!-- Ondesk Lanjutan Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pb-4 border-b dark:border-slate-700">
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal Mulai Lanjutan</p>
-            <p class="font-medium">${r.tanggal_mulai_ondesk_lanjutan ? new Date(r.tanggal_mulai_ondesk_lanjutan).toLocaleDateString('id-ID') : '-'}</p>
+        <!-- Investigasi Lanjutan Section -->
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="font-bold text-lg text-emerald-700 dark:text-emerald-400">📊 Investigasi Lanjutan</h4>
+            <% if (user.role === 'deswa' || user.role === 'admin') { %>
+            <div class="flex gap-2">
+              <button onclick='editDeswaLanjutan(${JSON.stringify(r).replace(/"/g, "&quot;")})' class="px-3 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700">
+                ✏️ Edit Lanjutan
+              </button>
+              <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600">
+                🗑️ Hapus
+              </button>
+            </div>
+            <% } %>
           </div>
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal Selesai Lanjutan</p>
-            <p class="font-medium">${r.tanggal_selesai_ondesk_lanjutan ? new Date(r.tanggal_selesai_ondesk_lanjutan).toLocaleDateString('id-ID') : '-'}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">SLA Lanjutan</p>
-            <p class="font-medium text-blue-600">${r.sla_ondesk_lanjutan !== null ? r.sla_ondesk_lanjutan + ' hari' : '-'}</p>
-          </div>
-        </div>
 
-        <!-- Konfirmasi Laporan Lanjutan - HANYA TAMPIL JIKA ADA DATA -->
-        ${r.tanggal_kirim_laporan_lanjutan || r.tanggal_terima_konfirmasi_lanjutan_bri || r.sla_konfirmasi_lanjutan !== null ? `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-purple-50 dark:bg-purple-900/20 p-4 rounded">
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 font-bold">Konfirmasi Laporan</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Mulai Lanjutan</p>
+              <p class="font-medium">${formatDT(r.tanggal_mulai_ondesk_lanjutan, r.jam_mulai_ondesk_lanjutan)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Selesai Lanjutan</p>
+              <p class="font-medium">${formatDT(r.tanggal_selesai_ondesk_lanjutan, r.jam_selesai_ondesk_lanjutan)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">SLA Lanjutan</p>
+              <p class="font-bold text-blue-600">${r.sla_ondesk_lanjutan !== null ? r.sla_ondesk_lanjutan + ' hari' : '-'}</p>
+            </div>
           </div>
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal Kirim Laporan</p>
-            <p class="font-medium">${r.tanggal_kirim_laporan_lanjutan ? new Date(r.tanggal_kirim_laporan_lanjutan).toLocaleDateString('id-ID') : '-'}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Tanggal Terima Konfirmasi</p>
-            <p class="font-medium">${r.tanggal_terima_konfirmasi_lanjutan_bri ? new Date(r.tanggal_terima_konfirmasi_lanjutan_bri).toLocaleDateString('id-ID') : '-'}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">SLA Konfirmasi</p>
-            <p class="font-medium text-green-600">${r.sla_konfirmasi_lanjutan !== null ? r.sla_konfirmasi_lanjutan + ' hari' : '-'}</p>
+
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Kirim Laporan Lanjutan</p>
+              <p class="font-medium">${formatDT(r.tanggal_kirim_laporan_lanjutan, r.jam_kirim_laporan_lanjutan)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Terima Konfirmasi Lanjutan</p>
+              <p class="font-medium">${formatDT(r.tanggal_terima_konfirmasi_lanjutan_bri, r.jam_terima_konfirmasi_lanjutan_bri)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">SLA Konfirmasi Lanjutan</p>
+              <p class="font-bold text-green-600">${r.sla_konfirmasi_lanjutan !== null ? r.sla_konfirmasi_lanjutan + ' hari' : '-'}</p>
+            </div>
           </div>
         </div>
-        ` : ''}
       </div>
     `).join('');
   } catch(err) {
     console.error(err);
-    document.getElementById('deswaMetadataList').innerHTML = '<p class="text-red-500">Error loading data</p>';
+    document.getElementById('deswaMetadataList').innerHTML = '<p class="text-red-500 text-center py-8">Gagal memuat data Deswa</p>';
   }
 }
 
@@ -1813,12 +1957,11 @@ async function deleteDeswa(id) {
   try {
     const res = await fetch(`/laporan/<%= data.id %>/deswa/${id}`, { method: 'DELETE' });
     if (res.ok) {
-      toastr.success('Deswa dihapus');
+      alert('Deswa dihapus');
       loadDeswaMetadataList();
     }
   } catch(err) {
     console.error(err);
-    toastr.error('Gagal menghapus Deswa');
   }
 }
 
@@ -1941,12 +2084,18 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Analis</label>
-          <input type="date" name="tanggal_submit_pic_analis" id="briStartDate" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()">
+          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Analis *</label>
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_submit_pic_analis" id="briStartDate" required class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()" oninput="calculateBriSLA()">
+            <input type="time" name="jam_submit_pic_analis" id="briStartTime" class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700" onchange="calculateBriSLA()" oninput="calculateBriSLA()">
+          </div>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Investigator</label>
-          <input type="date" name="tanggal_submit_pic_investigator" id="briEndDate" class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()">
+          <label class="block text-sm font-medium mb-2">Tanggal Submit PIC Investigator *</label>
+          <div class="flex gap-2">
+            <input type="date" name="tanggal_submit_pic_investigator" id="briEndDate" required class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700" onchange="calculateBriSLA()" oninput="calculateBriSLA()">
+            <input type="time" name="jam_submit_pic_investigator" id="briEndTime" class="w-32 border rounded-lg px-2 py-2 dark:bg-slate-700" onchange="calculateBriSLA()" oninput="calculateBriSLA()">
+          </div>
         </div>
       </div>
       <div>
@@ -1970,13 +2119,35 @@ function closeModalBri() { document.getElementById('modalBri').classList.add('hi
 
 function calculateBriSLA() {
   const startDate = document.getElementById('briStartDate').value;
+  const jamMulai = document.getElementById('briStartTime').value;
   const endDate = document.getElementById('briEndDate').value;
+  const jamSelesai = document.getElementById('briEndTime').value;
   const slaDisplay = document.getElementById('briSlaDisplay');
   
   if (startDate && endDate) {
-    const start = new Date(startDate);
+    let start = new Date(startDate);
     const end = new Date(endDate);
-    const sla = calculateBusinessDays(start, end);
+    
+    if (jamMulai) {
+      const [hours, minutes] = jamMulai.split(':').map(Number);
+      if (hours >= 14) {
+        start.setDate(start.getDate() + 1);
+        while (start.getDay() === 0 || start.getDay() === 6) {
+          start.setDate(start.getDate() + 1);
+        }
+      }
+    }
+    
+    let sla = calculateBusinessDays(start, end);
+
+    // Logic Jam Selesai: Jika jam selesai melewati 14:00, maka SLA ditambah 1
+    if (jamSelesai) {
+      const [h, m] = jamSelesai.split(':').map(Number);
+      if (h >= 14) {
+        sla += 1;
+      }
+    }
+
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1985,21 +2156,21 @@ function calculateBriSLA() {
 
 async function submitBri(event) {
   event.preventDefault();
-  const data = Object.fromEntries(new FormData(document.getElementById('formBri')));
+  const formData = Object.fromEntries(new FormData(document.getElementById('formBri')));
   try {
     const res = await fetch('/laporan/<%= data.id %>/bri', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(formData)
     });
-    if (res.ok) { 
-      toastr.success('BRI data tersimpan'); 
-      closeModalBri(); 
-      loadBriList(); 
+    if (res.ok) {
+      alert('BRI submission berhasil disimpan');
+      closeModalBri();
+      loadBriList();
     } else {
-      toastr.error('Gagal menyimpan BRI');
+      alert('Gagal menyimpan BRI');
     }
-  } catch(err) { 
-    console.error(err); 
-    toastr.error('Terjadi kesalahan'); 
+  } catch(err) {
+    console.error(err);
+    alert('Terjadi kesalahan');
   }
 }
 
@@ -2008,10 +2179,106 @@ async function loadBriList() {
     const res = await fetch('/laporan/<%= data.id %>/bri');
     const rows = await res.json();
     const container = document.getElementById('briList');
-    if (!rows.length) { 
-      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data BRI</p>'; 
-      return; 
+    
+    if (!rows.length) {
+      container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada BRI data</p>';
+      return;
     }
+    
+    container.innerHTML = rows.map(r => `
+      <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h4 class="font-semibold text-lg text-indigo-600 dark:text-indigo-400">PIC: ${r.pic_investigator}</h4>
+            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 mt-1">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-xs uppercase w-24">PIC Analis:</span>
+                  <span>${formatDT(r.tanggal_submit_pic_analis, r.jam_submit_pic_analis)}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-xs uppercase w-24">Investigator:</span>
+                  <span>${formatDT(r.tanggal_submit_pic_investigator, r.jam_submit_pic_investigator)}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-xs uppercase w-24">SLA:</span>
+                  <span class="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 px-2 py-0.5 rounded-full text-xs font-bold">
+                    ${r.sla_bri} Hari
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick='editBri(${JSON.stringify(r).replace(/'/g, "&#39;")})' class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
+              ✏️ Edit
+            </button>
+            <button onclick="deleteBri(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+              🗑️ Hapus
+            </button>
+          </div>
+        </div>
+        <div class="text-sm mt-3 pt-3 border-t dark:border-slate-700 flex justify-between items-center">
+          <span class="text-gray-600 dark:text-gray-400">SLA Proses:</span>
+          <span class="font-bold text-blue-600">${r.sla } hari</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(err) {
+    console.error('Load BRI error', err);
+  }
+}
+
+function editBri(data) {
+    const form = document.getElementById('formBri');
+    document.querySelector('#formBri input[name="pic_investigator"]').value = data.pic_investigator || '';
+    document.querySelector('#formBri input[name="tanggal_submit_pic_analis"]').value = data.tanggal_submit_pic_analis ? data.tanggal_submit_pic_analis.split('T')[0] : '';
+    document.querySelector('#formBri input[name="jam_submit_pic_analis"]').value = data.jam_submit_pic_analis || '';
+    document.querySelector('#formBri input[name="tanggal_submit_pic_investigator"]').value = data.tanggal_submit_pic_investigator ? data.tanggal_submit_pic_investigator.split('T')[0] : '';
+    document.querySelector('#formBri input[name="jam_submit_pic_investigator"]').value = data.jam_submit_pic_investigator || '';
+    
+    // Hidden field for ID if needed, but the current submitBri might need updating to handle PUT/UPDATE
+    // For now, let's keep it simple and just populate the form.
+    // If you want to support actual UPDATE, you'd need to change form action or add a hidden ID.
+    
+    setTimeout(() => {
+        calculateBriSLA();
+    }, 100);
+    
+    openModalBri();
+}
+
+async function deleteBri(id) {
+  if (!confirm('Yakin hapus BRI data ini?')) return;
+  try {
+    const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('BRI data dihapus');
+      loadBriList();
+    }
+  } catch(err) {
+    console.error(err);
+  }
+}
+</script>
+<script>
+async function submitBri(event) {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(document.getElementById('formBri')));
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) { alert('BRI data tersimpan'); closeModalBri(); loadBriList(); } else alert('Gagal menyimpan BRI');
+  } catch(err) { console.error(err); alert('Terjadi kesalahan'); }
+}
+
+async function loadBriList() {
+  try {
+    const res = await fetch('/laporan/<%= data.id %>/bri');
+    const rows = await res.json();
+    const container = document.getElementById('briList');
+    if (!rows.length) { container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Belum ada data BRI</p>'; return; }
     container.innerHTML = rows.map(r => `
       <div class="border rounded-lg p-4 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
         <div class="flex justify-between items-start mb-3">
@@ -2021,7 +2288,7 @@ async function loadBriList() {
               ${new Date(r.tanggal_submit_pic_analis).toLocaleDateString('id-ID')} - ${new Date(r.tanggal_submit_pic_investigator).toLocaleDateString('id-ID')}
             </p>
           </div>
-          <button onclick="deleteBri(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
+          <button onclick="deleteDeswa(${r.id})" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded">
             🗑️ Hapus
           </button>
         </div>
@@ -2031,22 +2298,15 @@ async function loadBriList() {
         </div>
       </div>
     `).join('');
-  } catch(err) { 
-    console.error('Load BRI error', err); 
-  }
+  } catch(err) { console.error('Load BRI error', err); }
 }
 
 async function deleteBri(id) {
   if (!confirm('Yakin hapus data BRI ini?')) return;
   try {
     const res = await fetch(`/laporan/<%= data.id %>/bri/${id}`, { method: 'DELETE' });
-    if (res.ok) { 
-      toastr.success('BRI dihapus'); 
-      loadBriList(); 
-    }
-  } catch(err) { 
-    console.error(err); 
-  }
+    if (res.ok) { alert('BRI dihapus'); loadBriList(); }
+  } catch(err) { console.error(err); }
 }
 </script>
 

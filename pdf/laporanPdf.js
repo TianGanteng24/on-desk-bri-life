@@ -5,7 +5,7 @@ const db = require("../config/db");
    HELPER DASAR
 ======================= */
 
-function formatDateIndo(dateString) {
+function formatDate(dateString, timeString = "") {
   if (!dateString || dateString === "0000-00-00") return "-";
   const d = new Date(dateString);
   if (isNaN(d)) return dateString;
@@ -25,16 +25,12 @@ function formatDateIndo(dateString) {
     "Desember",
   ];
 
-  return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function formatDate(dateString) {
-  if (!dateString || dateString === "0000-00-00") return "-";
-  const d = new Date(dateString);
-  if (isNaN(d)) return dateString;
-  return `${String(d.getDate()).padStart(2, "0")}/${String(
-    d.getMonth() + 1
-  ).padStart(2, "0")}/${d.getFullYear()}`;
+  const day = String(d.getDate()).padStart(2, "0");
+  let formatted = `${day} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+  if (timeString && timeString !== "--:--" && timeString !== "") {
+    formatted += ` ${timeString} WIB`;
+  }
+  return formatted;
 }
 
 function cleanText(text) {
@@ -214,20 +210,28 @@ module.exports = async (req, res) => {
       [
         "2",
         "Tgl Submit Analis",
-        formatDate(bri?.tanggal_submit_pic_analis),
+        formatDate(bri?.tanggal_submit_pic_analis, bri?.jam_submit_pic_analis),
         "2",
         "Tanggal Terima",
-        formatDate(deswa?.tanggal_mulai),
+        formatDate(deswa?.tanggal_mulai, deswa?.jam_mulai),
       ],
       [
         "3",
         "Tgl Submit Inv",
-        formatDate(bri?.tanggal_submit_pic_investigator),
+        formatDate(bri?.tanggal_submit_pic_investigator, bri?.jam_submit_pic_investigator),
         "3",
-        "Tanggal Selesai",
-        formatDate(deswa?.tanggal_selesai),
+        "Tanggal Sla Awal",
+        formatDate(deswa?.tanggal_sla_awal, deswa?.jam_sla_awal),
       ],
-      ["4", "SLA BRI", bri?.sla, "4", "SLA Vendor", deswa?.sla_proses],
+      [
+        "4",
+        "SLA BRI",
+        bri?.sla,
+        "4",
+        "Tanggal Selesai",
+        formatDate(deswa?.tanggal_selesai, deswa?.jam_selesai),
+      ],
+      ["", "", "", "5", "SLA Vendor", deswa?.sla_proses],
     ];
 
     infoRows.forEach((r) => {
@@ -353,9 +357,7 @@ module.exports = async (req, res) => {
         {
           x,
           w: wT[0],
-          text: `${formatDateIndo(d.tanggal_investigasi)}\nJam ${
-            d.jam_telepon || "--:--"
-          }`,
+          text: formatDate(d.tanggal_investigasi, d.jam_telepon),
           opt: { align: "center" },
         },
         { x, w: wT[1], text: d.activity },
@@ -399,9 +401,7 @@ module.exports = async (req, res) => {
           {
             x,
             w: wTL[0],
-            text: `${formatDateIndo(d.tanggal_investigasi)}\nJam ${
-              d.jam_telepon || "--:--"
-            }`,
+            text: formatDate(d.tanggal_investigasi, d.jam_telepon),
             opt: { align: "center" },
           },
           { x, w: wTL[1], text: d.activity || "-" },
@@ -445,16 +445,16 @@ module.exports = async (req, res) => {
       y += 18;
 
       const deswaInfo = [
-        ["Tgl Mulai Ondesk", formatDate(deswa?.tanggal_mulai), "Tgl Selesai Ondesk", formatDate(deswa?.tanggal_selesai)],
+        ["Tgl Mulai Ondesk", formatDate(deswa?.tanggal_mulai, deswa?.jam_mulai), "Tgl Selesai Ondesk", formatDate(deswa?.tanggal_selesai, deswa?.jam_selesai)],
         ["SLA Ondesk (hari)", deswa?.sla_proses || "-", "PIC Investigator", deswa?.pic_investigator || "-"],
       ];
 
       if (deswa?.tanggal_kirim_laporan || deswa?.tanggal_terima_konfirmasi_bri) {
         deswaInfo.push([
           "Tgl Kirim Laporan",
-          formatDate(deswa?.tanggal_kirim_laporan),
+          formatDate(deswa?.tanggal_kirim_laporan, deswa?.jam_kirim_laporan),
           "Tgl Terima Konfirmasi BRI",
-          formatDate(deswa?.tanggal_terima_konfirmasi_bri),
+          formatDate(deswa?.tanggal_terima_konfirmasi_bri, deswa?.jam_terima_konfirmasi_bri),
         ]);
         deswaInfo.push([
           "SLA Konfirmasi (hari)",
@@ -465,46 +465,6 @@ module.exports = async (req, res) => {
       }
 
       deswaInfo.forEach((r) => {
-        y = dynamicRow(doc, y, [
-          { x, w: W / 2, text: r[0] },
-          { x, w: W / 2, text: r[1] },
-        ]);
-        if (r[2]) {
-          y = dynamicRow(doc, y, [
-            { x, w: W / 2, text: r[2] },
-            { x, w: W / 2, text: r[3] },
-          ]);
-        }
-      });
-    }
-
-    /* ===== DESWA METADATA - INVESTIGASI LANJUTAN (HANYA JIKA ADA) ===== */
-    if (deswa && (deswa?.tanggal_mulai_ondesk_lanjutan || deswa?.tanggal_selesai_ondesk_lanjutan)) {
-      y += 15;
-      sectionTitle(doc, x, y, W, "DATA DESWA - INVESTIGASI LANJUTAN");
-      y += 18;
-
-      const deswaLanjutanInfo = [
-        ["Tgl Mulai Ondesk Lanjutan", formatDate(deswa?.tanggal_mulai_ondesk_lanjutan), "Tgl Selesai Ondesk Lanjutan", formatDate(deswa?.tanggal_selesai_ondesk_lanjutan)],
-        ["SLA Ondesk Lanjutan (hari)", deswa?.sla_ondesk_lanjutan || "-", "", ""],
-      ];
-
-      if (deswa?.tanggal_kirim_laporan_lanjutan || deswa?.tanggal_terima_konfirmasi_lanjutan_bri) {
-        deswaLanjutanInfo.push([
-          "Tgl Kirim Laporan Lanjutan",
-          formatDate(deswa?.tanggal_kirim_laporan_lanjutan),
-          "Tgl Terima Konfirmasi Lanjutan",
-          formatDate(deswa?.tanggal_terima_konfirmasi_lanjutan_bri),
-        ]);
-        deswaLanjutanInfo.push([
-          "SLA Konfirmasi Lanjutan (hari)",
-          deswa?.sla_konfirmasi_lanjutan || "-",
-          "",
-          "",
-        ]);
-      }
-
-      deswaLanjutanInfo.forEach((r) => {
         y = dynamicRow(doc, y, [
           { x, w: W / 2, text: r[0] },
           { x, w: W / 2, text: r[1] },

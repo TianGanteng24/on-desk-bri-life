@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../config/db');
 const generatePdf = require('../pdf/laporanPdf');
+const generateWord = require('../word/laporanWord');
 const crypto = require('crypto');
 
 const router = express.Router();
@@ -266,10 +267,26 @@ router.get('/laporan/:id', auth, async (req, res) => {
         d.tanggal_mulai          AS tanggal_mulai_deswa,
         d.tanggal_selesai        AS tanggal_selesai_deswa,
         d.sla_proses             AS sla_deswa,
+        d.tanggal_sla_awal,
+        d.jam_sla_awal,
+        d.tanggal_kirim_laporan,
+        d.jam_kirim_laporan,
+        d.tanggal_terima_konfirmasi_bri,
+        d.jam_terima_konfirmasi_bri,
+        d.tanggal_mulai_ondesk_lanjutan,
+        d.jam_mulai_ondesk_lanjutan,
+        d.tanggal_selesai_ondesk_lanjutan,
+        d.jam_selesai_ondesk_lanjutan,
+        d.tanggal_kirim_laporan_lanjutan,
+        d.jam_kirim_laporan_lanjutan,
+        d.tanggal_terima_konfirmasi_lanjutan_bri,
+        d.jam_terima_konfirmasi_lanjutan_bri,
         -- BRI
         b.pic_investigator       AS pic_brilife,
         b.tanggal_submit_pic_analis       AS tanggal_submit_pic,
+        b.jam_submit_pic_analis,
         b.tanggal_submit_pic_investigator AS tanggal_submit_investigator,
+        b.jam_submit_pic_investigator,
         b.sla                    AS sla_brilife
       FROM laporan_investigasi l
       LEFT JOIN users u ON u.id = l.created_by
@@ -347,7 +364,6 @@ router.post('/laporan/store', auth, async (req, res) => {
     if (d.tanggal_meninggal && d.tgl_mulai_asuransi) {
       const tglMeninggal = new Date(d.tanggal_meninggal);
       const tglMulai = new Date(d.tgl_mulai_asuransi);
-
       if (tglMeninggal < tglMulai) {
         return res.status(400).json({
           error: true,
@@ -568,6 +584,11 @@ router.get('/laporan/delete/:id', auth, async (req, res) => {
 /* PDF PREVIEW */
 router.get('/laporan/pdf/:id', auth, (req, res) => {
   generatePdf(req, res);
+});
+
+/* WORD PREVIEW */
+router.get('/laporan/word/:id', auth, (req, res) => {
+  generateWord(req, res);
 });
 
 /* =========================
@@ -1129,7 +1150,13 @@ router.get('/laporan/:id/deswa', auth, async (req, res) => {
 // Perbaikan untuk Vendor Deswa (Poin 4) - UPDATE ONLY (tidak insert baru)
 router.post('/laporan/:id/deswa', auth, async (req, res) => {
     try {
-        const { pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses, tanggal_mulai_ondesk_lanjutan, tanggal_selesai_ondesk_lanjutan, sla_ondesk_lanjutan, tanggal_kirim_laporan_lanjutan, tanggal_terima_konfirmasi_lanjutan_bri, sla_konfirmasi_lanjutan } = req.body;
+        const { 
+            pic_investigator, tanggal_mulai, jam_mulai, tanggal_selesai, jam_selesai, sla_proses,
+            tanggal_sla_awal, jam_sla_awal,
+            tanggal_kirim_laporan, jam_kirim_laporan, tanggal_terima_konfirmasi_bri, jam_terima_konfirmasi_bri, sla_konfirmasi,
+            tanggal_mulai_ondesk_lanjutan, jam_mulai_ondesk_lanjutan, tanggal_selesai_ondesk_lanjutan, jam_selesai_ondesk_lanjutan, sla_ondesk_lanjutan, 
+            tanggal_kirim_laporan_lanjutan, jam_kirim_laporan_lanjutan, tanggal_terima_konfirmasi_lanjutan_bri, jam_terima_konfirmasi_lanjutan_bri, sla_konfirmasi_lanjutan 
+        } = req.body;
         const laporan_id = req.params.id;
 
         // Cek apakah data sudah ada
@@ -1146,9 +1173,11 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
 
             // Daftar field yang mungkin diupdate
             const allowedFields = [
-                'pic_investigator', 'tanggal_mulai', 'tanggal_selesai', 'sla_proses',
-                'tanggal_mulai_ondesk_lanjutan', 'tanggal_selesai_ondesk_lanjutan', 'sla_ondesk_lanjutan',
-                'tanggal_kirim_laporan_lanjutan', 'tanggal_terima_konfirmasi_lanjutan_bri', 'sla_konfirmasi_lanjutan'
+                'pic_investigator', 'tanggal_mulai', 'jam_mulai', 'tanggal_selesai', 'jam_selesai', 'sla_proses',
+                'tanggal_sla_awal', 'jam_sla_awal',
+                'tanggal_kirim_laporan', 'jam_kirim_laporan', 'tanggal_terima_konfirmasi_bri', 'jam_terima_konfirmasi_bri', 'sla_konfirmasi',
+                'tanggal_mulai_ondesk_lanjutan', 'jam_mulai_ondesk_lanjutan', 'tanggal_selesai_ondesk_lanjutan', 'jam_selesai_ondesk_lanjutan', 'sla_ondesk_lanjutan',
+                'tanggal_kirim_laporan_lanjutan', 'jam_kirim_laporan_lanjutan', 'tanggal_terima_konfirmasi_lanjutan_bri', 'jam_terima_konfirmasi_lanjutan_bri', 'sla_konfirmasi_lanjutan'
             ];
 
             // Hanya tambah ke query jika field tersebut ada di req.body dan tidak kosong
@@ -1169,9 +1198,25 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
             // Jika belum ada, INSERT baru dengan nilai awal (untuk investigasi awal)
             // Untuk lanjutan, data harus sudah ada terlebih dahulu
             await db.query(
-                `INSERT INTO deswa (laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                [laporan_id, pic_investigator || '', tanggal_mulai || null, tanggal_selesai || null, sla_proses || null]
+                `INSERT INTO deswa (
+                    laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses,
+                    tanggal_sla_awal, jam_sla_awal,
+                    tanggal_kirim_laporan, jam_kirim_laporan, tanggal_terima_konfirmasi_bri, jam_terima_konfirmasi_bri, sla_konfirmasi
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    laporan_id, 
+                    pic_investigator || '', 
+                    tanggal_mulai || null, 
+                    tanggal_selesai || null, 
+                    sla_proses || null,
+                    tanggal_sla_awal || null,
+                    jam_sla_awal || null,
+                    tanggal_kirim_laporan || null,
+                    jam_kirim_laporan || null,
+                    tanggal_terima_konfirmasi_bri || null,
+                    jam_terima_konfirmasi_bri || null,
+                    sla_konfirmasi || null
+                ]
             );
         }
         res.json({ success: true });
@@ -1246,7 +1291,9 @@ router.post('/laporan/:id/bri', auth, async (req, res) => {
     const {
       pic_investigator,
       tanggal_submit_pic_analis,
-      tanggal_submit_pic_investigator
+      jam_submit_pic_analis,
+      tanggal_submit_pic_investigator,
+      jam_submit_pic_investigator
     } = req.body;
 
     // Auto-calculate SLA (hari) = tanggal_submit_pic_investigator - tanggal_submit_pic_analis
@@ -1257,21 +1304,54 @@ router.post('/laporan/:id/bri', auth, async (req, res) => {
       sla = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     }
 
-    await db.query(`
-      INSERT INTO bri (
-        laporan_id,
+    // Cek apakah data sudah ada (untuk handle edit)
+    const [existing] = await db.query(
+      'SELECT id FROM bri WHERE laporan_id = ?',
+      [req.params.id]
+    );
+
+    if (existing.length > 0) {
+      // Update
+      await db.query(`
+        UPDATE bri SET
+          pic_investigator = ?,
+          tanggal_submit_pic_analis = ?,
+          jam_submit_pic_analis = ?,
+          tanggal_submit_pic_investigator = ?,
+          jam_submit_pic_investigator = ?,
+          sla = ?
+        WHERE laporan_id = ?
+      `, [
         pic_investigator,
         tanggal_submit_pic_analis,
+        jam_submit_pic_analis,
         tanggal_submit_pic_investigator,
+        jam_submit_pic_investigator,
+        sla,
+        req.params.id
+      ]);
+    } else {
+      // Insert
+      await db.query(`
+        INSERT INTO bri (
+          laporan_id,
+          pic_investigator,
+          tanggal_submit_pic_analis,
+          jam_submit_pic_analis,
+          tanggal_submit_pic_investigator,
+          jam_submit_pic_investigator,
+          sla
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [
+        req.params.id,
+        pic_investigator,
+        tanggal_submit_pic_analis,
+        jam_submit_pic_analis,
+        tanggal_submit_pic_investigator,
+        jam_submit_pic_investigator,
         sla
-      ) VALUES (?, ?, ?, ?, ?)
-    `, [
-      req.params.id,
-      pic_investigator,
-      tanggal_submit_pic_analis,
-      tanggal_submit_pic_investigator,
-      sla
-    ]);
+      ]);
+    }
 
     res.json({ success: true });
   } catch (err) {
