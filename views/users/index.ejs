@@ -51,30 +51,29 @@
                 <%= u.role === 'admin' ? '🛡️ Admin' : '👤 ' + u.role %>
               </span>
             </td>
-            <td class="px-6 py-4 text-center">
-              <div class="flex justify-center gap-3">
-                <% if (u.role !== 'admin') { %>
-                <button
-                  type="button"
-                  onclick="openEditModal('<%= u.id %>', '<%= u.username %>', '<%= u.role %>', '<%= u.nama_lengkap %>')"
-                  class="hidden p-2 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg transition-all"
-                >
-                  ✏️
-                </button>
-                <% } %>
-              
+           <td class="px-6 py-4 text-center">
+  <div class="flex justify-center gap-3">
+    <% if (user.role === 'admin') { %>
+    <button
+      type="button"
+      onclick="openEditModal('<%= u.id %>', '<%= u.username %>', '<%= u.role %>')"
+      class="p-2 bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white rounded-lg transition-all"
+    >
+      ✏️
+    </button>
+    <% } %>
 
-                <% if (u.id !== user.id) { %>
-                <a
-                  href="/users/delete/<%= u.id %>"
-                  onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
-                  class="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all"
-                >
-                  🗑️
-                </a>
-                <% } %>
-              </div>
-            </td>
+    <% if (u.id !== user.id) { %>
+    <a
+      href="/users/delete/<%= u.id %>"
+      onclick="return confirm('Apakah Anda yakin ingin menghapus user ini?')"
+      class="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all"
+    >
+      🗑️
+    </a>
+    <% } %>
+  </div>
+</td>
           </tr>
           <% }) %>
         </tbody>
@@ -202,7 +201,6 @@
         <div>
           <label class="block text-sm font-medium text-slate-400 mb-1">Role Akses</label>
           <select name="role" id="edit_role" class="w-full bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-amber-500" required>
-            <option value="admin">Admin</option>
             <option value="bri">BRI</option>
             <option value="deswa">Deswa</option>
           </select>

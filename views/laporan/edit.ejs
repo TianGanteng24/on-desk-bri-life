@@ -118,27 +118,7 @@
   </div>
 </fieldset>
 
-<fieldset class="border rounded-lg p-4 dark:border-slate-700">
-  <legend class="text-lg font-semibold px-2">BRI Life</legend> 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-    <div>
-      <label class="text-sm font-medium">PIC BRI Life</label>
-      <input name="pic_brilife" value="<%= data.pic_brilife || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
-    </div>
-    <div>
-      <label class="text-sm font-medium">Tgl Submit PIC</label>
-      <input name="tanggal_submit_pic" type="date" value="<%= data.tanggal_submit_pic ? data.tanggal_submit_pic.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
-    </div>
-    <div>
-      <label class="text-sm font-medium">Tgl Submit Investigator</label>
-      <input name="tanggal_submit_investigator" type="date" value="<%= data.tanggal_submit_investigator ? data.tanggal_submit_investigator.toISOString().split('T')[0] : '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
-    </div>
-    <div>
-      <label class="text-sm font-medium">SLA BRI Life (hari)</label>
-      <input name="sla_brilife" type="number" value="<%= data.sla_brilife || '' %>" class="w-full mt-1 border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600"> 
-    </div>
-  </div>
-</fieldset>
+
 
 <div class="flex justify-end gap-3 pt-6 border-t dark:border-slate-700">
   <a href="/laporan" class="px-6 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">Batal</a>

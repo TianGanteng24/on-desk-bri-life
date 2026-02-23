@@ -1199,15 +1199,19 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
             // Untuk lanjutan, data harus sudah ada terlebih dahulu
             await db.query(
                 `INSERT INTO deswa (
-                    laporan_id, pic_investigator, tanggal_mulai, tanggal_selesai, sla_proses,
+                    laporan_id, pic_investigator, tanggal_mulai, jam_mulai, tanggal_selesai, jam_selesai, sla_proses,
                     tanggal_sla_awal, jam_sla_awal,
-                    tanggal_kirim_laporan, jam_kirim_laporan, tanggal_terima_konfirmasi_bri, jam_terima_konfirmasi_bri, sla_konfirmasi
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    tanggal_kirim_laporan, jam_kirim_laporan, tanggal_terima_konfirmasi_bri, jam_terima_konfirmasi_bri, sla_konfirmasi,
+                    tanggal_mulai_ondesk_lanjutan, jam_mulai_ondesk_lanjutan, tanggal_selesai_ondesk_lanjutan, jam_selesai_ondesk_lanjutan, sla_ondesk_lanjutan,
+                    tanggal_kirim_laporan_lanjutan, jam_kirim_laporan_lanjutan, tanggal_terima_konfirmasi_lanjutan_bri, jam_terima_konfirmasi_lanjutan_bri, sla_konfirmasi_lanjutan
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     laporan_id, 
                     pic_investigator || '', 
                     tanggal_mulai || null, 
+                    jam_mulai || null,
                     tanggal_selesai || null, 
+                    jam_selesai || null,
                     sla_proses || null,
                     tanggal_sla_awal || null,
                     jam_sla_awal || null,
@@ -1215,7 +1219,17 @@ router.post('/laporan/:id/deswa', auth, async (req, res) => {
                     jam_kirim_laporan || null,
                     tanggal_terima_konfirmasi_bri || null,
                     jam_terima_konfirmasi_bri || null,
-                    sla_konfirmasi || null
+                    sla_konfirmasi || null,
+                    tanggal_mulai_ondesk_lanjutan || null,
+                    jam_mulai_ondesk_lanjutan || null,
+                    tanggal_selesai_ondesk_lanjutan || null,
+                    jam_selesai_ondesk_lanjutan || null,
+                    sla_ondesk_lanjutan || null,
+                    tanggal_kirim_laporan_lanjutan || null,
+                    jam_kirim_laporan_lanjutan || null,
+                    tanggal_terima_konfirmasi_lanjutan_bri || null,
+                    jam_terima_konfirmasi_lanjutan_bri || null,
+                    sla_konfirmasi_lanjutan || null
                 ]
             );
         }
@@ -1287,77 +1301,25 @@ router.get('/laporan/:id/bri', auth, async (req, res) => {
 });
 
 router.post('/laporan/:id/bri', auth, async (req, res) => {
-  try {
-    const {
-      pic_investigator,
-      tanggal_submit_pic_analis,
-      jam_submit_pic_analis,
-      tanggal_submit_pic_investigator,
-      jam_submit_pic_investigator
-    } = req.body;
+    try {
+        const { pic_investigator, tanggal_submit_pic_analis, tanggal_submit_pic_investigator, jam_mulai, jam_selesai } = req.body;
+        
+        // Logika Hitung SLA (Selisih Hari)
+        const tgl1 = new Date(tanggal_submit_pic_analis);
+        const tgl2 = new Date(tanggal_submit_pic_investigator);
+        const diffInMs = Math.abs(tgl2 - tgl1);
+        const sla = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
 
-    // Auto-calculate SLA (hari) = tanggal_submit_pic_investigator - tanggal_submit_pic_analis
-    let sla = null;
-    if (tanggal_submit_pic_analis && tanggal_submit_pic_investigator) {
-      const start = new Date(tanggal_submit_pic_analis);
-      const end = new Date(tanggal_submit_pic_investigator);
-      sla = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        await db.query(
+            'INSERT INTO bri_submission (laporan_id, pic_investigator, tanggal_submit_pic_analis, tanggal_submit_pic_investigator, jam_mulai, jam_selesai, sla) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [req.params.id, pic_investigator, tanggal_submit_pic_analis, tanggal_submit_pic_investigator, jam_mulai, jam_selesai, sla]
+        );
+        req.flash('success', 'Data BRI berhasil disimpan');
+        res.redirect('back');
+    } catch (err) {
+        console.error(err);
+        res.redirect('back');
     }
-
-    // Cek apakah data sudah ada (untuk handle edit)
-    const [existing] = await db.query(
-      'SELECT id FROM bri WHERE laporan_id = ?',
-      [req.params.id]
-    );
-
-    if (existing.length > 0) {
-      // Update
-      await db.query(`
-        UPDATE bri SET
-          pic_investigator = ?,
-          tanggal_submit_pic_analis = ?,
-          jam_submit_pic_analis = ?,
-          tanggal_submit_pic_investigator = ?,
-          jam_submit_pic_investigator = ?,
-          sla = ?
-        WHERE laporan_id = ?
-      `, [
-        pic_investigator,
-        tanggal_submit_pic_analis,
-        jam_submit_pic_analis,
-        tanggal_submit_pic_investigator,
-        jam_submit_pic_investigator,
-        sla,
-        req.params.id
-      ]);
-    } else {
-      // Insert
-      await db.query(`
-        INSERT INTO bri (
-          laporan_id,
-          pic_investigator,
-          tanggal_submit_pic_analis,
-          jam_submit_pic_analis,
-          tanggal_submit_pic_investigator,
-          jam_submit_pic_investigator,
-          sla
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, [
-        req.params.id,
-        pic_investigator,
-        tanggal_submit_pic_analis,
-        jam_submit_pic_analis,
-        tanggal_submit_pic_investigator,
-        jam_submit_pic_investigator,
-        sla
-      ]);
-    }
-
-    res.json({ success: true });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Database error' });
-  }
 });
 
 router.delete('/laporan/:laporan_id/bri/:id', auth, async (req, res) => {
