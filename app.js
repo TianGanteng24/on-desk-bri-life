@@ -4,6 +4,8 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const path = require('path');
 const db = require('./config/db');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 
 const routes = require('./routes');
 
@@ -12,6 +14,7 @@ const app = express();
 /* MIDDLEWARE */
 app.use(express.json()); // Parse JSON request bodies (for AJAX/fetch requests)
 app.use(bodyParser.urlencoded({ extended: false })); // Parse form data
+app.use(cookieParser());
 app.use(express.static('public'));
 
 app.use(session({
@@ -30,6 +33,23 @@ app.use(flash());
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
+  
+  // Check JWT Token
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, 'secret_key_anda'); // Gunakan secret key yang sama
+      req.user = decoded;
+      res.locals.user = decoded;
+    } catch (err) {
+      req.user = null;
+      res.locals.user = null;
+    }
+  } else {
+    req.user = null;
+    res.locals.user = null;
+  }
+  
   next();
 });
 
@@ -37,7 +57,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   if (req.path === '/auto-logout' || req.path === '/heartbeat') {
     console.log(`📍 ${req.method} ${req.path}`, {
-      sessionUser: req.session?.user?.username || 'no-session',
+      sessionUser: req.user?.username || 'no-session',
       timestamp: new Date().toLocaleTimeString('id-ID')
     });
   }
@@ -52,10 +72,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/', routes);
 
 app.use((req, res, next) => {
-  if (req.session.user) {
+  if (req.user) {
     db.query(
       'UPDATE users SET last_activity=NOW() WHERE id=?',
-      [req.session.user.id]
+      [req.user.id]
     );
   }
   next();

@@ -3,21 +3,22 @@ const db = require('../config/db');
 const generatePdf = require('../pdf/laporanPdf');
 const generateWord = require('../word/laporanWord');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
 async function auth(req, res, next) {
-  // Check if user session exists
-  if (!req.session.user) {
+  // Check if user is authenticated via JWT (populated in app.js middleware)
+  if (!req.user) {
     return res.redirect('/login');
   }
 
-  // Session is valid, proceed
+  // User is valid, proceed
   next();
 }
 
 function adminOnly(req, res, next) {
-  if (req.session.user.role !== 'admin') {
+  if (req.user?.role !== 'admin') {
     return res.redirect('/laporan');
   }
   next();
@@ -51,12 +52,19 @@ router.post('/login', async (req, res) => {
       return res.redirect('/login');
     }
 
-    // ✅ Set session user (no database update needed)
-    req.session.user = {
-      id: user.id,
-      username: user.username,
-      role: user.role
-    };
+    // ✅ Generate JWT Token
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      'secret_key_anda', // Ganti dengan environment variable di production
+      { expiresIn: '24h' }
+    );
+
+    // Set Cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // Set true jika HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // 24 jam
+    });
 
     console.log(`✅ User ${user.id} (${user.username}) logged in`);
     req.flash('success', 'Selamat datang, ' + user.username);
@@ -70,9 +78,13 @@ router.post('/login', async (req, res) => {
 
 
 router.get('/logout', auth, async (req, res) => {
-  const userId = req.session?.user?.id;
+  const userId = req.user?.id;
+  
+  // Clear Cookie
+  res.clearCookie('token');
+  
   req.session.destroy(() => {
-    console.log(`✅ User ${userId} logged out (session destroyed)`);
+    console.log(`✅ User ${userId} logged out`);
     res.redirect('/login');
   });
 });
@@ -80,7 +92,7 @@ router.get('/logout', auth, async (req, res) => {
 // 1. GET: Menampilkan Daftar User
 router.get('/users', async (req, res) => {
     try {
-       const currentUser = req.session.user; 
+       const currentUser = req.user; 
 
         if (!currentUser || currentUser.role !== 'admin') {
             return res.redirect('/login'); // Lempar ke login jika tidak ada user/bukan admin
@@ -164,10 +176,13 @@ router.get('/users/delete/:id', async (req, res) => {
 });
 
 router.post('/auto-logout', async (req, res) => {
-  const userId = req.session?.user?.id;
+  const userId = req.user?.id;
   
+  // Clear Cookie
+  res.clearCookie('token');
+
   if (!userId) {
-    console.log('⚠️ Auto logout: No user in session');
+    console.log('⚠️ Auto logout: No user in session/token');
     return res.status(200).json({ status: 'no-session' });
   }
 
@@ -191,10 +206,12 @@ router.post('/auto-logout', async (req, res) => {
 });
 
 router.post('/heartbeat', auth, async (req, res) => {
-  await db.query(
-    'UPDATE users SET last_activity=NOW() WHERE id=?',
-    [req.session.user.id]
-  );
+  if (req.user) {
+    await db.query(
+      'UPDATE users SET last_activity=NOW() WHERE id=?',
+      [req.user.id]
+    );
+  }
   res.sendStatus(204);
 });
 
@@ -210,7 +227,7 @@ router.get('/', (req, res) => {
 /* HALAMAN DAFTAR LAPORAN (BY ROLE) */
 router.get('/laporan', auth, async (req, res) => {
   try {
-    const user = req.session.user;
+    const user = req.user;
     let query = '';
     let params = [];
 
@@ -246,14 +263,14 @@ router.get('/laporan', auth, async (req, res) => {
 
 /* CREATE */
 router.get('/laporan/create', auth, (req, res) => {
-  res.render('laporan/create', { user: req.session.user });
+  res.render('laporan/create', { user: req.user });
 });
 
 /* SHOW */
 router.get('/laporan/:id', auth, async (req, res) => {
   try {
     const laporanId = req.params.id;
-    const user = req.session.user; // Pastikan nama variabel konsisten (user)
+    const user = req.user; // Pastikan nama variabel konsisten (user)
 
     // ===============================
     // 1. DATA UTAMA LAPORAN
@@ -348,7 +365,7 @@ router.get('/laporan/:id', auth, async (req, res) => {
     encrypted += cipher.final('hex');
     
     const token = `${iv.toString('hex')}:${encrypted}`;
-    const publicUrl = `http://localhost:3000/view/laporan/${token}`;
+    const publicUrl = `http://31.97.199.58:3006/view/laporan/${token}`;
 
     res.render('laporan/show', {
       dataLaporan,
@@ -412,7 +429,7 @@ router.post('/laporan/store', auth, async (req, res) => {
       d.jenis_produk,              // 17
       d.no_identitas,              // 18
       d.rekomendasi,               // 19
-      req.session.user.id          // 20
+      req.user.id          // 20
     ];
 
     const sql = `
@@ -473,7 +490,7 @@ router.get('/laporan/edit/:id', auth, async (req, res) => {
       'SELECT * FROM laporan_investigasi WHERE id=?',
       [req.params.id]
     );
-    res.render('laporan/edit', { data: row[0], user: req.session.user });
+    res.render('laporan/edit', { data: row[0], user: req.user });
   } catch (error) {
     console.error(error);
     req.flash('error', 'Terjadi kesalahan pada server');
@@ -799,7 +816,7 @@ router.post('/laporan/:id/hasil-ondesk-lanjutan', auth, async (req, res) => {
         no_kontak,
         hasil_investigasi,
         analisa,
-        req.session.user.id // Memperbaiki error req.user.id
+        req.user.id // Memperbaiki error req.user.id
       ]
     );
 
