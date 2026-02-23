@@ -337,9 +337,23 @@ router.get('/laporan/:id', auth, async (req, res) => {
     // ===============================
     // 3. RENDER
     // ===============================
+    // Logic Encryption untuk Public URL (QR Code) - Reversible
+    // Gunakan AES-256-CBC
+    const algorithm = 'aes-256-cbc';
+    const secretKey = crypto.createHash('sha256').update('secret_key_anda').digest(); // 32 bytes
+    const iv = crypto.randomBytes(16);
+    
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    let encrypted = cipher.update(laporanId.toString(), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    const token = `${iv.toString('hex')}:${encrypted}`;
+    const publicUrl = `http://localhost:3000/view/laporan/${token}`;
+
     res.render('laporan/show', {
       dataLaporan,
       data: dataLaporan,
+      publicUrl, // Pass publicUrl ke view
       penelponan: penelponanRows || [],
       resume_interview: resumeRows || [],
       hasilOndeskLanjutan,
@@ -584,6 +598,45 @@ router.get('/laporan/delete/:id', auth, async (req, res) => {
 /* PDF PREVIEW */
 router.get('/laporan/pdf/:id', auth, (req, res) => {
   generatePdf(req, res);
+});
+// Endpoint publik untuk akses PDF via QR (Tanpa Login)
+router.get('/view/laporan/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+        const [ivHex, encryptedData] = token.split(':');
+        
+        if (!ivHex || !encryptedData) {
+            return res.status(400).send('Format token tidak valid');
+        }
+
+        // Decryption Logic
+        const algorithm = 'aes-256-cbc';
+        const secretKey = crypto.createHash('sha256').update('secret_key_anda').digest();
+        const iv = Buffer.from(ivHex, 'hex');
+        
+        const decipher = crypto.createDecipheriv(algorithm, secretKey, iv);
+        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+
+        // Pastikan ID valid
+        const targetId = parseInt(decrypted);
+        if (isNaN(targetId)) {
+            return res.status(400).send('Token rusak atau tidak valid');
+        }
+
+        // Panggil fungsi generatePdf dengan mock request object
+        // generatePdf mengharapkan req.params.id
+        const mockReq = { 
+            params: { id: targetId },
+            // Tambahkan properti lain jika diperlukan oleh generatePdf
+        };
+        
+        await generatePdf(mockReq, res);
+        
+    } catch (err) {
+        console.error('QR Access Error:', err);
+        res.status(500).send('Link kadaluarsa atau tidak valid');
+    }
 });
 
 /* WORD PREVIEW */
