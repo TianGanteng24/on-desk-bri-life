@@ -1176,8 +1176,8 @@ function closeModalQR() {
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-2">SLA (hari) - Auto Calculate</label>
-        <input type="number" name="sla_proses" id="deswaSlaDisplay" readonly placeholder="Akan otomatis ter-hitung"
+        <label class="block text-sm font-medium mb-2">SLA (hari)</label>
+        <input type="number" name="sla_proses" id="deswaSlaDisplay" placeholder="Akan otomatis ter-hitung"
           class="w-full border rounded-lg px-4 py-2 dark:bg-slate-700 dark:border-slate-600 bg-gray-100 dark:bg-slate-800">
       </div>
 
@@ -1552,7 +1552,7 @@ function calculateBusinessDays(startDate, endDate) {
     if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
     curDate.setDate(curDate.getDate() + 1);
   }
-  return count > 0 ? count - 1 : 0;
+  return count;
 }
 
 function calculateDeswaSLA() {
@@ -1585,14 +1585,6 @@ function calculateDeswaSLA() {
     
     let sla = calculateBusinessDays(start, end);
     
-    // Logic Jam Selesai: Jika jam selesai melewati 14:00, maka SLA ditambah 1
-    if (jamSelesai) {
-      const [h, m] = jamSelesai.split(':').map(Number);
-      if (h >= 14) {
-        sla += 1;
-      }
-    }
-    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1621,13 +1613,6 @@ function calculateDeswaSLAKonfirmasi() {
     }
     
     let sla = calculateBusinessDays(start, end);
-    
-    if (jamTerima) {
-      const [h, m] = jamTerima.split(':').map(Number);
-      if (h >= 14) {
-        sla += 1;
-      }
-    }
     
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
@@ -1658,13 +1643,6 @@ function calculateDeswaSLAOndesKLanjutan() {
     
     let sla = calculateBusinessDays(start, end);
     
-    if (jamSelesai) {
-      const [h, m] = jamSelesai.split(':').map(Number);
-      if (h >= 14) {
-        sla += 1;
-      }
-    }
-    
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
     slaDisplay.value = '';
@@ -1693,13 +1671,6 @@ function calculateDeswaSLAKonfirmasiLanjutan() {
     }
     
     let sla = calculateBusinessDays(start, end);
-    
-    if (jamTerima) {
-      const [h, m] = jamTerima.split(':').map(Number);
-      if (h >= 14) {
-        sla += 1;
-      }
-    }
     
     slaDisplay.value = sla >= 0 ? sla : 0;
   } else {
