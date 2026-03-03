@@ -24,10 +24,12 @@
     </a>
   <% } %>
   
+  <% if (user.role !== 'bri') { %>
   <a href="/laporan/create"
     class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
     ➕ Tambah Laporan
   </a>
+  <% } %>
 </div>
   </div>
 
@@ -48,7 +50,10 @@
     <% if (data.length === 0) { %>
       <tr>
         <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-          Belum ada data laporan. <a href="/laporan/create" class="text-emerald-600 hover:underline">Buat laporan baru</a>
+          Belum ada data laporan. 
+          <% if (user.role !== 'bri') { %>
+            <a href="/laporan/create" class="text-emerald-600 hover:underline">Buat laporan baru</a>
+          <% } %>
         </td>
       </tr>
     <% } else { %>
