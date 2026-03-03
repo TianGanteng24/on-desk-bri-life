@@ -391,9 +391,16 @@ router.post('/laporan/store', auth, async (req, res) => {
   try {
     const d = req.body;
 
+    // Menghiraukan tanggal meninggal jika jenis klaim bukan Klaim Meninggal
+    let tglMeninggalFix = d.tanggal_meninggal;
+    if (d.jenis_klaim !== 'Klaim Meninggal') {
+      tglMeninggalFix = null;
+    }
+
     // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
-    if (d.tanggal_meninggal && d.tgl_mulai_asuransi) {
-      const tglMeninggal = new Date(d.tanggal_meninggal);
+    // Hanya validasi jika jenis_klaim adalah Klaim Meninggal
+    if (d.jenis_klaim === 'Klaim Meninggal' && tglMeninggalFix && d.tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(tglMeninggalFix);
       const tglMulai = new Date(d.tgl_mulai_asuransi);
       if (tglMeninggal < tglMulai) {
         return res.status(400).json({
@@ -415,7 +422,7 @@ router.post('/laporan/store', auth, async (req, res) => {
       d.alamat,                    // 5
       d.uang_pertanggungan,        // 6
       d.tanggal_lahir || null,     // 7
-      d.tanggal_meninggal || null,  // 8
+      tglMeninggalFix || null,     // 8
       d.date_claim || null,  // 8
       d.lama_dirawat || null,  // 8
       status_fix,                  // 9
@@ -525,9 +532,16 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       rekomendasi
     } = req.body;
 
+    // Menghiraukan tanggal meninggal jika jenis klaim bukan Klaim Meninggal
+    let tglMeninggalFix = tanggal_meninggal;
+    if (jenis_klaim !== 'Klaim Meninggal') {
+      tglMeninggalFix = null;
+    }
+
     // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
-    if (tanggal_meninggal && tgl_mulai_asuransi) {
-      const tglMeninggal = new Date(tanggal_meninggal);
+    // Hanya validasi jika jenis_klaim adalah Klaim Meninggal
+    if (jenis_klaim === 'Klaim Meninggal' && tglMeninggalFix && tgl_mulai_asuransi) {
+      const tglMeninggal = new Date(tglMeninggalFix);
       const tglMulai = new Date(tgl_mulai_asuransi);
 
       if (tglMeninggal < tglMulai) {
@@ -570,7 +584,7 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       alamat,
       uang_pertanggungan,
       tanggal_lahir,
-      tanggal_meninggal,
+      tglMeninggalFix,
       date_claim,
       lama_dirawat,
       status_asuransi,
