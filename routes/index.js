@@ -423,20 +423,20 @@ router.post('/laporan/store', auth, async (req, res) => {
       d.uang_pertanggungan,        // 6
       d.tanggal_lahir || null,     // 7
       tglMeninggalFix || null,     // 8
-      d.date_claim || null,  // 8
-      d.lama_dirawat || null,  // 8
-      status_fix,                  // 9
-      d.kronologis,                // 10
-      d.kelengkapan_dokumen,       // 11
-      d.pengisi_form_kronologis,   // 12
-      d.tgl_mulai_asuransi || null,// 13
-      d.tgl_akhir_asuransi || null, // 14
-      d.usia_polis,                // 15
-      d.jenis_klaim,               // 16
-      d.jenis_produk,              // 17
-      d.no_identitas,              // 18
-      d.rekomendasi,               // 19
-      req.user.id          // 20
+      d.date_claim || null,        // 9
+      d.lama_dirawat || null,      // 10
+      status_fix,                  // 11
+      d.kronologis,                // 12
+      d.kelengkapan_dokumen,       // 13
+      d.pengisi_form_kronologis,   // 14
+      d.tgl_mulai_asuransi || null,// 15
+      d.tgl_akhir_asuransi || null, // 16
+      d.usia_polis,                // 17
+      d.jenis_klaim,               // 18
+      d.jenis_produk,              // 19
+      d.no_identitas,              // 20
+      d.rekomendasi,               // 21
+      req.user.id                  // 22
     ];
 
     const sql = `
@@ -538,6 +538,9 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       tglMeninggalFix = null;
     }
 
+    // Set date_claim to null if empty
+    let dateClaimFix = date_claim || null;
+
     // ✅ VALIDASI: Cek apakah tanggal_meninggal lebih awal dari tgl_mulai_asuransi
     // Hanya validasi jika jenis_klaim adalah Klaim Meninggal
     if (jenis_klaim === 'Klaim Meninggal' && tglMeninggalFix && tgl_mulai_asuransi) {
@@ -585,7 +588,7 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       uang_pertanggungan,
       tanggal_lahir,
       tglMeninggalFix,
-      date_claim,
+      dateClaimFix,
       lama_dirawat,
       status_asuransi,
       kronologis,
