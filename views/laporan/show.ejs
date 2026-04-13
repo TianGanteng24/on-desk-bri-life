@@ -1363,13 +1363,40 @@ function closeModalQR() {
 </div>
 
 <script>
+// Fungsi Helper Validasi
+function containsSymbols(str) {
+    // Anda bisa menyesuaikan simbol apa saja yang dilarang di regex ini
+const forbidden = /[!@#$%^&*_+\-=\[\]{};':"\\|<>\/?]|[^\x00-\x7F]/.test(str);
+    return forbidden;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('formOnDesk');
+    
+    form.addEventListener('submit', function(e) {
+        const fieldsToCheck = [
+            { id: 'f_nama_faskes', label: 'Nama Faskes' },
+            { id: 'f_nama_petugas', label: 'Nama Petugas' },
+            { id: 'f_hasil', label: 'Hasil Investigasi' },
+            { id: 'f_analisa', label: 'Analisa' }
+        ];
+
+        for (let field of fieldsToCheck) {
+            const element = document.getElementById(field.id);
+            if (element && containsSymbols(element.value)) {
+                e.preventDefault();
+                alert(`Inputan pada "${field.label}" dilarang menggunakan simbol!`);
+                element.focus();
+                return;
+            }
+        }
+    });
+});
+
 function openModalOnDesk() {
     const form = document.getElementById('formOnDesk');
     document.getElementById('modalTitle').innerText = 'Tambah Investigasi Baru';
-    
-    // Set Action URL untuk INSERT
     form.action = '/laporan/<%= data.id %>/hasil-ondesk';
-    
     form.reset();
     document.getElementById('ondesk_id').value = '';
     document.getElementById('modalOnDesk').classList.remove('hidden');
@@ -1378,17 +1405,13 @@ function openModalOnDesk() {
 function editInvestigasi(data) {
     const form = document.getElementById('formOnDesk');
     document.getElementById('modalTitle').innerText = 'Update Investigasi';
-    
-    // Set Action URL untuk UPDATE menggunakan ID Investigasi tersebut
     form.action = `/laporan/ondesk/update/${data.id}`;
     
-    // Isi data ke dalam form
     document.getElementById('ondesk_id').value = data.id;
     document.getElementById('f_nama_faskes').value = data.nama_faskes;
     document.getElementById('f_alamat_faskes').value = data.alamat_faskes || '';
     document.getElementById('f_activity').value = data.activity;
     
-    // Format tanggal ke YYYY-MM-DD agar muncul di input date
     if (data.tanggal_investigasi) {
         const d = new Date(data.tanggal_investigasi);
         const formattedDate = d.toISOString().split('T')[0];
@@ -1399,7 +1422,7 @@ function editInvestigasi(data) {
     document.getElementById('f_no_kontak').value = data.no_kontak || '';
     document.getElementById('f_hasil').value = data.hasil_investigasi;
     document.getElementById('f_analisa').value = data.analisa;
-    document.getElementById('f_jam').value = data.jam_telepon
+    document.getElementById('f_jam').value = data.jam_telepon;
     
     document.getElementById('modalOnDesk').classList.remove('hidden');
 }

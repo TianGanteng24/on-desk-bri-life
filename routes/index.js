@@ -724,14 +724,14 @@ router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
 // UPDATE HASIL ONDESK
 router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
     try {
-        const { tanggal_investigasi, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
+        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
         
         await db.query(
             `UPDATE hasil_on_desk SET 
-                tanggal_investigasi=?, nama_petugas=?, no_kontak=?, nama_faskes=?, alamat_faskes=?,
+                tanggal_investigasi=?, jam_telepon=?, nama_petugas=?, no_kontak=?, nama_faskes=?, alamat_faskes=?,
                 hasil_investigasi=?, analisa=?, activity=?
              WHERE id=?`,
-            [tanggal_investigasi, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, req.params.id]
+            [tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, req.params.id]
         );
         
         req.flash('success', 'Hasil investigasi berhasil diperbarui');
