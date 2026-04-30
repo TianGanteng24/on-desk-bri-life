@@ -83,6 +83,6 @@ app.use((req, res, next) => {
 
 
 /* SERVER */
-app.listen(3000, () => {
+app.listen(3006, () => {
   console.log('Server running http://localhost:3000');
 });

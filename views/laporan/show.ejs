@@ -1366,7 +1366,7 @@ function closeModalQR() {
 // Fungsi Helper Validasi
 function containsSymbols(str) {
     // Anda bisa menyesuaikan simbol apa saja yang dilarang di regex ini
-const forbidden = /[!@#$%^&*_+\-=\[\]{};':"\\|<>\/?]|[^\x00-\x7F]/.test(str);
+const forbidden = /[\=\[\]{}\\|<>?]|[^\x00-\x7F]/.test(str);
     return forbidden;
 }
 
