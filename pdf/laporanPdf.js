@@ -331,15 +331,13 @@ module.exports = async (req, res) => {
     sectionTitle(doc, x, y, W, "HASIL KONFIRMASI / INVESTIGASI");
     y += 18;
 
-    const wT = [95, 45, 65, 65, 75, 100, 100];
+    const wT = [90, 50, 120, 110, 175];
     [
       "Tanggal / Jam",
       "Activity",
-      "Petugas",
-      "No Kontak",
-      "Faskes",
-      "Alamat Faskes",
-      "Hasil",
+      "Petugas / Faskes",
+      "Status & Konfirmasi",
+      "Hasil & Analisa",
     ].forEach((h, i) => {
       headerCell(
         doc,
@@ -353,6 +351,10 @@ module.exports = async (req, res) => {
     y += 18;
 
     desk.forEach((d) => {
+      const petFaskes = `${cleanText(d.nama_petugas)} / ${cleanText(d.nama_faskes)}\nTelp: ${cleanText(d.no_kontak)}`;
+      const statusKonf = `Status: ${cleanText(d.status_penelponan)}\nKonf: ${cleanText(d.hasil_konfirmasi)}`;
+      const hasilAnalis = `Hasil: ${cleanText(d.hasil_investigasi)}\nAnalisa: ${cleanText(d.analisa)}`;
+
       y = dynamicRow(doc, y, [
         {
           x,
@@ -360,12 +362,10 @@ module.exports = async (req, res) => {
           text: formatDate(d.tanggal_investigasi, d.jam_telepon),
           opt: { align: "center" },
         },
-        { x, w: wT[1], text: d.activity },
-        { x, w: wT[2], text: d.nama_petugas },
-        { x, w: wT[3], text: d.no_kontak },
-        { x, w: wT[4], text: d.nama_faskes },
-        { x, w: wT[5], text: d.alamat_faskes },
-        { x, w: wT[6], text: d.hasil_investigasi },
+        { x, w: wT[1], text: d.activity || "Call", opt: { align: "center" } },
+        { x, w: wT[2], text: petFaskes },
+        { x, w: wT[3], text: statusKonf, opt: { bold: true } },
+        { x, w: wT[4], text: hasilAnalis },
       ]);
     });
 
@@ -375,15 +375,13 @@ module.exports = async (req, res) => {
       sectionTitle(doc, x, y, W, "HASIL INVESTIGASI LANJUTAN");
       y += 18;
 
-      const wTL = [95, 45, 65, 65, 75, 100, 100];
+      const wTL = [90, 50, 120, 110, 175];
       [
         "Tanggal / Jam",
         "Activity",
-        "Petugas",
-        "No Kontak",
-        "Faskes",
-        "Alamat Faskes",
-        "Hasil",
+        "Petugas / Faskes",
+        "Status & Konfirmasi",
+        "Hasil & Analisa",
       ].forEach((h, i) => {
         headerCell(
           doc,
@@ -397,6 +395,10 @@ module.exports = async (req, res) => {
       y += 18;
 
       deskLanjutan.forEach((d) => {
+        const petFaskes = `${cleanText(d.nama_petugas)} / ${cleanText(d.nama_faskes)}\nTelp: ${cleanText(d.no_kontak)}`;
+        const statusKonf = `Status: ${cleanText(d.status_penelponan)}\nKonf: ${cleanText(d.hasil_konfirmasi)}`;
+        const hasilAnalis = `Hasil: ${cleanText(d.hasil_investigasi)}\nAnalisa: ${cleanText(d.analisa)}`;
+
         y = dynamicRow(doc, y, [
           {
             x,
@@ -404,12 +406,10 @@ module.exports = async (req, res) => {
             text: formatDate(d.tanggal_investigasi, d.jam_telepon),
             opt: { align: "center" },
           },
-          { x, w: wTL[1], text: d.activity || "-" },
-          { x, w: wTL[2], text: d.nama_petugas },
-          { x, w: wTL[3], text: d.no_kontak || "-" },
-          { x, w: wTL[4], text: d.nama_faskes },
-          { x, w: wTL[5], text: d.alamat_faskes || "-" },
-          { x, w: wTL[6], text: d.hasil_investigasi },
+          { x, w: wTL[1], text: d.activity || "Call", opt: { align: "center" } },
+          { x, w: wTL[2], text: petFaskes },
+          { x, w: wTL[3], text: statusKonf, opt: { bold: true } },
+          { x, w: wTL[4], text: hasilAnalis },
         ]);
       });
     }

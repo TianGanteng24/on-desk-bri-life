@@ -520,6 +520,7 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       date_claim,
       lama_dirawat,
       status_asuransi,
+      status_laporan,
       kronologis,
       kelengkapan_dokumen,
       pengisi_form_kronologis,
@@ -568,6 +569,7 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
         date_claim = ?,
         lama_dirawat = ?,
         status_asuransi = ?,
+        status_laporan = ?,
         kronologis = ?,
         kelengkapan_dokumen = ?,
         pengisi_form_kronologis = ?,
@@ -591,6 +593,7 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
       dateClaimFix,
       lama_dirawat,
       status_asuransi,
+      status_laporan || 'Draft',
       kronologis,
       kelengkapan_dokumen,
       pengisi_form_kronologis,
@@ -611,6 +614,31 @@ router.post('/laporan/update/:id', auth, async (req, res) => {
     req.flash('error', 'Gagal memperbarui laporan: ' + err.message);
     res.redirect('/laporan/' + req.params.id);
   }
+});
+
+// Route untuk update status laporan (Complete/Approve)
+router.post('/laporan/:id/update-status', auth, async (req, res) => {
+    try {
+        const { status } = req.body;
+        const laporanId = req.params.id;
+
+        // Proteksi role admin untuk status 'Approved'
+        if (status === 'Approved' && req.user.role !== 'admin') {
+            return res.status(403).send('Hanya admin yang dapat menyetujui laporan');
+        }
+
+        await db.query(
+            'UPDATE laporan_investigasi SET status_laporan = ? WHERE id = ?',
+            [status, laporanId]
+        );
+
+        req.flash('success', `Status laporan berhasil diperbarui menjadi ${status}`);
+        res.redirect(`/laporan/${laporanId}`);
+    } catch (err) {
+        console.error(err);
+        req.flash('error', 'Gagal memperbarui status laporan');
+        res.redirect('back');
+    }
 });
 
 /* DELETE */
@@ -699,14 +727,14 @@ router.get('/laporan/:id/hasil-on-desk', auth, async (req, res) => {
 // API untuk Input Hasil On-Desk (Hasil Konfirmasi)
 router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
   try {
-        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity } = req.body;
+        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, status_penelponan, hasil_konfirmasi } = req.body;
         const laporanId = req.params.id;
 
         await db.query(
             `INSERT INTO hasil_on_desk 
-            (laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity]
+            (laporan_id, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, status_penelponan, hasil_konfirmasi) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [laporanId, tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, status_penelponan, hasil_konfirmasi]
         );
         req.flash('success', 'Hasil investigasi berhasil disimpan');
         res.redirect('/laporan/' + laporanId);
@@ -724,14 +752,14 @@ router.post('/laporan/:id/hasil-ondesk', auth, async (req, res) => {
 // UPDATE HASIL ONDESK
 router.post('/laporan/ondesk/update/:id', auth, async (req, res) => {
     try {
-        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, laporan_id } = req.body;
+        const { tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, status_penelponan, hasil_konfirmasi, laporan_id } = req.body;
         
         await db.query(
             `UPDATE hasil_on_desk SET 
                 tanggal_investigasi=?, jam_telepon=?, nama_petugas=?, no_kontak=?, nama_faskes=?, alamat_faskes=?,
-                hasil_investigasi=?, analisa=?, activity=?
+                hasil_investigasi=?, analisa=?, activity=?, status_penelponan=?, hasil_konfirmasi=?
              WHERE id=?`,
-            [tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, req.params.id]
+            [tanggal_investigasi, jam_telepon, nama_petugas, no_kontak, nama_faskes, alamat_faskes, hasil_investigasi, analisa, activity, status_penelponan, hasil_konfirmasi, req.params.id]
         );
         
         req.flash('success', 'Hasil investigasi berhasil diperbarui');

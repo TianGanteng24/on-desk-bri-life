@@ -309,6 +309,7 @@
           <th class="p-4 border-b dark:border-slate-600">Tgl & Jam</th>
           <th class="p-4 border-b dark:border-slate-600">Activity</th>
           <th class="p-4 border-b dark:border-slate-600">Petugas / Faskes</th>
+          <th class="p-4 border-b dark:border-slate-600">Status & Konfirmasi</th>
           <th class="p-4 border-b dark:border-slate-600">Hasil & Analisa</th>
           <th class="p-4 border-b dark:border-slate-600 text-center">Aksi</th>
         </tr>
@@ -338,6 +339,20 @@
                 <% if(d.no_kontak) { %>
                   <p class="text-[10px] text-blue-500 mt-1">📞 <%= d.no_kontak %></p>
                 <% } %>
+              </td>
+
+              <td class="p-4">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full <%= d.status_penelponan === 'tersambung' ? 'bg-green-500' : 'bg-red-500' %>"></span>
+                    <span class="text-xs font-medium capitalize text-gray-700 dark:text-gray-300">
+                      <%= d.status_penelponan || '-' %>
+                    </span>
+                  </div>
+                  <div class="inline-flex px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400 border dark:border-slate-600 uppercase">
+                    <%= d.hasil_konfirmasi || '-' %>
+                  </div>
+                </div>
               </td>
 
               <td class="p-4 max-w-xs">
@@ -1069,13 +1084,29 @@ form.addEventListener('submit', async e => {
     Update: <%= new Date(data.updated_at).toLocaleString('id-ID') %>
   </div>
   <div class="flex gap-4 mt-8 no-print">
-  <a href="/laporan/<%= data.id %>/pdf" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium">
+  <a href="/laporan/pdf/<%= data.id %>" class="px-6 py-2 bg-red-600 text-white rounded-lg font-medium">
     📄 Download PDF
   </a>
 
   <button onclick="showQRCode('<%= publicUrl %>')" class="px-6 py-2 bg-green-600 text-white rounded-lg font-medium flex items-center gap-2">
     <span>📱</span> Generate QR Report
   </button>
+
+  <% if (data.status_laporan === 'Draft' && user.role !== 'bri') { %>
+    <form action="/laporan/<%= data.id %>/update-status" method="POST" onsubmit="return confirm('Kirim laporan ini untuk diselesaikan?')">
+      <input type="hidden" name="status" value="Sent to Complete">
+      <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-blue-700 transition">
+        <span>🚀</span> Send to Complete
+      </button>
+    </form>
+  <% } else if (data.status_laporan === 'Sent to Complete' && user.role === 'admin') { %>
+    <form action="/laporan/<%= data.id %>/update-status" method="POST" onsubmit="return confirm('Setujui laporan ini sebagai Selesai?')">
+      <input type="hidden" name="status" value="Approved">
+      <button type="submit" class="px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-emerald-700 transition">
+        <span>✅</span> Approve Complete
+      </button>
+    </form>
+  <% } %>
 </div>
 
 <div id="modalQR" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
@@ -1340,6 +1371,23 @@ function closeModalQR() {
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">No. Kontak</label>
                         <input type="text" name="no_kontak" id="f_no_kontak" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status Penelponan</label>
+                        <select name="status_penelponan" id="f_status_penelponan" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                            <option value="">-- Pilih --</option>
+                            <option value="tersambung">Tersambung</option>
+                            <option value="tidak tersambung">Tidak Tersambung</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Hasil Konfirmasi</label>
+                        <select name="hasil_konfirmasi" id="f_hasil_konfirmasi" class="w-full border-gray-300 rounded-lg p-2 dark:bg-slate-700 dark:text-white">
+                            <option value="">-- Pilih --</option>
+                            <option value="terdata">Terdata</option>
+                            <option value="tidak terdapat">Tidak Terdapat</option>
+                            <option value="perlu konfirmasi">Perlu Konfirmasi</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-5">
                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Alamat Faskes</label>
@@ -1423,6 +1471,8 @@ function editInvestigasi(data) {
     document.getElementById('f_hasil').value = data.hasil_investigasi;
     document.getElementById('f_analisa').value = data.analisa;
     document.getElementById('f_jam').value = data.jam_telepon;
+    document.getElementById('f_status_penelponan').value = data.status_penelponan || '';
+    document.getElementById('f_hasil_konfirmasi').value = data.hasil_konfirmasi || '';
     
     document.getElementById('modalOnDesk').classList.remove('hidden');
 }
@@ -1486,6 +1536,17 @@ async function loadOnDeskList() {
         <div class="mb-3">
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Hasil Investigasi</p>
           <p class="whitespace-pre-wrap bg-white dark:bg-slate-800 p-3 rounded text-sm">${item.hasil_investigasi }</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-3 text-xs">
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-800">
+            <p class="text-gray-500 uppercase font-bold mb-1">Status Penelponan</p>
+            <p class="font-semibold text-blue-700 dark:text-blue-300 capitalize">${item.status_penelponan || '-'}</p>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 p-2 rounded border border-purple-100 dark:border-purple-800">
+            <p class="text-gray-500 uppercase font-bold mb-1">Hasil Konfirmasi</p>
+            <p class="font-semibold text-purple-700 dark:text-purple-300 capitalize">${item.hasil_konfirmasi || '-'}</p>
+          </div>
         </div>
         
         <!-- Penelponan logs for this on-desk investigation -->
